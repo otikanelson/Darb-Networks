@@ -195,5 +195,5 @@ This project is licensed under the ISC License.
 
 ## Contact
 
-- Project Maintainer: Your Name - youremail@example.com
-- Project Link: https://github.com/yourusername/darb-backend
+- Project Maintainer: Your Name - otikanelson29@example.com
+- Project Link: https://github.com/otikanelson/darb-backend
