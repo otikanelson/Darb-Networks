@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import CustomLink from '../ui/CustomLink';
+import {Link} from 'react-router-dom';
 import { 
   ChevronRight, 
   ChevronDown, 
@@ -88,34 +88,34 @@ const ProfileDropdown = () => {
               Type: {user?.userType === 'founder' ? 'Founder' : user?.userType === 'investor' ? 'Investor' : 'Admin'}
             </p>
           </div>
-          <CustomLink
+          <Link
             to="/profile"
             className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
             onClick={() => setIsDropdownOpen(false)}
           >
             <User className="mr-3 h-4 w-4 text-gray-500" />
             Profile
-          </CustomLink>
+          </Link>
 
           {/* Conditionally render My Favorites and My Campaigns */}
           {user?.userType !== 'admin' && (
             <>
-              <CustomLink
+              <Link
                 to="/my-campaigns"
                 className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <Heart className="mr-3 h-4 w-4 text-gray-500" />
                 My Favorites
-              </CustomLink>
-              <CustomLink
+              </Link>
+              <Link
                 to="/my-campaigns"
                 className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <FileText className="mr-3 h-4 w-4 text-gray-500" />
                 My Campaigns
-              </CustomLink>
+              </Link>
             </>
           )}
 
@@ -144,61 +144,61 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo and Title */}
-          <CustomLink to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex-shrink-0 flex items-center">
             <img 
-              src="src/assets/Logo.png" 
+              src="/src/assets/Logo.png" 
               alt="Logo" 
-              className="w-32 h-14 object-contain"
+              className="h-14 w-auto"
             />
-          </CustomLink>
+          </Link>
           
           <div className="hidden md:flex space-x-8">
-            <CustomLink 
+            <Link 
               to="/dashboard" 
               className="text-gray-600 hover:text-green-700 font-bold"
             >
               Browse Startups
-            </CustomLink>
-            <CustomLink 
+            </Link>
+            <Link 
               to="/register" 
               className="text-gray-600 hover:text-green-700 font-bold"
             >
               For Investors
-            </CustomLink>
-            <CustomLink 
+            </Link>
+            <Link 
               to="/about" 
               className="text-gray-600 hover:text-green-700 font-bold"
             >
               Success Stories
-            </CustomLink>
-            <CustomLink 
+            </Link>
+            <Link 
               to="/about" 
               className="text-gray-600 hover:text-green-700 font-bold"
             >
               Resources
-            </CustomLink>
+            </Link>
           </div>
           
           {/* Only show Login/SignUp options when not authenticated */}
           {!isAuthenticated() ? (
             <div className="flex space-x-4 items-center">
-              <CustomLink 
+              <Link 
                 to="/login" 
                 className="text-gray-600 hover:text-purple-700 font-bold"
               >
                 Login
-              </CustomLink>
-              <CustomLink 
+              </Link>
+              <Link 
                 className="text-gray-600 hover:text-green-700 font-bold"
               >
               /
-              </CustomLink>
-              <CustomLink 
+              </Link>
+              <Link 
                 to="/Register" 
                 className="text-gray-600 hover:text-purple-700 font-bold"
               >
                 SignUp
-              </CustomLink>
+              </Link>
               <button 
                 onClick={() => navigate('/Register')}
                 className="bg-green-700 text-white font-bold font-sans px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-green-600 transition-colors"
@@ -212,14 +212,14 @@ const Navbar = () => {
             <div className="flex items-center space-x-4">
               {/* Create Campaign Button - Only show for Founders */}
               {user?.userType?.toLowerCase() === 'founder' && (
-                  <CustomLink
+                  <Link
                   to="/pages/CreateCampaign"
                   className="flex items-center mx-3 px-4 py-2 bg-green-700 text-white rounded-3xl 
                            hover:bg-green-700 transition-colors text-sm font-medium"
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   New Campaign
-                </CustomLink>
+                </Link>
               )}
               
               {/* Profile Dropdown */}

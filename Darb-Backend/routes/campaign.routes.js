@@ -25,6 +25,8 @@ module.exports = function(app) {
     controller.getMyCampaigns
   );
 
+  app.get("/api/campaigns/:id", controller.getCampaignById);
+
   // Get viewed campaigns (campaigns the user has viewed)
   app.get(
     "/api/campaigns/user/viewed",

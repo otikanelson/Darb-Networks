@@ -171,7 +171,7 @@ const FeaturedStartups = () => {
               </button>
             )}
 
-            {/* FIXED: Scrollable campaigns container */}
+            {/* Scrollable campaigns container */}
             <div
               id="featured-campaigns-container"
               className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-12"

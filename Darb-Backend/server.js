@@ -99,6 +99,7 @@ require('./routes/user.routes')(app);
 require('./routes/passwordReset.routes')(app);
 require('./routes/campaign.routes')(app);
 require('./routes/admin.routes')(app);
+require('./routes/investment.routes')(app);
 
 
 // Set port, listen for requests

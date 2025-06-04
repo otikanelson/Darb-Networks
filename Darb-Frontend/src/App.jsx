@@ -1,4 +1,5 @@
-// src/App.jsx - Complete routing configuration for the crowdfunding platform
+// src/App.jsx - Updated with Investment routes
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -18,14 +19,12 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import AdminDashboard from './pages/AdminDashboard';
 
-
 // Campaign related pages
 import CreateCampaign from './pages/CreateCampaign';
 import EditCampaign from './pages/EditCampaign';
 import CampaignDisplay from './pages/CampaignDisplay';
 
-// Payment related pages
-import PaymentPage from './pages/PaymentPage';
+// Investment related pages (NEW)
 import PaymentVerification from './pages/PaymentVerification';
 
 // Protected Route Component
@@ -66,8 +65,6 @@ function App() {
             </ProtectedRoute>
           } />
 
-          <Route path="/campaign/:id" element={<CampaignDisplay />} />
-
           {/* Campaign Management Routes - Protected */}
           <Route path="/pages/CreateCampaign" element={
             <ProtectedRoute>
@@ -81,7 +78,7 @@ function App() {
             </ProtectedRoute>
           } />
 
-\          <Route path="/admin" element={
+          <Route path="/admin" element={
             <ProtectedRoute>
               <AdminDashboard />
             </ProtectedRoute>
@@ -93,14 +90,24 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Payment Routes - Protected */}
-          <Route path="/payment/:campaignId" element={
+          {/* Investment Routes - NEW */}
+          
+          {/* Payment Verification - Protected Route */}
+          <Route path="/investment/verify/:paymentReference" element={
             <ProtectedRoute>
-              <PaymentPage />
+              <PaymentVerification />
             </ProtectedRoute>
           } />
 
-          <Route path="/payment/verify/:paymentId" element={
+          {/* Investment Success Page - Alternative route */}
+          <Route path="/payment/success/:paymentReference" element={
+            <ProtectedRoute>
+              <PaymentVerification />
+            </ProtectedRoute>
+          } />
+
+          {/* Investment Failed Page - Alternative route */}
+          <Route path="/payment/failed/:paymentReference" element={
             <ProtectedRoute>
               <PaymentVerification />
             </ProtectedRoute>

@@ -1,311 +1,313 @@
-// src/pages/PaymentVerification.jsx
-import React, { useState, useEffect } from "react";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { Check, AlertTriangle, Home, Eye, Download } from "lucide-react";
-import DashboardNavbar from "../components/Navbars/DashboardNavbar";
-import Footer from "../components/layout/Footer";
-import campaignService from "../services/campaignService";
+
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  CheckCircle, 
+  XCircle, 
+  Loader, 
+  ArrowRight, 
+  AlertCircle,
+  RefreshCw,
+  Home,
+  Eye
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
+
+/**
+ * PAYMENT VERIFICATION PAGE
+ * Handles payment verification after Paystack redirect
+ */
 
 const PaymentVerification = () => {
-  const { paymentId } = useParams();
-  const [searchParams] = useSearchParams();
-  const reference = searchParams.get("reference");
+  const { paymentReference } = useParams();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
 
-  const [loading, setLoading] = useState(true);
-  const [verificationStatus, setVerificationStatus] = useState("processing");
-  const [payment, setPayment] = useState(null);
-  const [campaign, setCampaign] = useState(null);
-  const [error, setError] = useState("");
+  const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'failed', 'error'
+  const [investmentData, setInvestmentData] = useState(null);
+  const [error, setError] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    if (!paymentId || !reference) {
-      setVerificationStatus("failed");
-      setError("Invalid payment information");
-      setLoading(false);
+    if (!isAuthenticated()) {
+      navigate('/login');
       return;
     }
 
-    const verifyPayment = async () => {
-      try {
-        setLoading(true);
-
-        // In a real app, you would call your backend to verify with Paystack or another payment provider
-        // For this example, we'll get the payment data from localStorage
-        const paymentData = localStorage.getItem(`payment_${paymentId}`);
-
-        if (!paymentData) {
-          throw new Error("Payment not found");
-        }
-
-        const paymentDetails = JSON.parse(paymentData);
-        setPayment(paymentDetails);
-
-        // Verify that the reference matches
-        if (paymentDetails.reference !== reference) {
-          throw new Error("Invalid payment reference");
-        }
-
-        // Get campaign details
-        if (paymentDetails.campaignId) {
-          const campaignDetails = await campaignService.getCampaignById(
-            paymentDetails.campaignId
-          );
-          setCampaign(campaignDetails);
-        }
-
-        // Update payment status to indicate it's been verified
-        paymentDetails.verifiedAt = new Date().toISOString();
-        localStorage.setItem(
-          `payment_${paymentId}`,
-          JSON.stringify(paymentDetails)
-        );
-
-        setVerificationStatus("success");
-      } catch (error) {
-        console.error("Payment verification error:", error);
-        setVerificationStatus("failed");
-        setError(
-          error.message || "Failed to verify payment. Please contact support."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Add a small delay to simulate verification process
-    const timer = setTimeout(() => {
+    if (paymentReference) {
       verifyPayment();
-    }, 1500);
+    } else {
+      setStatus('error');
+      setError('No payment reference provided');
+    }
+  }, [paymentReference, isAuthenticated]);
 
-    return () => clearTimeout(timer);
-  }, [paymentId, reference]);
+  const verifyPayment = async () => {
+    try {
+      setStatus('verifying');
+      setError('');
 
-  // Format currency
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+      console.log('🔍 Verifying payment:', paymentReference);
+
+      const response = await fetch(`/api/investments/verify/${paymentReference}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setStatus('success');
+        setInvestmentData(result.data);
+        console.log('✅ Payment verified successfully');
+      } else {
+        setStatus('failed');
+        setError(result.message || 'Payment verification failed');
+        console.log('❌ Payment verification failed:', result.message);
+      }
+
+    } catch (error) {
+      console.error('❌ Verification error:', error);
+      setStatus('error');
+      setError('Network error occurred. Please check your connection.');
+    }
   };
 
-  // Generate a PDF receipt (simulated)
-  const downloadReceipt = () => {
-    // In a real app, you would generate a PDF receipt
-    // For this example, we'll just create a simple receipt text
-    const receiptText = `
-Receipt for Payment ${payment.reference}
-Date: ${new Date(payment.createdAt).toLocaleString()}
-Amount: ${formatCurrency(payment.amount)}
-Campaign: ${campaign?.title || "Unknown Campaign"}
-Status: Paid
+  const retryVerification = () => {
+    if (retryCount < 3) {
+      setRetryCount(retryCount + 1);
+      setTimeout(() => verifyPayment(), 1000); // Wait 1 second before retry
+    } else {
+      setError('Maximum retry attempts reached. Please contact support.');
+    }
+  };
 
-Thank you for your contribution!
-    `;
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount || 0);
+  };
 
-    // Create a download link for the text
-    const element = document.createElement("a");
-    const file = new Blob([receiptText], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = `receipt-${payment.reference}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+  const renderContent = () => {
+    switch (status) {
+      case 'verifying':
+        return (
+          <div className="text-center py-16">
+            <Loader className="h-16 w-16 animate-spin text-blue-500 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Verifying Your Payment
+            </h1>
+            <p className="text-gray-600 mb-4">
+              Please wait while we confirm your payment with Paystack...
+            </p>
+            <div className="bg-blue-50 rounded-lg p-4 max-w-md mx-auto">
+              <p className="text-sm text-blue-800">
+                This usually takes a few seconds. Please don't close this page.
+              </p>
+            </div>
+            
+            {retryCount > 0 && (
+              <div className="mt-4 text-sm text-gray-500">
+                Verification attempt {retryCount + 1}/4
+              </div>
+            )}
+          </div>
+        );
+
+      case 'success':
+        return (
+          <div className="text-center py-16">
+            <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-6" />
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Payment Successful! 🎉
+            </h1>
+            <p className="text-xl text-gray-600 mb-8">
+              Your investment has been confirmed
+            </p>
+
+            {/* Investment Details Card */}
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 max-w-lg mx-auto mb-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-gray-900 mb-2">
+                  {formatCurrency(investmentData?.amount)}
+                </div>
+                <div className="text-gray-600 mb-4">
+                  Investment Amount
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/50">
+                  <div>
+                    <div className="text-sm text-gray-600">Campaign</div>
+                    <div className="font-medium text-gray-900 text-sm">
+                      Campaign #{investmentData?.campaignId}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Status</div>
+                    <div className="font-medium text-green-600 text-sm">
+                      Confirmed
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Success Message */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-lg mx-auto mb-8">
+              <div className="text-green-800">
+                <h3 className="font-semibold mb-2">What happens next?</h3>
+                <ul className="text-sm space-y-1 text-left">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    You'll receive email confirmation shortly
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    Track your investment in "My Investments"
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    Get updates on campaign progress
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    Potential returns when campaign succeeds
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+              <button
+                onClick={retryVerification}
+                disabled={retryCount >= 3}
+                className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                {retryCount >= 3 ? 'Max Retries Reached' : 'Retry Verification'}
+              </button>
+              
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </button>
+            </div>
+
+            {/* Contact Support */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-gray-600">
+                Still having issues?{' '}
+                <a 
+                  href="mailto:support@darbnetwork.com" 
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  Contact Support
+                </a>
+              </p>
+            </div>
+          </div>
+        );
+
+      case 'error':
+        return (
+          <div className="text-center py-16">
+            <AlertCircle className="h-20 w-20 text-orange-500 mx-auto mb-6" />
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Verification Error
+            </h1>
+            <p className="text-xl text-gray-600 mb-8">
+              We encountered an error while verifying your payment
+            </p>
+
+            {/* Error Details */}
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 max-w-lg mx-auto mb-8">
+              <div className="text-orange-800">
+                <h3 className="font-semibold mb-2">Error Details</h3>
+                <p className="text-sm mb-4">{error}</p>
+                
+                <div className="text-left">
+                  <h4 className="font-medium mb-2">What you can do:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li className="flex items-center">
+                      <RefreshCw className="h-4 w-4 mr-2 flex-shrink-0" />
+                      Check your internet connection and retry
+                    </li>
+                    <li className="flex items-center">
+                      <Eye className="h-4 w-4 mr-2 flex-shrink-0" />
+                      Check "My Investments" to see if payment went through
+                    </li>
+                    <li className="flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                      Contact support if the issue persists
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+              <button
+                onClick={retryVerification}
+                disabled={retryCount >= 3}
+                className="flex items-center justify-center px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </button>
+              
+              <button
+                onClick={() => navigate('/my-campaigns')}
+                className="flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Check My Investments
+              </button>
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="text-center py-16">
+            <Loader className="h-16 w-16 animate-spin text-gray-400 mx-auto mb-6" />
+            <h1 className="text-2xl font-bold text-gray-900">Loading...</h1>
+          </div>
+        );
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardNavbar />
-
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          {/* Header */}
-          <div
-            className={`px-6 py-4 text-white ${
-              loading
-                ? "bg-blue-600"
-                : verificationStatus === "success"
-                ? "bg-green-600"
-                : "bg-red-600"
-            }`}
-          >
-            <div className="flex items-center">
-              {loading ? (
-                <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mr-2"></div>
-              ) : verificationStatus === "success" ? (
-                <Check className="h-6 w-6 mr-2" />
-              ) : (
-                <AlertTriangle className="h-6 w-6 mr-2" />
-              )}
-
-              <h2 className="text-lg font-medium">
-                {loading
-                  ? "Verifying Payment..."
-                  : verificationStatus === "success"
-                  ? "Payment Successful"
-                  : "Payment Failed"}
-              </h2>
+      <Navbar />
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {renderContent()}
+        
+        {/* Payment Reference Info */}
+        {paymentReference && (
+          <div className="mt-12 text-center">
+            <div className="bg-white rounded-lg p-4 max-w-md mx-auto border border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Payment Reference</h3>
+              <div className="font-mono text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border">
+                {paymentReference}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Save this reference for your records
+              </p>
             </div>
           </div>
-
-          {/* Content */}
-          <div className="p-6">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="text-center">
-                  <p className="text-gray-600 mb-4">
-                    We are verifying your payment. Please wait...
-                  </p>
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent"></div>
-                </div>
-              </div>
-            ) : verificationStatus === "success" ? (
-              <div>
-                <div className="flex justify-center mb-6">
-                  <div className="bg-green-100 rounded-full p-3">
-                    <Check className="h-10 w-10 text-green-600" />
-                  </div>
-                </div>
-
-                <h3 className="text-2xl font-bold text-center text-gray-900 mb-6">
-                  Thank You for Your Contribution!
-                </h3>
-
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Payment Reference:</span>
-                    <span className="text-gray-900 font-medium">
-                      {reference}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Amount:</span>
-                    <span className="text-gray-900 font-medium">
-                      {payment ? formatCurrency(payment.amount) : "-"}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Payment Method:</span>
-                    <span className="text-gray-900 font-medium">
-                      Card ending in {payment?.cardLast4 || "****"}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Date:</span>
-                    <span className="text-gray-900 font-medium">
-                      {payment
-                        ? new Date(payment.createdAt).toLocaleString()
-                        : "-"}
-                    </span>
-                  </div>
-                </div>
-
-                {campaign && (
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-2">
-                      Campaign Details
-                    </h4>
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h5 className="font-medium text-gray-900">
-                        {campaign.title}
-                      </h5>
-                      <p className="text-sm text-gray-600 mb-4">
-                        {campaign.description}
-                      </p>
-
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Creator:</span>
-                        <span className="text-gray-900">
-                          {campaign.creator.name}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="text-center mt-8">
-                  <p className="text-gray-600 mb-4">
-                    A receipt has been sent to your email address.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row justify-center gap-4">
-                    <button
-                      onClick={() => navigate("/dashboard")}
-                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
-                    >
-                      <Home className="mr-2 h-5 w-5" />
-                      Return to Dashboard
-                    </button>
-
-                    <button
-                      onClick={downloadReceipt}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <Download className="mr-2 h-5 w-5" />
-                      Download Receipt
-                    </button>
-
-                    {campaign && (
-                      <button
-                        onClick={() => navigate(`/campaign/${campaign.id}`)}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                      >
-                        <Eye className="mr-2 h-5 w-5" />
-                        View Campaign
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div className="flex justify-center mb-6">
-                  <div className="bg-red-100 rounded-full p-3">
-                    <AlertTriangle className="h-10 w-10 text-red-600" />
-                  </div>
-                </div>
-
-                <h3 className="text-2xl font-bold text-center text-gray-900 mb-6">
-                  Payment Verification Failed
-                </h3>
-
-                <p className="text-center text-gray-600 mb-6">
-                  {error ||
-                    "There was an issue verifying your payment. Please try again or contact support."}
-                </p>
-
-                <div className="text-center mt-8">
-                  <div className="flex flex-col sm:flex-row justify-center gap-4">
-                    <button
-                      onClick={() => navigate("/dashboard")}
-                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-                    >
-                      <Home className="mr-2 h-5 w-5" />
-                      Return to Dashboard
-                    </button>
-
-                    {payment && payment.campaignId && (
-                      <button
-                        onClick={() =>
-                          navigate(`/campaign/${payment.campaignId}`)
-                        }
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                      >
-                        <Eye className="mr-2 h-5 w-5" />
-                        View Campaign
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
 
       <Footer />

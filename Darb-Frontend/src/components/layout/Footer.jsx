@@ -1,6 +1,4 @@
-import React from 'react';
-import CustomLink from '../ui/CustomLink';
-
+import {Link} from 'react-router-dom';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -32,24 +30,24 @@ const Footer = () => {
                 <h3 className="font-bold mb-8">Donate</h3>
                 <ul className="space-y-4">
                   <li>
-                    <CustomLink to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
                       Tech & Innovation
-                    </CustomLink>
+                    </Link>
                   </li>
                   <li>
-                    <CustomLink to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
                       Creative Works
-                    </CustomLink>
+                    </Link>
                   </li>
                   <li>
-                    <CustomLink to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
                       Community Projects
-                    </CustomLink>
+                    </Link>
                   </li>
                   <li>
-                    <CustomLink to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
                       Disaster
-                    </CustomLink>
+                    </Link>
                   </li>
                 </ul>
               </div>
@@ -59,19 +57,19 @@ const Footer = () => {
                 <h3 className="font-bold mb-8">Help</h3>
                 <ul className="space-y-4">
                   <li>
-                    <CustomLink to="/faq" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/faq" className="text-gray-400 hover:text-white font-semibold">
                       FAQ
-                    </CustomLink>
+                    </Link>
                   </li>
                   <li>
-                    <CustomLink to="/privacy-policy" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/privacy-policy" className="text-gray-400 hover:text-white font-semibold">
                       Privacy Policy
-                    </CustomLink>
+                    </Link>
                   </li>
                   <li>
-                    <CustomLink to="/about" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/about" className="text-gray-400 hover:text-white font-semibold">
                       Contact Us
-                    </CustomLink>
+                    </Link>
                   </li>
                 </ul>
               </div>
@@ -81,14 +79,14 @@ const Footer = () => {
                 <h3 className="font-bold mb-8">Company</h3>
                 <ul className="space-y-4">
                   <li>
-                    <CustomLink to="/about" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/about" className="text-gray-400 hover:text-white font-semibold">
                       About Us
-                    </CustomLink>
+                    </Link>
                   </li>
                   <li>
-                    <CustomLink to="/about" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/about" className="text-gray-400 hover:text-white font-semibold">
                       Services
-                    </CustomLink>
+                    </Link>
                   </li>
                 </ul>
               </div>

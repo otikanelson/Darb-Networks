@@ -13,13 +13,11 @@ import {
   FileText,
   Home
 } from 'lucide-react';
-import { CustomNav } from '../../hooks/CustomNavigation';
 
 const DashboardNavbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const navigate = CustomNav();
   
   // Close dropdown when clicking outside
   useEffect(() => {

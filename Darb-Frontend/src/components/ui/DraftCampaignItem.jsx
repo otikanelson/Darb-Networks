@@ -1,4 +1,3 @@
-// src/components/ui/DraftCampaignItem.jsx
 import React from 'react';
 import { Calendar, PenLine, Trash2, Send, User, Tag, MapPin } from 'lucide-react';
 
