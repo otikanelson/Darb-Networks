@@ -188,11 +188,19 @@ const Navbars = ({
       ];
     }
 
-    // Base authenticated links - NO HOME LINK for default variant
+    // Base authenticated links - ADD Dashboard and My Campaigns for default (home) variant
     const baseLinks = [];
 
     // Add variant-specific links
     switch (variant) {
+      case 'default':
+        // HOME PAGE - show Dashboard and My Campaigns for authenticated users
+        baseLinks.push({ to: '/dashboard', label: 'Dashboard' });
+      if (user?.userType !== 'admin') {
+        baseLinks.push({ to: '/my-campaigns', label: 'My Campaigns' });
+      }
+      break;
+
       case 'dashboard':
         baseLinks.push({ to: '/', label: 'Home' });
         baseLinks.push({ to: '/dashboard', label: 'Dashboard' });
@@ -237,10 +245,8 @@ const Navbars = ({
         baseLinks.push({ to: '/dashboard', label: 'Dashboard' });
         break;
 
-      case 'default':
       default:
-        // Default variant (home page) - NO navigation links when search is shown
-        // Navigation is handled differently for home page
+        // Fallback
         break;
     }
 
@@ -401,124 +407,112 @@ const Navbars = ({
 
   const navLinks = getNavLinks();
 
-  return (
-    <nav className={`bg-white border-b border-gray-200 py-1 px-16 ${className}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Left: Logo */}
-          <div className="flex items-center flex-shrink-0">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <img 
-                src="/src/assets/Logo.png" 
-                alt="Logo" 
-                className="h-14 w-auto"
-              />
-            </Link>
+return (
+  <nav className={`bg-white border-b border-gray-200 py-1 px-16 ${className}`}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex justify-between items-center h-16">
+        {/* Left: Logo */}
+        <div className="flex items-center flex-shrink-0">
+          <Link to="/" className="flex-shrink-0 flex items-center">
+            <img 
+              src="/src/assets/Logo.png" 
+              alt="Logo" 
+              className="h-14 w-auto"
+            />
+          </Link>
+        </div>
+
+        {/* Center: Search Bar (when showSearch is true) */}
+        {showSearch && (
+          <SearchBar />
+        )}
+
+        {/* Center/Left: Navigation Links */}
+        {showNavLinks && navLinks.length > 0 && (
+          <div className={`hidden md:flex md:space-x-3 ${showSearch ? 'lg:ml-8' : 'md:ml-14'}`}>
+            {/* Show max 2 links when search is present, all links when no search */}
+            {(showSearch ? navLinks.slice(0, 2) : navLinks).map((link, index) => (
+              <Link 
+                key={index}
+                to={link.to} 
+                className={`px-3 py-2 font-bold text-gray-500 hover:text-purple-700 ${
+                  showSearch ? 'text-sm' : 'text-md'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
+        )}
 
-          {/* Center: Search Bar (when showSearch is true) */}
-          {showSearch && (
-            <SearchBar />
-          )}
-
-          {/* Center/Left: Navigation (when no search) */}
-          {!showSearch && showNavLinks && (
-            <div className="hidden md:ml-14 md:flex md:space-x-3">
-              {navLinks.map((link, index) => (
-                <Link 
-                  key={index}
-                  to={link.to} 
-                  className="px-3 py-2 text-md font-bold text-gray-500 hover:text-purple-700"
+        {/* Right: Actions */}
+        <div className="flex items-center flex-shrink-0">
+          {isAuthenticated() ? (
+            <>
+              {/* Create Campaign Button - Only show for Founders */}
+              {showCreateButton && isFounder && (
+                <Link
+                  to="/pages/CreateCampaign"
+                  className="flex items-center mx-3 px-4 py-2 bg-green-700 text-white rounded-3xl 
+                           hover:bg-green-700 transition-colors text-sm font-medium"
                 >
-                  {link.label}
+                  <Plus className="h-4 w-4 mr-1" />
+                  New Campaign
                 </Link>
-              ))}
+              )}
+
+              {/* Profile Dropdown */}
+              {showProfileDropdown && <ProfileDropdown />}
+            </>
+          ) : (
+            // Logged out view - varies by variant
+            <div className="flex items-center space-x-4">
+              {variant === 'default' ? (
+                // Home page style
+                <>
+                  <Link 
+                    to="/login" 
+                    className="text-gray-600 hover:text-purple-700 font-bold"
+                  >
+                    Login
+                  </Link>
+                  <Link 
+                    className="text-gray-600 hover:text-green-700 font-bold"
+                  >
+                    /
+                  </Link>
+                  <Link 
+                    to="/Register" 
+                    className="text-gray-600 hover:text-purple-700 font-bold"
+                  >
+                    SignUp
+                  </Link>
+                  <button 
+                    onClick={() => navigate('/Register')}
+                    className="bg-green-700 text-white font-bold font-sans px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-green-600 transition-colors"
+                  >
+                    <span>Join Campaign</span>
+                    <ChevronRight size={16} />
+                  </button>
+                </>
+              ) : (
+                // Standard login/signup for other variants
+                <>
+                  <Link to="/login" className="text-gray-500 hover:text-gray-900 font-medium text-sm">
+                    Log in
+                  </Link>
+                  <Link to="/register" className="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
+                    Sign up
+                  </Link>
+                </>
+              )}
             </div>
           )}
-
-          {/* Right: Actions */}
-          <div className="flex items-center flex-shrink-0">
-            {isAuthenticated() ? (
-              <>
-                {/* Create Campaign Button - Only show for Founders */}
-                {showCreateButton && isFounder && (
-                  <Link
-                    to="/pages/CreateCampaign"
-                    className="flex items-center mx-3 px-4 py-2 bg-green-700 text-white rounded-3xl 
-                             hover:bg-green-700 transition-colors text-sm font-medium"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    New Campaign
-                  </Link>
-                )}
-
-                {/* Navigation links when search is shown */}
-                {showSearch && showNavLinks && (
-                  <div className="hidden lg:flex lg:space-x-4 lg:mr-4">
-                    {navLinks.slice(0, 2).map((link, index) => (
-                      <Link 
-                        key={index}
-                        to={link.to} 
-                        className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-purple-700"
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-
-                {/* Profile Dropdown */}
-                {showProfileDropdown && <ProfileDropdown />}
-              </>
-            ) : (
-              // Logged out view - varies by variant
-              <div className="flex items-center space-x-4">
-                {variant === 'default' ? (
-                  // Home page style
-                  <>
-                    <Link 
-                      to="/login" 
-                      className="text-gray-600 hover:text-purple-700 font-bold"
-                    >
-                      Login
-                    </Link>
-                    <Link 
-                      className="text-gray-600 hover:text-green-700 font-bold"
-                    >
-                      /
-                    </Link>
-                    <Link 
-                      to="/Register" 
-                      className="text-gray-600 hover:text-purple-700 font-bold"
-                    >
-                      SignUp
-                    </Link>
-                    <button 
-                      onClick={() => navigate('/Register')}
-                      className="bg-green-700 text-white font-bold font-sans px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-green-600 transition-colors"
-                    >
-                      <span>Join Campaign</span>
-                      <ChevronRight size={16} />
-                    </button>
-                  </>
-                ) : (
-                  // Standard login/signup for other variants
-                  <>
-                    <Link to="/login" className="text-gray-500 hover:text-gray-900 font-medium text-sm">
-                      Log in
-                    </Link>
-                    <Link to="/register" className="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
-                      Sign up
-                    </Link>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </div>
-    </nav>
-  );
+    </div>
+  </nav>
+);
 };
 
 export default Navbars;
