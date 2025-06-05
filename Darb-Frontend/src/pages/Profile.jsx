@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import ProfileNavbar from '../components/Navbars/ProfileNavbar';
-import Footer from '../components/layout/Footer';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Globe, 
-  Building, 
-  Shield, 
-  Lock, 
-  Save, 
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import UnifiedNavbar from "../components/layout/Navbars";
+import Footer from "../components/layout/Footer";
+import {
+  User,
+  Mail,
+  Phone,
+  Globe,
+  Building,
+  Shield,
+  Lock,
+  Save,
   AlertCircle,
   Upload,
   Check,
@@ -20,38 +20,38 @@ import {
   Camera,
   Trash2,
   CreditCard,
-  MapPin
-} from 'lucide-react';
+  MapPin,
+} from "lucide-react";
 
 const Profile = () => {
   const { user, updateUserContext, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  
+
   // Profile data state
   const [profileData, setProfileData] = useState({
-    fullName: '',
-    email: '',
-    phoneNumber: '',
-    address: '',
-    companyName: '',
-    userType: '',
-    bvn: '',
-    cacNumber: '',
-    accountNumber: '',
-    bankName: ''
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    address: "",
+    companyName: "",
+    userType: "",
+    bvn: "",
+    cacNumber: "",
+    accountNumber: "",
+    bankName: "",
   });
-  
+
   // Password change state
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   // Email change state
   const [emailData, setEmailData] = useState({
-    newEmail: '',
-    currentPassword: ''
+    newEmail: "",
+    currentPassword: "",
   });
 
   // UI state
@@ -59,18 +59,18 @@ const Profile = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showEmailPassword, setShowEmailPassword] = useState(false);
-  
+
   // Status states
   const [loading, setLoading] = useState(false);
   const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false);
   const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false);
   const [emailUpdateSuccess, setEmailUpdateSuccess] = useState(false);
   const [errors, setErrors] = useState({});
-  
+
   // Editing state
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
-  
+  const [activeTab, setActiveTab] = useState("profile");
+
   // Image state
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -79,293 +79,304 @@ const Profile = () => {
   // Load user data on mount
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
-    
+
     fetchUserProfile();
   }, [isAuthenticated, navigate]);
 
-const fetchUserProfile = async () => {
-  try {
-    setLoading(true);
-    
-    const token = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:5000/api/users/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
 
-    if (response.ok) {
-      const result = await response.json();
-      const userData = result.data;
-      
-      console.log('Fetched user data:', userData);
-      console.log('Raw profileImageUrl:', userData.profileImageUrl);
-      
-      setProfileData({
-        fullName: userData.fullName || '',
-        email: userData.email || '',
-        phoneNumber: userData.phoneNumber || '',
-        address: userData.address || '',
-        companyName: userData.companyName || '',
-        userType: userData.userType || '',
-        bvn: userData.bvn || '',
-        cacNumber: userData.cacNumber || '',
-        accountNumber: userData.accountNumber || '',
-        bankName: userData.bankName || ''
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("http://localhost:5000/api/users/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
-      // Handle profile image URL
-      if (userData.profileImageUrl) {
-        let imageUrl;
-        
-        if (userData.profileImageUrl.startsWith('http')) {
-          imageUrl = userData.profileImageUrl;
-        } else if (userData.profileImageUrl.startsWith('/uploads')) {
-          imageUrl = `http://localhost:5000${userData.profileImageUrl}`;
+      if (response.ok) {
+        const result = await response.json();
+        const userData = result.data;
+
+        console.log("Fetched user data:", userData);
+        console.log("Raw profileImageUrl:", userData.profileImageUrl);
+
+        setProfileData({
+          fullName: userData.fullName || "",
+          email: userData.email || "",
+          phoneNumber: userData.phoneNumber || "",
+          address: userData.address || "",
+          companyName: userData.companyName || "",
+          userType: userData.userType || "",
+          bvn: userData.bvn || "",
+          cacNumber: userData.cacNumber || "",
+          accountNumber: userData.accountNumber || "",
+          bankName: userData.bankName || "",
+        });
+
+        // Handle profile image URL
+        if (userData.profileImageUrl) {
+          let imageUrl;
+
+          if (userData.profileImageUrl.startsWith("http")) {
+            imageUrl = userData.profileImageUrl;
+          } else if (userData.profileImageUrl.startsWith("/uploads")) {
+            imageUrl = `http://localhost:5000${userData.profileImageUrl}`;
+          } else {
+            imageUrl = `http://localhost:5000/uploads/profiles/${userData.profileImageUrl}`;
+          }
+
+          console.log("Constructed image URL:", imageUrl);
+
+          // Test if the image actually loads
+          const img = new Image();
+          img.onload = () => {
+            console.log("✅ Image verified, setting preview");
+            setImagePreview(imageUrl);
+          };
+          img.onerror = () => {
+            console.error("❌ Image failed to load, clearing preview");
+            setImagePreview(null);
+          };
+          img.src = imageUrl;
         } else {
-          imageUrl = `http://localhost:5000/uploads/profiles/${userData.profileImageUrl}`;
-        }
-        
-        console.log('Constructed image URL:', imageUrl);
-        
-        // Test if the image actually loads
-        const img = new Image();
-        img.onload = () => {
-          console.log('✅ Image verified, setting preview');
-          setImagePreview(imageUrl);
-        };
-        img.onerror = () => {
-          console.error('❌ Image failed to load, clearing preview');
+          console.log("No profile image URL found");
           setImagePreview(null);
-        };
-        img.src = imageUrl;
-      } else {
-        console.log('No profile image URL found');
-        setImagePreview(null);
+        }
       }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      setErrors({ fetch: "Failed to load profile data" });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching profile:', error);
-    setErrors({ fetch: 'Failed to load profile data' });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Handle profile form changes
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({
+    setProfileData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear errors for this field
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
+      setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
 
   // Handle password form changes
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
-    setPasswordData(prev => ({
+    setPasswordData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
+      setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
 
   // Handle email form changes
   const handleEmailChange = (e) => {
     const { name, value } = e.target;
-    setEmailData(prev => ({
+    setEmailData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
+      setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
 
-
   // Handle image selection
-const handleImageSelect = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  
-  console.log('Selected file:', file);
-  
-  // Validate file
-  if (file.size > 5 * 1024 * 1024) {
-    setErrors(prev => ({ ...prev, image: 'Image must be less than 5MB' }));
-    return;
-  }
-  
-  if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-    setErrors(prev => ({ ...prev, image: 'Only JPG and PNG formats are allowed' }));
-    return;
-  }
-  
-  setProfileImage(file);
-  
-  // Create preview URL
-  const previewUrl = URL.createObjectURL(file);
-  console.log('Created preview URL:', previewUrl);
-  setImagePreview(previewUrl);
-  
-  if (errors.image) {
-    setErrors(prev => ({ ...prev, image: null }));
-  }
-};
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    console.log("Selected file:", file);
+
+    // Validate file
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, image: "Image must be less than 5MB" }));
+      return;
+    }
+
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only JPG and PNG formats are allowed",
+      }));
+      return;
+    }
+
+    setProfileImage(file);
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    console.log("Created preview URL:", previewUrl);
+    setImagePreview(previewUrl);
+
+    if (errors.image) {
+      setErrors((prev) => ({ ...prev, image: null }));
+    }
+  };
 
   // Upload profile image
-const uploadProfileImage = async () => {
-  if (!profileImage) return;
-  
-  try {
-    setImageUploading(true);
-    setErrors(prev => ({ ...prev, image: null }));
-    
-    console.log('🚀 Starting upload for:', profileImage.name);
-    
-    const formData = new FormData();
-    formData.append('profileImage', profileImage);
-    
-    const token = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:5000/api/users/profile-image', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
+  const uploadProfileImage = async () => {
+    if (!profileImage) return;
 
-    const result = await response.json();
-    console.log('📡 Upload response:', result);
-    
-    if (response.ok && result.success) {
-      const newImageUrl = `http://localhost:5000${result.data.profileImageUrl}`;
-      console.log('🎯 New image URL:', newImageUrl);
-      
-      // Update local preview
-      setImagePreview(newImageUrl);
-      setProfileImage(null);
-      
-      // *** CRITICAL: Update user context with new data ***
-      if (result.data.user) {
-        console.log('🔄 Updating user context with:', result.data.user);
-        await updateUserContext(result.data.user);
+    try {
+      setImageUploading(true);
+      setErrors((prev) => ({ ...prev, image: null }));
+
+      console.log("🚀 Starting upload for:", profileImage.name);
+
+      const formData = new FormData();
+      formData.append("profileImage", profileImage);
+
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(
+        "http://localhost:5000/api/users/profile-image",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+      console.log("📡 Upload response:", result);
+
+      if (response.ok && result.success) {
+        const newImageUrl = `http://localhost:5000${result.data.profileImageUrl}`;
+        console.log("🎯 New image URL:", newImageUrl);
+
+        // Update local preview
+        setImagePreview(newImageUrl);
+        setProfileImage(null);
+
+        // *** CRITICAL: Update user context with new data ***
+        if (result.data.user) {
+          console.log("🔄 Updating user context with:", result.data.user);
+          await updateUserContext(result.data.user);
+        }
+
+        setProfileUpdateSuccess(true);
+        setTimeout(() => setProfileUpdateSuccess(false), 3000);
+
+        // *** FORCE REFRESH TO VERIFY PERSISTENCE ***
+        console.log("🔄 Refreshing profile data to verify save...");
+        setTimeout(() => {
+          fetchUserProfile();
+        }, 1000);
+      } else {
+        console.error("❌ Upload failed:", result);
+        setErrors((prev) => ({
+          ...prev,
+          image: result.message || "Upload failed",
+        }));
       }
-      
-      setProfileUpdateSuccess(true);
-      setTimeout(() => setProfileUpdateSuccess(false), 3000);
-      
-      // *** FORCE REFRESH TO VERIFY PERSISTENCE ***
-      console.log('🔄 Refreshing profile data to verify save...');
-      setTimeout(() => {
-        fetchUserProfile();
-      }, 1000);
-      
-    } else {
-      console.error('❌ Upload failed:', result);
-      setErrors(prev => ({ ...prev, image: result.message || 'Upload failed' }));
+    } catch (error) {
+      console.error("❌ Upload error:", error);
+      setErrors((prev) => ({ ...prev, image: "Failed to upload image" }));
+    } finally {
+      setImageUploading(false);
     }
-  } catch (error) {
-    console.error('❌ Upload error:', error);
-    setErrors(prev => ({ ...prev, image: 'Failed to upload image' }));
-  } finally {
-    setImageUploading(false);
-  }
-};
+  };
 
-  const isFounder = user?.userType?.toLowerCase() === 'founder';
+  const isFounder = user?.userType?.toLowerCase() === "founder";
 
+  useEffect(() => {
+    if (user && user.profileImageUrl && !imagePreview) {
+      const imageUrl = user.profileImageUrl.startsWith("http")
+        ? user.profileImageUrl
+        : `http://localhost:5000${user.profileImageUrl}`;
+      console.log("Syncing profile image from context:", imageUrl);
+      setImagePreview(imageUrl);
+    }
+  }, [user, user?.profileImageUrl]);
 
+  useEffect(() => {
+    console.log("=== IMAGE DEBUG ===");
+    console.log("imagePreview:", imagePreview);
+    console.log("user.profileImageUrl:", user?.profileImageUrl);
+    console.log("profileData.profileImageUrl:", profileData.profileImageUrl);
+    console.log("==================");
+  }, [imagePreview, user?.profileImageUrl, profileData.profileImageUrl]);
 
-useEffect(() => {
-  if (user && user.profileImageUrl && !imagePreview) {
-    const imageUrl = user.profileImageUrl.startsWith('http') 
-      ? user.profileImageUrl 
-      : `http://localhost:5000${user.profileImageUrl}`;
-    console.log('Syncing profile image from context:', imageUrl);
-    setImagePreview(imageUrl);
-  }
-}, [user, user?.profileImageUrl]);
-
-useEffect(() => {
-  console.log('=== IMAGE DEBUG ===');
-  console.log('imagePreview:', imagePreview);
-  console.log('user.profileImageUrl:', user?.profileImageUrl);
-  console.log('profileData.profileImageUrl:', profileData.profileImageUrl);
-  console.log('==================');
-}, [imagePreview, user?.profileImageUrl, profileData.profileImageUrl]);
-
-// Add this function to test image URLs
-const testImageUrl = (url) => {
-  console.log('Testing image URL:', url);
-  const img = new Image();
-  img.onload = () => console.log('✅ Image loads successfully:', url);
-  img.onerror = () => console.error('❌ Image failed to load:', url);
-  img.src = url;
-};
+  // Add this function to test image URLs
+  const testImageUrl = (url) => {
+    console.log("Testing image URL:", url);
+    const img = new Image();
+    img.onload = () => console.log("✅ Image loads successfully:", url);
+    img.onerror = () => console.error("❌ Image failed to load:", url);
+    img.src = url;
+  };
 
   // Delete profile image
-const deleteProfileImage = async () => {
-  try {
-    const token = localStorage.getItem('authToken');
-    const response = await fetch('http://localhost:5000/api/users/profile-image', {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
+  const deleteProfileImage = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(
+        "http://localhost:5000/api/users/profile-image",
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+      console.log("Delete response:", result);
+
+      if (response.ok && result.success) {
+        setImagePreview(null);
+        setProfileImage(null);
+        setProfileUpdateSuccess(true);
+        setTimeout(() => setProfileUpdateSuccess(false), 3000);
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          image: result.message || "Failed to delete image",
+        }));
       }
-    });
-
-    const result = await response.json();
-    console.log('Delete response:', result);
-
-    if (response.ok && result.success) {
-      setImagePreview(null);
-      setProfileImage(null);
-      setProfileUpdateSuccess(true);
-      setTimeout(() => setProfileUpdateSuccess(false), 3000);
-    } else {
-      setErrors(prev => ({ ...prev, image: result.message || 'Failed to delete image' }));
+    } catch (error) {
+      console.error("Delete error:", error);
+      setErrors((prev) => ({ ...prev, image: "Failed to delete image" }));
     }
-  } catch (error) {
-    console.error('Delete error:', error);
-    setErrors(prev => ({ ...prev, image: 'Failed to delete image' }));
-  }
-};
+  };
 
   // Handle profile update
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
       setErrors({});
-      
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5000/api/users/profile', {
-        method: 'PUT',
+
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("http://localhost:5000/api/users/profile", {
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(profileData)
+        body: JSON.stringify(profileData),
       });
 
       const result = await response.json();
-      
+
       if (response.ok) {
         await updateUserContext(result.data);
         setProfileUpdateSuccess(true);
@@ -374,7 +385,7 @@ const deleteProfileImage = async () => {
       } else {
         if (result.errors) {
           const errorObj = {};
-          result.errors.forEach(error => {
+          result.errors.forEach((error) => {
             errorObj.general = error;
           });
           setErrors(errorObj);
@@ -383,7 +394,7 @@ const deleteProfileImage = async () => {
         }
       }
     } catch (error) {
-      setErrors({ general: 'Failed to update profile' });
+      setErrors({ general: "Failed to update profile" });
     } finally {
       setLoading(false);
     }
@@ -392,69 +403,72 @@ const deleteProfileImage = async () => {
   // Handle password update
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setErrors({ confirmPassword: 'Passwords do not match' });
+      setErrors({ confirmPassword: "Passwords do not match" });
       return;
     }
-    
+
     try {
       setLoading(true);
       setErrors({});
-      
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5000/api/users/password', {
-        method: 'PUT',
+
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("http://localhost:5000/api/users/password", {
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        })
+          newPassword: passwordData.newPassword,
+        }),
       });
 
       const result = await response.json();
-      
+
       if (response.ok) {
         setPasswordUpdateSuccess(true);
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
         setTimeout(() => setPasswordUpdateSuccess(false), 3000);
       } else {
         setErrors({ password: result.message });
       }
     } catch (error) {
-      setErrors({ password: 'Failed to update password' });
+      setErrors({ password: "Failed to update password" });
     } finally {
       setLoading(false);
     }
   };
 
-
   // Handle email update
   const handleEmailUpdate = async (e) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
       setErrors({});
-      
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5000/api/users/email', {
-        method: 'PUT',
+
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("http://localhost:5000/api/users/email", {
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(emailData)
+        body: JSON.stringify(emailData),
       });
 
       const result = await response.json();
-      
+
       if (response.ok) {
         setEmailUpdateSuccess(true);
-        setEmailData({ newEmail: '', currentPassword: '' });
+        setEmailData({ newEmail: "", currentPassword: "" });
         setTimeout(() => setEmailUpdateSuccess(false), 3000);
         // Refresh profile data
         await fetchUserProfile();
@@ -462,7 +476,7 @@ const deleteProfileImage = async () => {
         setErrors({ email: result.message });
       }
     } catch (error) {
-      setErrors({ email: 'Failed to update email' });
+      setErrors({ email: "Failed to update email" });
     } finally {
       setLoading(false);
     }
@@ -478,27 +492,29 @@ const deleteProfileImage = async () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ProfileNavbar />
-      
+      <UnifiedNavbar variant="profile" />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Profile Settings</h1>
-        
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">
+          Profile Settings
+        </h1>
+
         {/* Tab Navigation */}
         <div className="border-b border-gray-200 mb-8">
           <nav className="flex space-x-8">
-            {['profile', 'security', 'account'].map((tab) => (
+            {["profile", "security", "account"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? "border-green-500 text-green-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                {tab === 'security' && ' & Password'}
-                {tab === 'account' && ' & Email'}
+                {tab === "security" && " & Password"}
+                {tab === "account" && " & Email"}
               </button>
             ))}
           </nav>
@@ -508,113 +524,127 @@ const deleteProfileImage = async () => {
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              {/* Profile Image Section */}
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative mb-4">
+                  <div className="h-32 w-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-4 border-white shadow-lg">
+                    {imagePreview ? (
+                      <>
+                        <img
+                          src={imagePreview}
+                          alt="Profile"
+                          className="h-full w-full object-cover"
+                          style={{ display: "block" }}
+                          onLoad={(e) => {
+                            console.log("✅ Image loaded in UI:", imagePreview);
+                            e.target.style.display = "block";
+                            e.target.nextElementSibling.style.display = "none";
+                          }}
+                          onError={(e) => {
+                            console.error(
+                              "❌ Image failed in UI:",
+                              imagePreview
+                            );
+                            e.target.style.display = "none";
+                            e.target.nextElementSibling.style.display = "flex";
+                          }}
+                        />
+                        {/* Hidden fallback that shows if image fails */}
+                        <span
+                          className="text-4xl font-medium text-gray-500 absolute inset-0 flex items-center justify-center"
+                          style={{ display: "none" }}
+                        >
+                          {profileData.fullName?.charAt(0)?.toUpperCase() ||
+                            "U"}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-4xl font-medium text-gray-500">
+                        {profileData.fullName?.charAt(0)?.toUpperCase() || "U"}
+                      </span>
+                    )}
+                  </div>
 
-          {/* Profile Image Section */}
-          <div className="flex flex-col items-center mb-6">
-            <div className="relative mb-4">
-              <div className="h-32 w-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-4 border-white shadow-lg">
-                {imagePreview ? (
-                  <>
-                    <img 
-                      src={imagePreview} 
-                      alt="Profile"
-                      className="h-full w-full object-cover"
-                      style={{ display: 'block' }}
-                      onLoad={(e) => {
-                        console.log('✅ Image loaded in UI:', imagePreview);
-                        e.target.style.display = 'block';
-                        e.target.nextElementSibling.style.display = 'none';
-                      }}
-                      onError={(e) => {
-                        console.error('❌ Image failed in UI:', imagePreview);
-                        e.target.style.display = 'none';
-                        e.target.nextElementSibling.style.display = 'flex';
-                      }}
-                    />
-                    {/* Hidden fallback that shows if image fails */}
-                    <span 
-                      className="text-4xl font-medium text-gray-500 absolute inset-0 flex items-center justify-center"
-                      style={{ display: 'none' }}
-                    >
-                      {profileData.fullName?.charAt(0)?.toUpperCase() || 'U'}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-4xl font-medium text-gray-500">
-                    {profileData.fullName?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
-                )}
-              </div>
-              
-              {/* Upload Controls */}
-              <div className="absolute bottom-0 right-0 flex space-x-1">
-                <label className="bg-green-700 text-white p-2 rounded-full cursor-pointer hover:bg-green-800 transition-colors shadow-md">
-                  <Camera className="h-4 w-4" />
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/jpeg,image/png,image/jpg"
-                    onChange={handleImageSelect}
-                  />
-                </label>
-                
-                {imagePreview && (
+                  {/* Upload Controls */}
+                  <div className="absolute bottom-0 right-0 flex space-x-1">
+                    <label className="bg-green-700 text-white p-2 rounded-full cursor-pointer hover:bg-green-800 transition-colors shadow-md">
+                      <Camera className="h-4 w-4" />
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/jpeg,image/png,image/jpg"
+                        onChange={handleImageSelect}
+                      />
+                    </label>
+
+                    {imagePreview && (
+                      <button
+                        onClick={deleteProfileImage}
+                        className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors shadow-md"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Upload button for selected image */}
+                {profileImage && (
                   <button
-                    onClick={deleteProfileImage}
-                    className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors shadow-md"
+                    onClick={uploadProfileImage}
+                    disabled={imageUploading}
+                    className="mb-4 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 flex items-center"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {imageUploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Image
+                      </>
+                    )}
                   </button>
                 )}
-              </div>
-            </div>
-            
-            {/* Upload button for selected image */}
-            {profileImage && (
-              <button
-                onClick={uploadProfileImage}
-                disabled={imageUploading}
-                className="mb-4 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 flex items-center"
-              >
-                {imageUploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Image
-                  </>
+
+                {errors.image && (
+                  <p className="text-sm text-red-500 mb-2 text-center">
+                    {errors.image}
+                  </p>
                 )}
-              </button>
-            )}
-            
-            {errors.image && (
-              <p className="text-sm text-red-500 mb-2 text-center">{errors.image}</p>
-            )}
-                
-                <h2 className="text-xl font-bold text-gray-900">{profileData.fullName}</h2>
+
+                <h2 className="text-xl font-bold text-gray-900">
+                  {profileData.fullName}
+                </h2>
                 <p className="text-gray-500 mb-2">{profileData.email}</p>
-                
+
                 <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 mb-4">
-                {profileData.userType === 'founder' 
-                  ? 'Founder' 
-                  : profileData.userType === 'investor' 
-                  ? 'Investor' 
-                  : profileData.userType === 'admin'
-                  ? 'Admin'
-                  : 'User'}
+                  {profileData.userType === "founder"
+                    ? "Founder"
+                    : profileData.userType === "investor"
+                    ? "Investor"
+                    : profileData.userType === "admin"
+                    ? "Admin"
+                    : "User"}
+                </div>
               </div>
-              </div>
-              
+
               {/* Account Info */}
               <div className="border-t border-gray-200 pt-6">
-                <h3 className="font-medium text-gray-900 mb-4">Account Information</h3>
+                <h3 className="font-medium text-gray-900 mb-4">
+                  Account Information
+                </h3>
                 <div className="space-y-3">
                   <div className="flex items-center text-sm">
                     <User className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-600">Member since {new Date(user?.createdAt || Date.now()).toLocaleDateString()}</span>
+                    <span className="text-gray-600">
+                      Member since{" "}
+                      {new Date(
+                        user?.createdAt || Date.now()
+                      ).toLocaleDateString()}
+                    </span>
                   </div>
                   <div className="flex items-center text-sm">
                     <Mail className="h-5 w-5 text-gray-400 mr-3" />
@@ -623,26 +653,32 @@ const deleteProfileImage = async () => {
                   {profileData.phoneNumber && (
                     <div className="flex items-center text-sm">
                       <Phone className="h-5 w-5 text-gray-400 mr-3" />
-                      <span className="text-gray-600">{profileData.phoneNumber}</span>
+                      <span className="text-gray-600">
+                        {profileData.phoneNumber}
+                      </span>
                     </div>
                   )}
                   {profileData.address && (
                     <div className="flex items-center text-sm">
                       <MapPin className="h-5 w-5 text-gray-400 mr-3" />
-                      <span className="text-gray-600">{profileData.address}</span>
+                      <span className="text-gray-600">
+                        {profileData.address}
+                      </span>
                     </div>
                   )}
                   {profileData.companyName && (
                     <div className="flex items-center text-sm">
                       <Building className="h-5 w-5 text-gray-400 mr-3" />
-                      <span className="text-gray-600">{profileData.companyName}</span>
+                      <span className="text-gray-600">
+                        {profileData.companyName}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
             </div>
           </div>
-          
+
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Success Messages */}
@@ -663,15 +699,20 @@ const deleteProfileImage = async () => {
             {emailUpdateSuccess && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center text-green-700">
                 <Check className="h-5 w-5 mr-2 flex-shrink-0" />
-                <p className="text-sm">Email updated successfully! Please verify your new email address.</p>
+                <p className="text-sm">
+                  Email updated successfully! Please verify your new email
+                  address.
+                </p>
               </div>
             )}
 
             {/* Profile Tab */}
-            {activeTab === 'profile' && (
+            {activeTab === "profile" && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Personal Information
+                  </h2>
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
@@ -779,7 +820,7 @@ const deleteProfileImage = async () => {
                   </div>
 
                   {/* Financial Information - Only show if not 'admin' user type */}
-                  {profileData.userType !== 'admin' && (
+                  {profileData.userType !== "admin" && (
                     <div className="border-t border-gray-200 pt-6 mb-6">
                       <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                         <CreditCard className="h-5 w-5 mr-2" />
@@ -889,17 +930,19 @@ const deleteProfileImage = async () => {
             )}
 
             {/* Security Tab */}
-            {activeTab === 'security' && (
+            {activeTab === "security" && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Security & Password</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Security & Password
+                </h2>
+
                 {errors.password && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
                     <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
                     <p className="text-sm">{errors.password}</p>
                   </div>
                 )}
-                
+
                 <form onSubmit={handlePasswordUpdate}>
                   <div className="space-y-4 mb-6">
                     <div>
@@ -918,13 +961,19 @@ const deleteProfileImage = async () => {
                         <button
                           type="button"
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          onClick={() =>
+                            setShowCurrentPassword(!showCurrentPassword)
+                          }
                         >
-                          {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          {showCurrentPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         New Password <span className="text-red-500">*</span>
@@ -943,14 +992,19 @@ const deleteProfileImage = async () => {
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                           onClick={() => setShowNewPassword(!showNewPassword)}
                         >
-                          {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          {showNewPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Confirm New Password <span className="text-red-500">*</span>
+                        Confirm New Password{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <input
@@ -959,20 +1013,30 @@ const deleteProfileImage = async () => {
                           value={passwordData.confirmPassword}
                           onChange={handlePasswordChange}
                           className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                            errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                            errors.confirmPassword
+                              ? "border-red-500"
+                              : "border-gray-300"
                           }`}
                           placeholder="Confirm new password"
                         />
                         <button
                           type="button"
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                         >
-                          {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                       {errors.confirmPassword && (
-                        <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
+                        <p className="mt-1 text-sm text-red-500">
+                          {errors.confirmPassword}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -982,7 +1046,7 @@ const deleteProfileImage = async () => {
                       <Lock className="h-4 w-4 mr-1 text-gray-400" />
                       <span>Password must be at least 6 characters</span>
                     </div>
-                    
+
                     <button
                       type="submit"
                       disabled={loading}
@@ -1006,22 +1070,28 @@ const deleteProfileImage = async () => {
             )}
 
             {/* Account Tab */}
-            {activeTab === 'account' && (
+            {activeTab === "account" && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Account & Email Settings</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Account & Email Settings
+                </h2>
+
                 {errors.email && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
                     <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
                     <p className="text-sm">{errors.email}</p>
                   </div>
                 )}
-                
+
                 <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Current Email</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Current Email
+                  </h3>
                   <div className="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">{profileData.email}</p>
+                      <p className="font-medium text-gray-900">
+                        {profileData.email}
+                      </p>
                       <p className="text-sm text-gray-500">
                         {user?.isVerified ? (
                           <span className="flex items-center text-green-600">
@@ -1038,14 +1108,17 @@ const deleteProfileImage = async () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <form onSubmit={handleEmailUpdate}>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Change Email Address</h3>
-                  
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Change Email Address
+                  </h3>
+
                   <div className="space-y-4 mb-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        New Email Address <span className="text-red-500">*</span>
+                        New Email Address{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="email"
@@ -1056,7 +1129,7 @@ const deleteProfileImage = async () => {
                         placeholder="Enter new email address"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Current Password <span className="text-red-500">*</span>
@@ -1073,9 +1146,15 @@ const deleteProfileImage = async () => {
                         <button
                           type="button"
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                          onClick={() => setShowEmailPassword(!showEmailPassword)}
+                          onClick={() =>
+                            setShowEmailPassword(!showEmailPassword)
+                          }
                         >
-                          {showEmailPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          {showEmailPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1085,15 +1164,18 @@ const deleteProfileImage = async () => {
                     <div className="flex">
                       <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-2" />
                       <div>
-                        <h4 className="text-sm font-medium text-yellow-800">Important Notice</h4>
+                        <h4 className="text-sm font-medium text-yellow-800">
+                          Important Notice
+                        </h4>
                         <p className="text-sm text-yellow-700 mt-1">
-                          Changing your email address will require verification of your new email. 
-                          You'll need to verify the new email before it becomes active.
+                          Changing your email address will require verification
+                          of your new email. You'll need to verify the new email
+                          before it becomes active.
                         </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-end">
                     <button
                       type="submit"
@@ -1119,7 +1201,7 @@ const deleteProfileImage = async () => {
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );

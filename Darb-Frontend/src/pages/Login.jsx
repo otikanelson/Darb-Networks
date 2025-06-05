@@ -44,11 +44,8 @@ const Login = () => {
     } catch (err) {
       console.error('Login error:', err);
       
-      // SIMPLIFIED ERROR HANDLING
-      // Always display a user-friendly error message
       setError('Invalid email or password. Please try again.');
       
-      // Don't forget to set loading to false
       setIsLoading(false);
     }
   };
@@ -61,7 +58,6 @@ const Login = () => {
     <div className="min-h-screen flex">
       {/* Left side - Image */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-green-700 to-green-900 p-12 relative">
-        {/* Left side content unchanged */}
         <div className="absolute inset-0 bg-gradient-to-b from-green-800/95 to-green-900/90" />
         <img 
           src="/src/assets/featured-bg.png" 

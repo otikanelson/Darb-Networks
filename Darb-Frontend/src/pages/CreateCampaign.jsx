@@ -1,59 +1,59 @@
 // Updated sections of CreateCampaign.jsx - Fix the main issues
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { 
-  Save, 
-  Send, 
-  Upload, 
-  AlertCircle, 
-  Check, 
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import {
+  Save,
+  Send,
+  Upload,
+  AlertCircle,
+  Check,
   DollarSign,
   MapPin,
   Building,
   FileText,
   Image as ImageIcon,
   Video,
-  Loader
-} from 'lucide-react';
-import DashboardNavbar from '../components/Navbars/DashboardNavbar';
-import Footer from '../components/layout/Footer';
+  Loader,
+} from "lucide-react";
+import UnifiedNavbar from "../components/layout/Navbars";
+import Footer from "../components/layout/Footer";
 
 const CreateCampaign = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  
+
   // Redirect if not authenticated or not a founder
   React.useEffect(() => {
     if (!isAuthenticated()) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
-    if (user?.userType !== 'founder') {
-      navigate('/dashboard');
+    if (user?.userType !== "founder") {
+      navigate("/dashboard");
       return;
     }
   }, [isAuthenticated, user, navigate]);
 
   // Form state
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    location: '',
-    targetAmount: '',
-    minimumInvestment: '',
-    problemStatement: '',
-    solution: '',
-    businessPlan: '',
-    videoUrl: ''
+    title: "",
+    description: "",
+    category: "",
+    location: "",
+    targetAmount: "",
+    minimumInvestment: "",
+    problemStatement: "",
+    solution: "",
+    businessPlan: "",
+    videoUrl: "",
   });
 
   // UI state - FIXED: Use consistent naming
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({}); // FIXED: was using both errors and error
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [autoSaving, setAutoSaving] = useState(false);
@@ -61,30 +61,30 @@ const CreateCampaign = () => {
 
   // Categories
   const categories = [
-    'Technology',
-    'Healthcare',
-    'Education',
-    'Finance',
-    'Energy & Green Tech',
-    'Agriculture',
-    'Real Estate',
-    'E-commerce',
-    'Transportation',
-    'Food & Beverages',
-    'Other'
+    "Technology",
+    "Healthcare",
+    "Education",
+    "Finance",
+    "Energy & Green Tech",
+    "Agriculture",
+    "Real Estate",
+    "E-commerce",
+    "Transportation",
+    "Food & Beverages",
+    "Other",
   ];
 
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     // Clear errors for this field
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
+      setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
 
@@ -95,52 +95,69 @@ const CreateCampaign = () => {
 
     // Validate file
     if (file.size > 10 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, image: 'Image must be less than 10MB' }));
+      setErrors((prev) => ({ ...prev, image: "Image must be less than 10MB" }));
       return;
     }
 
-    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-      setErrors(prev => ({ ...prev, image: 'Only JPG and PNG formats allowed' }));
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only JPG and PNG formats allowed",
+      }));
       return;
     }
 
     setSelectedImage(file);
     setImagePreview(URL.createObjectURL(file));
-    
+
     if (errors.image) {
-      setErrors(prev => ({ ...prev, image: null }));
+      setErrors((prev) => ({ ...prev, image: null }));
     }
   };
 
   // Validate form
   const validateForm = (isDraft = false) => {
     const newErrors = {};
-    
+
     if (!isDraft) {
       // Required fields for submission
-      if (!formData.title.trim()) newErrors.title = 'Title is required';
-      if (!formData.description.trim()) newErrors.description = 'Description is required';
-      if (!formData.category) newErrors.category = 'Category is required';
-      if (!formData.location.trim()) newErrors.location = 'Location is required';
-      if (!formData.targetAmount) newErrors.targetAmount = 'Target amount is required';
-      if (!formData.minimumInvestment) newErrors.minimumInvestment = 'Minimum investment is required';
-      
+      if (!formData.title.trim()) newErrors.title = "Title is required";
+      if (!formData.description.trim())
+        newErrors.description = "Description is required";
+      if (!formData.category) newErrors.category = "Category is required";
+      if (!formData.location.trim())
+        newErrors.location = "Location is required";
+      if (!formData.targetAmount)
+        newErrors.targetAmount = "Target amount is required";
+      if (!formData.minimumInvestment)
+        newErrors.minimumInvestment = "Minimum investment is required";
+
       // Validate amounts
       if (formData.targetAmount && parseFloat(formData.targetAmount) <= 0) {
-        newErrors.targetAmount = 'Target amount must be greater than 0';
+        newErrors.targetAmount = "Target amount must be greater than 0";
       }
-      if (formData.minimumInvestment && parseFloat(formData.minimumInvestment) <= 0) {
-        newErrors.minimumInvestment = 'Minimum investment must be greater than 0';
+      if (
+        formData.minimumInvestment &&
+        parseFloat(formData.minimumInvestment) <= 0
+      ) {
+        newErrors.minimumInvestment =
+          "Minimum investment must be greater than 0";
       }
-      if (formData.minimumInvestment && formData.targetAmount && 
-          parseFloat(formData.minimumInvestment) > parseFloat(formData.targetAmount)) {
-        newErrors.minimumInvestment = 'Minimum investment cannot exceed target amount';
+      if (
+        formData.minimumInvestment &&
+        formData.targetAmount &&
+        parseFloat(formData.minimumInvestment) >
+          parseFloat(formData.targetAmount)
+      ) {
+        newErrors.minimumInvestment =
+          "Minimum investment cannot exceed target amount";
       }
     }
 
     // ENFORCED: Image is required even for drafts
     if (!selectedImage && !imagePreview) {
-      newErrors.image = 'Please upload a campaign image before saving. You can use a placeholder if needed.';
+      newErrors.image =
+        "Please upload a campaign image before saving. You can use a placeholder if needed.";
     }
 
     setErrors(newErrors);
@@ -155,65 +172,69 @@ const CreateCampaign = () => {
 
       // Check if image is required for drafts
       if (!selectedImage && !imagePreview) {
-        setErrors({ 
-          image: 'Please select an image before saving as draft. You can use a placeholder if needed.' 
+        setErrors({
+          image:
+            "Please select an image before saving as draft. You can use a placeholder if needed.",
         });
         return;
       }
 
-      const token = localStorage.getItem('authToken');
-      
-      console.log('💾 Saving draft with data:', formData);
-      
-      const response = await fetch('http://localhost:5000/api/campaigns', {
-        method: 'POST',
+      const token = localStorage.getItem("authToken");
+
+      console.log("💾 Saving draft with data:", formData);
+
+      const response = await fetch("http://localhost:5000/api/campaigns", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
-          isDraft: true
-        })
+          isDraft: true,
+        }),
       });
 
       const result = await response.json();
-      console.log('💾 Draft save response:', result);
+      console.log("💾 Draft save response:", result);
 
       if (response.ok && result.success) {
         const campaignId = result.data.id;
-        
+
         // Upload image if selected
         if (selectedImage) {
-          console.log('📸 Uploading image to draft...');
-          
+          console.log("📸 Uploading image to draft...");
+
           const imageFormData = new FormData();
-          imageFormData.append('campaignImage', selectedImage);
-          
-          const imageResponse = await fetch(`http://localhost:5000/api/campaigns/${campaignId}/image`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
-            body: imageFormData
-          });
+          imageFormData.append("campaignImage", selectedImage);
+
+          const imageResponse = await fetch(
+            `http://localhost:5000/api/campaigns/${campaignId}/image`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: imageFormData,
+            }
+          );
 
           if (imageResponse.ok) {
-            console.log('✅ Draft image uploaded successfully');
+            console.log("✅ Draft image uploaded successfully");
           } else {
-            console.warn('⚠️ Draft image upload failed');
+            console.warn("⚠️ Draft image upload failed");
           }
         }
-        
+
         setLastSaved(new Date());
-        setSuccess('Draft saved successfully');
-        setTimeout(() => setSuccess(''), 3000);
+        setSuccess("Draft saved successfully");
+        setTimeout(() => setSuccess(""), 3000);
       } else {
-        setErrors({ general: result.message || 'Failed to save draft' });
+        setErrors({ general: result.message || "Failed to save draft" });
       }
     } catch (error) {
-      console.error('❌ Save draft error:', error);
-      setErrors({ general: 'Failed to save draft: ' + error.message });
+      console.error("❌ Save draft error:", error);
+      setErrors({ general: "Failed to save draft: " + error.message });
     } finally {
       setAutoSaving(false);
     }
@@ -229,26 +250,26 @@ const CreateCampaign = () => {
       setLoading(true);
       setErrors({}); // FIXED: was setError({})
 
-      const token = localStorage.getItem('authToken');
-      
-      console.log('📤 Submitting campaign with data:', formData);
-      console.log('📸 Selected image:', selectedImage);
-      
+      const token = localStorage.getItem("authToken");
+
+      console.log("📤 Submitting campaign with data:", formData);
+      console.log("📸 Selected image:", selectedImage);
+
       // Create campaign first
-      const response = await fetch('http://localhost:5000/api/campaigns', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/campaigns", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
-          isDraft: false
-        })
+          isDraft: false,
+        }),
       });
 
       const result = await response.json();
-      console.log('📋 Campaign creation response:', result);
+      console.log("📋 Campaign creation response:", result);
 
       if (response.ok && result.success) {
         const campaignId = result.data.id;
@@ -256,46 +277,51 @@ const CreateCampaign = () => {
 
         // Upload image if selected
         if (selectedImage) {
-          console.log('📸 Uploading image...');
-          
+          console.log("📸 Uploading image...");
+
           const imageFormData = new FormData();
-          imageFormData.append('campaignImage', selectedImage);
-          
-          console.log('📤 FormData for image upload created');
-          
-          const imageResponse = await fetch(`http://localhost:5000/api/campaigns/${campaignId}/image`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
-            body: imageFormData
-          });
+          imageFormData.append("campaignImage", selectedImage);
+
+          console.log("📤 FormData for image upload created");
+
+          const imageResponse = await fetch(
+            `http://localhost:5000/api/campaigns/${campaignId}/image`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: imageFormData,
+            }
+          );
 
           const imageResult = await imageResponse.json();
-          console.log('📸 Image upload response:', imageResult);
+          console.log("📸 Image upload response:", imageResult);
 
           if (!imageResponse.ok) {
-            console.warn('⚠️ Image upload failed:', imageResult.message);
-            setSuccess('Campaign submitted for approval successfully! (Image upload had issues)');
+            console.warn("⚠️ Image upload failed:", imageResult.message);
+            setSuccess(
+              "Campaign submitted for approval successfully! (Image upload had issues)"
+            );
           } else {
-            console.log('✅ Image uploaded successfully');
-            setSuccess('Campaign submitted for approval successfully!');
+            console.log("✅ Image uploaded successfully");
+            setSuccess("Campaign submitted for approval successfully!");
           }
         } else {
-          setSuccess('Campaign submitted for approval successfully!');
+          setSuccess("Campaign submitted for approval successfully!");
         }
 
         // Navigate after a short delay
         setTimeout(() => {
-          navigate('/my-campaigns');
+          navigate("/my-campaigns");
         }, 2000);
       } else {
-        console.error('❌ Campaign creation failed:', result);
-        setErrors({ general: result.message || 'Failed to submit campaign' });
+        console.error("❌ Campaign creation failed:", result);
+        setErrors({ general: result.message || "Failed to submit campaign" });
       }
     } catch (error) {
-      console.error('❌ Submit campaign error:', error);
-      setErrors({ general: 'Failed to submit campaign: ' + error.message });
+      console.error("❌ Submit campaign error:", error);
+      setErrors({ general: "Failed to submit campaign: " + error.message });
     } finally {
       setLoading(false);
     }
@@ -303,24 +329,25 @@ const CreateCampaign = () => {
 
   // Format currency display
   const formatCurrency = (value) => {
-    if (!value) return '';
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0
+    if (!value) return "";
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
     }).format(value);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardNavbar />
-      
+      <UnifiedNavbar variant="dashboard" />
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="bg-gradient-to-r from-green-700 to-green-900 rounded-xl p-8 text-white mb-8">
           <h1 className="text-3xl font-bold mb-2">Create New Campaign</h1>
           <p className="text-green-100">
-            Share your vision with potential investors. Fill out the form below to create your campaign.
+            Share your vision with potential investors. Fill out the form below
+            to create your campaign.
           </p>
         </div>
 
@@ -363,7 +390,7 @@ const CreateCampaign = () => {
             </div>
             {/* REMOVED: Save Draft button from here - only show status */}
             <div className="text-xs text-gray-500">
-              {selectedImage ? '✅ Image selected' : '⚠️ Image required'}
+              {selectedImage ? "✅ Image selected" : "⚠️ Image required"}
             </div>
           </div>
         </div>
@@ -377,7 +404,7 @@ const CreateCampaign = () => {
                 <Building className="h-5 w-5 mr-2" />
                 Basic Information
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -389,11 +416,13 @@ const CreateCampaign = () => {
                     value={formData.title}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      errors.title ? 'border-red-500' : 'border-gray-300'
+                      errors.title ? "border-red-500" : "border-gray-300"
                     }`}
                     placeholder="Enter a compelling title for your campaign"
                   />
-                  {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title}</p>}
+                  {errors.title && (
+                    <p className="mt-1 text-sm text-red-500">{errors.title}</p>
+                  )}
                 </div>
 
                 <div>
@@ -405,15 +434,21 @@ const CreateCampaign = () => {
                     value={formData.category}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      errors.category ? 'border-red-500' : 'border-gray-300'
+                      errors.category ? "border-red-500" : "border-gray-300"
                     }`}
                   >
                     <option value="">Select a category</option>
-                    {categories.map(category => (
-                      <option key={category} value={category}>{category}</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
                     ))}
                   </select>
-                  {errors.category && <p className="mt-1 text-sm text-red-500">{errors.category}</p>}
+                  {errors.category && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.category}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -428,12 +463,16 @@ const CreateCampaign = () => {
                       value={formData.location}
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                        errors.location ? 'border-red-500' : 'border-gray-300'
+                        errors.location ? "border-red-500" : "border-gray-300"
                       }`}
                       placeholder="e.g., Lagos, Nigeria"
                     />
                   </div>
-                  {errors.location && <p className="mt-1 text-sm text-red-500">{errors.location}</p>}
+                  {errors.location && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.location}
+                    </p>
+                  )}
                 </div>
 
                 <div className="md:col-span-2">
@@ -446,11 +485,15 @@ const CreateCampaign = () => {
                     onChange={handleInputChange}
                     rows={4}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      errors.description ? 'border-red-500' : 'border-gray-300'
+                      errors.description ? "border-red-500" : "border-gray-300"
                     }`}
                     placeholder="Describe your project and what makes it unique..."
                   />
-                  {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
+                  {errors.description && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.description}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -461,7 +504,7 @@ const CreateCampaign = () => {
                 <DollarSign className="h-5 w-5 mr-2" />
                 Financial Information
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -475,7 +518,7 @@ const CreateCampaign = () => {
                     min="0"
                     step="1000"
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      errors.targetAmount ? 'border-red-500' : 'border-gray-300'
+                      errors.targetAmount ? "border-red-500" : "border-gray-300"
                     }`}
                     placeholder="e.g., 5000000"
                   />
@@ -484,12 +527,17 @@ const CreateCampaign = () => {
                       {formatCurrency(formData.targetAmount)}
                     </p>
                   )}
-                  {errors.targetAmount && <p className="mt-1 text-sm text-red-500">{errors.targetAmount}</p>}
+                  {errors.targetAmount && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.targetAmount}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Minimum Investment (NGN) <span className="text-red-500">*</span>
+                    Minimum Investment (NGN){" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -499,7 +547,9 @@ const CreateCampaign = () => {
                     min="0"
                     step="1000"
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      errors.minimumInvestment ? 'border-red-500' : 'border-gray-300'
+                      errors.minimumInvestment
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                     placeholder="e.g., 50000"
                   />
@@ -508,7 +558,11 @@ const CreateCampaign = () => {
                       {formatCurrency(formData.minimumInvestment)}
                     </p>
                   )}
-                  {errors.minimumInvestment && <p className="mt-1 text-sm text-red-500">{errors.minimumInvestment}</p>}
+                  {errors.minimumInvestment && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.minimumInvestment}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -519,7 +573,7 @@ const CreateCampaign = () => {
                 <FileText className="h-5 w-5 mr-2" />
                 Project Details
               </h2>
-              
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -571,7 +625,7 @@ const CreateCampaign = () => {
                 <ImageIcon className="h-5 w-5 mr-2" />
                 Media
               </h2>
-              
+
               <div className="space-y-6">
                 {/* Image Upload */}
                 <div>
@@ -581,9 +635,9 @@ const CreateCampaign = () => {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
                     {imagePreview ? (
                       <div className="relative">
-                        <img 
-                          src={imagePreview} 
-                          alt="Campaign preview" 
+                        <img
+                          src={imagePreview}
+                          alt="Campaign preview"
                           className="max-h-64 mx-auto rounded-lg"
                         />
                         <button
@@ -619,7 +673,9 @@ const CreateCampaign = () => {
                       </div>
                     )}
                   </div>
-                  {errors.image && <p className="mt-1 text-sm text-red-500">{errors.image}</p>}
+                  {errors.image && (
+                    <p className="mt-1 text-sm text-red-500">{errors.image}</p>
+                  )}
                 </div>
 
                 {/* Video URL */}
@@ -650,12 +706,12 @@ const CreateCampaign = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-between">
                 <button
                   type="button"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate("/dashboard")}
                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     type="button"
@@ -666,7 +722,7 @@ const CreateCampaign = () => {
                     <Save className="h-5 w-5 mr-2" />
                     Save as Draft
                   </button>
-                  
+
                   <button
                     type="button"
                     onClick={submitCampaign}
@@ -687,17 +743,18 @@ const CreateCampaign = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="mt-4 text-sm text-red-600 text-center">
                 <p>
-                  Submitted campaigns will be reviewed by our admin team before appearing on the platform.
+                  Submitted campaigns will be reviewed by our admin team before
+                  appearing on the platform.
                 </p>
               </div>
             </div>
           </form>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );

@@ -1,19 +1,18 @@
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Loader, 
-  ArrowRight, 
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  CheckCircle,
+  XCircle,
+  Loader,
+  ArrowRight,
   AlertCircle,
   RefreshCw,
   Home,
-  Eye
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
+  Eye,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import UnifiedNavbar from "../components/layout/Navbars";
+import Footer from "../components/layout/Footer";
 
 /**
  * PAYMENT VERIFICATION PAGE
@@ -25,54 +24,56 @@ const PaymentVerification = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
 
-  const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'failed', 'error'
+  const [status, setStatus] = useState("verifying"); // 'verifying', 'success', 'failed', 'error'
   const [investmentData, setInvestmentData] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
     if (paymentReference) {
       verifyPayment();
     } else {
-      setStatus('error');
-      setError('No payment reference provided');
+      setStatus("error");
+      setError("No payment reference provided");
     }
   }, [paymentReference, isAuthenticated]);
 
   const verifyPayment = async () => {
     try {
-      setStatus('verifying');
-      setError('');
+      setStatus("verifying");
+      setError("");
 
-      console.log('🔍 Verifying payment:', paymentReference);
+      console.log("🔍 Verifying payment:", paymentReference);
 
-      const response = await fetch(`/api/investments/verify/${paymentReference}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      const response = await fetch(
+        `/api/investments/verify/${paymentReference}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
         }
-      });
+      );
 
       const result = await response.json();
 
       if (result.success) {
-        setStatus('success');
+        setStatus("success");
         setInvestmentData(result.data);
-        console.log('✅ Payment verified successfully');
+        console.log("✅ Payment verified successfully");
       } else {
-        setStatus('failed');
-        setError(result.message || 'Payment verification failed');
-        console.log('❌ Payment verification failed:', result.message);
+        setStatus("failed");
+        setError(result.message || "Payment verification failed");
+        console.log("❌ Payment verification failed:", result.message);
       }
-
     } catch (error) {
-      console.error('❌ Verification error:', error);
-      setStatus('error');
-      setError('Network error occurred. Please check your connection.');
+      console.error("❌ Verification error:", error);
+      setStatus("error");
+      setError("Network error occurred. Please check your connection.");
     }
   };
 
@@ -81,22 +82,22 @@ const PaymentVerification = () => {
       setRetryCount(retryCount + 1);
       setTimeout(() => verifyPayment(), 1000); // Wait 1 second before retry
     } else {
-      setError('Maximum retry attempts reached. Please contact support.');
+      setError("Maximum retry attempts reached. Please contact support.");
     }
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount || 0);
   };
 
   const renderContent = () => {
     switch (status) {
-      case 'verifying':
+      case "verifying":
         return (
           <div className="text-center py-16">
             <Loader className="h-16 w-16 animate-spin text-blue-500 mx-auto mb-6" />
@@ -111,7 +112,7 @@ const PaymentVerification = () => {
                 This usually takes a few seconds. Please don't close this page.
               </p>
             </div>
-            
+
             {retryCount > 0 && (
               <div className="mt-4 text-sm text-gray-500">
                 Verification attempt {retryCount + 1}/4
@@ -120,7 +121,7 @@ const PaymentVerification = () => {
           </div>
         );
 
-      case 'success':
+      case "success":
         return (
           <div className="text-center py-16">
             <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-6" />
@@ -137,10 +138,8 @@ const PaymentVerification = () => {
                 <div className="text-3xl font-bold text-gray-900 mb-2">
                   {formatCurrency(investmentData?.amount)}
                 </div>
-                <div className="text-gray-600 mb-4">
-                  Investment Amount
-                </div>
-                
+                <div className="text-gray-600 mb-4">Investment Amount</div>
+
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/50">
                   <div>
                     <div className="text-sm text-gray-600">Campaign</div>
@@ -191,11 +190,11 @@ const PaymentVerification = () => {
                 className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                {retryCount >= 3 ? 'Max Retries Reached' : 'Retry Verification'}
+                {retryCount >= 3 ? "Max Retries Reached" : "Retry Verification"}
               </button>
-              
+
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate("/dashboard")}
                 className="flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <Home className="h-4 w-4 mr-2" />
@@ -206,9 +205,9 @@ const PaymentVerification = () => {
             {/* Contact Support */}
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-600">
-                Still having issues?{' '}
-                <a 
-                  href="mailto:support@darbnetwork.com" 
+                Still having issues?{" "}
+                <a
+                  href="mailto:support@darbnetwork.com"
                   className="text-blue-600 hover:text-blue-800 underline"
                 >
                   Contact Support
@@ -218,7 +217,7 @@ const PaymentVerification = () => {
           </div>
         );
 
-      case 'error':
+      case "error":
         return (
           <div className="text-center py-16">
             <AlertCircle className="h-20 w-20 text-orange-500 mx-auto mb-6" />
@@ -234,7 +233,7 @@ const PaymentVerification = () => {
               <div className="text-orange-800">
                 <h3 className="font-semibold mb-2">Error Details</h3>
                 <p className="text-sm mb-4">{error}</p>
-                
+
                 <div className="text-left">
                   <h4 className="font-medium mb-2">What you can do:</h4>
                   <ul className="text-sm space-y-1">
@@ -265,9 +264,9 @@ const PaymentVerification = () => {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again
               </button>
-              
+
               <button
-                onClick={() => navigate('/my-campaigns')}
+                onClick={() => navigate("/my-campaigns")}
                 className="flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <Eye className="h-4 w-4 mr-2" />
@@ -289,16 +288,18 @@ const PaymentVerification = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
+      <UnifiedNavbar variant="default" />
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {renderContent()}
-        
+
         {/* Payment Reference Info */}
         {paymentReference && (
           <div className="mt-12 text-center">
             <div className="bg-white rounded-lg p-4 max-w-md mx-auto border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Payment Reference</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                Payment Reference
+              </h3>
               <div className="font-mono text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border">
                 {paymentReference}
               </div>

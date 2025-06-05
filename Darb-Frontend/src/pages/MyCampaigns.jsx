@@ -1,8 +1,8 @@
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import MyCampaignsNavbar from "../components/Navbars/MyCampaignsNavbar";
+import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
 import CampaignCard from "../components/ui/CampaignCard";
 import CampaignService from "../services/CampaignService";
@@ -19,22 +19,22 @@ import {
   RefreshCw,
   Send,
   CheckCircle,
-  XCircle
+  XCircle,
 } from "lucide-react";
 
 const MyCampaigns = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated } = useAuth();
-  
+
   // Campaign data state
   const [campaignData, setCampaignData] = useState({
     viewed: [],
     favorites: [],
     created: { drafts: [], submitted: [], approved: [], rejected: [], all: [] },
-    funded: []
+    funded: [],
   });
-  
+
   // UI state
   const [activeTab, setActiveTab] = useState("viewed");
   const [loading, setLoading] = useState(true);
@@ -76,39 +76,46 @@ const MyCampaigns = () => {
   }, [location.state?.refresh, isAuthenticated]);
 
   const handleDeleteCampaign = async (campaignId, campaignTitle) => {
-  if (!window.confirm(`Are you sure you want to delete "${campaignTitle}"? This action cannot be undone.`)) {
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem('authToken');
-    
-    const response = await fetch(`http://localhost:5000/api/campaigns/${campaignId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (response.ok) {
-      // Refresh the campaigns data
-      loadAllCampaignData(true);
-      alert('Campaign deleted successfully');
-    } else {
-      const result = await response.json();
-      alert(result.message || 'Failed to delete campaign');
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${campaignTitle}"? This action cannot be undone.`
+      )
+    ) {
+      return;
     }
-  } catch (error) {
-    console.error('Error deleting campaign:', error);
-    alert('Failed to delete campaign');
-  }
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch(
+        `http://localhost:5000/api/campaigns/${campaignId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Refresh the campaigns data
+        loadAllCampaignData(true);
+        alert("Campaign deleted successfully");
+      } else {
+        const result = await response.json();
+        alert(result.message || "Failed to delete campaign");
+      }
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      alert("Failed to delete campaign");
+    }
   };
 
   const loadAllCampaignData = async (forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (forceRefresh) {
         setRefreshing(true);
       }
@@ -121,7 +128,9 @@ const MyCampaigns = () => {
       console.log("✅ Campaign data loaded successfully");
     } catch (error) {
       console.error("❌ Error loading campaign data:", error);
-      setError("Some campaign data could not be loaded. Please try refreshing.");
+      setError(
+        "Some campaign data could not be loaded. Please try refreshing."
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -130,12 +139,17 @@ const MyCampaigns = () => {
 
   const handleFavoriteToggle = async (campaignId) => {
     try {
-      const result = await CampaignService.toggleFavoriteCampaign(campaignId, user.id);
-      
+      const result = await CampaignService.toggleFavoriteCampaign(
+        campaignId,
+        user.id
+      );
+
       // Refresh favorites data
-      const updatedFavorites = await CampaignService.getFavoriteCampaigns(user.id);
-      setCampaignData(prev => ({ ...prev, favorites: updatedFavorites }));
-      
+      const updatedFavorites = await CampaignService.getFavoriteCampaigns(
+        user.id
+      );
+      setCampaignData((prev) => ({ ...prev, favorites: updatedFavorites }));
+
       return result;
     } catch (error) {
       console.error("Error toggling favorite:", error);
@@ -197,7 +211,7 @@ const MyCampaigns = () => {
   // Get placeholder content for empty states
   const getPlaceholderContent = () => {
     const isFounder = user?.userType?.toLowerCase() === "founder";
-    
+
     switch (activeTab) {
       case "viewed":
         return {
@@ -244,30 +258,37 @@ const MyCampaigns = () => {
           icon: Clock,
           title: "No campaigns under review",
           message: "Campaigns you've submitted for approval will appear here",
-          action: isFounder ? {
-            text: "Create a Campaign",
-            onClick: () => navigate("/pages/CreateCampaign"),
-          } : null,
+          action: isFounder
+            ? {
+                text: "Create a Campaign",
+                onClick: () => navigate("/pages/CreateCampaign"),
+              }
+            : null,
         };
       case "approved":
         return {
           icon: CheckCircle,
           title: "No published campaigns",
           message: "Your approved campaigns will appear here",
-          action: isFounder ? {
-            text: "Create a Campaign",
-            onClick: () => navigate("/pages/CreateCampaign"),
-          } : null,
+          action: isFounder
+            ? {
+                text: "Create a Campaign",
+                onClick: () => navigate("/pages/CreateCampaign"),
+              }
+            : null,
         };
       case "rejected":
         return {
           icon: XCircle,
           title: "No rejected campaigns",
-          message: "If any campaigns are rejected, they'll appear here with feedback",
-          action: isFounder ? {
-            text: "Create a Campaign",
-            onClick: () => navigate("/pages/CreateCampaign"),
-          } : null,
+          message:
+            "If any campaigns are rejected, they'll appear here with feedback",
+          action: isFounder
+            ? {
+                text: "Create a Campaign",
+                onClick: () => navigate("/pages/CreateCampaign"),
+              }
+            : null,
         };
       case "funded":
         return {
@@ -295,11 +316,16 @@ const MyCampaigns = () => {
   // Get status color for campaign cards
   const getStatusColor = (status) => {
     switch (status) {
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      case 'submitted': return 'bg-yellow-100 text-yellow-800';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "draft":
+        return "bg-gray-100 text-gray-800";
+      case "submitted":
+        return "bg-yellow-100 text-yellow-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -311,19 +337,19 @@ const MyCampaigns = () => {
   // Get stats for the header
   const getStats = () => {
     const isFounder = user?.userType?.toLowerCase() === "founder";
-    
+
     if (isFounder) {
       return {
         total: campaignData.created?.all?.length || 0,
         drafts: campaignData.created?.drafts?.length || 0,
         published: campaignData.created?.approved?.length || 0,
-        pending: campaignData.created?.submitted?.length || 0
+        pending: campaignData.created?.submitted?.length || 0,
       };
     } else {
       return {
         viewed: campaignData.viewed?.length || 0,
         favorites: campaignData.favorites?.length || 0,
-        funded: campaignData.funded?.length || 0
+        funded: campaignData.funded?.length || 0,
       };
     }
   };
@@ -340,7 +366,7 @@ const MyCampaigns = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <MyCampaignsNavbar />
+      <UnifiedNavbar variant="dashboard" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header with Stats */}
@@ -349,8 +375,8 @@ const MyCampaigns = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">My Campaigns</h1>
               <p className="text-gray-600 mt-1">
-                {isFounder 
-                  ? "Manage your campaigns and track their progress" 
+                {isFounder
+                  ? "Manage your campaigns and track their progress"
                   : "Track your investment activity and saved campaigns"}
               </p>
             </div>
@@ -362,7 +388,9 @@ const MyCampaigns = () => {
                 disabled={refreshing}
                 className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md flex items-center space-x-2 disabled:opacity-50"
               >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                />
                 <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
               </button>
 
@@ -384,34 +412,48 @@ const MyCampaigns = () => {
             {isFounder ? (
               <>
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {stats.total}
+                  </div>
                   <div className="text-sm text-gray-600">Total Campaigns</div>
                 </div>
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {stats.pending}
+                  </div>
                   <div className="text-sm text-gray-600">Under Review</div>
                 </div>
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-green-600">{stats.published}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {stats.published}
+                  </div>
                   <div className="text-sm text-gray-600">Published</div>
                 </div>
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-gray-600">{stats.drafts}</div>
+                  <div className="text-2xl font-bold text-gray-600">
+                    {stats.drafts}
+                  </div>
                   <div className="text-sm text-gray-600">Drafts</div>
                 </div>
               </>
             ) : (
               <>
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-blue-600">{stats.viewed}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {stats.viewed}
+                  </div>
                   <div className="text-sm text-gray-600">Viewed</div>
                 </div>
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-red-600">{stats.favorites}</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {stats.favorites}
+                  </div>
                   <div className="text-sm text-gray-600">Favorites</div>
                 </div>
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-green-600">{stats.funded}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {stats.funded}
+                  </div>
                   <div className="text-sm text-gray-600">Funded</div>
                 </div>
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -445,7 +487,7 @@ const MyCampaigns = () => {
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const count = getActiveCampaigns().length;
-              
+
               return (
                 <button
                   key={tab.id}
@@ -484,8 +526,8 @@ const MyCampaigns = () => {
                   onClick={() => navigate(`/campaign/${campaign.id}`)}
                   className="cursor-pointer"
                 >
-                  <CampaignCard 
-                    campaign={campaign} 
+                  <CampaignCard
+                    campaign={campaign}
                     onFavoriteToggle={handleFavoriteToggle}
                     showActions={true}
                   />
@@ -494,58 +536,75 @@ const MyCampaigns = () => {
                 {/* Status Badge for Founder's Campaigns */}
                 {isFounder && campaign.status && (
                   <div className="absolute top-3 left-3 z-10">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
-                      {campaign.status === 'draft' && <FileText className="h-3 w-3 mr-1" />}
-                      {campaign.status === 'submitted' && <Clock className="h-3 w-3 mr-1" />}
-                      {campaign.status === 'approved' && <CheckCircle className="h-3 w-3 mr-1" />}
-                      {campaign.status === 'rejected' && <XCircle className="h-3 w-3 mr-1" />}
-                      {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                        campaign.status
+                      )}`}
+                    >
+                      {campaign.status === "draft" && (
+                        <FileText className="h-3 w-3 mr-1" />
+                      )}
+                      {campaign.status === "submitted" && (
+                        <Clock className="h-3 w-3 mr-1" />
+                      )}
+                      {campaign.status === "approved" && (
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                      )}
+                      {campaign.status === "rejected" && (
+                        <XCircle className="h-3 w-3 mr-1" />
+                      )}
+                      {campaign.status.charAt(0).toUpperCase() +
+                        campaign.status.slice(1)}
                     </span>
                   </div>
                 )}
 
                 {/* Action Buttons for Editable Campaigns */}
-                {isFounder && (campaign.status === 'draft' || campaign.status === 'rejected') && (
-                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <div className="flex space-x-2">
-                      {/* Edit Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/edit-campaign/${campaign.id}`);
-                        }}
-                        className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-                        title="Edit Campaign"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      
-                      {/* Delete Button (only for drafts) */}
-                      {campaign.status === 'draft' && (
+                {isFounder &&
+                  (campaign.status === "draft" ||
+                    campaign.status === "rejected") && (
+                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <div className="flex space-x-2">
+                        {/* Edit Button */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteCampaign(campaign.id, campaign.title);
+                            navigate(`/edit-campaign/${campaign.id}`);
                           }}
-                          className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:bg-red-700 transition-colors"
-                          title="Delete Draft"
+                          className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                          title="Edit Campaign"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Edit className="h-4 w-4" />
                         </button>
-                      )}
+
+                        {/* Delete Button (only for drafts) */}
+                        {campaign.status === "draft" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCampaign(campaign.id, campaign.title);
+                            }}
+                            className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                            title="Delete Draft"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Admin Comments Badge for Rejected Campaigns */}
-                {isFounder && campaign.status === 'rejected' && campaign.adminComments && (
-                  <div className="absolute top-12 left-3 z-10">
-                    <div className="bg-red-100 text-red-800 px-2 py-1 text-xs rounded-md max-w-xs">
-                      <div className="font-medium">Admin Feedback:</div>
-                      <div className="truncate">{campaign.adminComments}</div>
+                {isFounder &&
+                  campaign.status === "rejected" &&
+                  campaign.adminComments && (
+                    <div className="absolute top-12 left-3 z-10">
+                      <div className="bg-red-100 text-red-800 px-2 py-1 text-xs rounded-md max-w-xs">
+                        <div className="font-medium">Admin Feedback:</div>
+                        <div className="truncate">{campaign.adminComments}</div>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             ))}
           </div>
@@ -571,9 +630,11 @@ const MyCampaigns = () => {
                            hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 
                            focus:ring-green-500"
                 >
-                  {isFounder && activeTab !== "viewed" && activeTab !== "favorites" && (
-                    <Plus className="h-4 w-4 mr-2" />
-                  )}
+                  {isFounder &&
+                    activeTab !== "viewed" &&
+                    activeTab !== "favorites" && (
+                      <Plus className="h-4 w-4 mr-2" />
+                    )}
                   {placeholder.action.text}
                 </button>
               </div>

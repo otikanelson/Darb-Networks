@@ -1,6 +1,3 @@
-// src/App.jsx - Updated with Investment routes
-
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 
@@ -14,17 +11,17 @@ import FAQ from './pages/FAQ';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import NotFound from './pages/NotFound';
 import Profile from './pages/Profile';
-import MyCampaigns from './pages/MyCampaigns';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import AdminDashboard from './pages/AdminDashboard';
 
 // Campaign related pages
+import MyCampaigns from './pages/MyCampaigns';
 import CreateCampaign from './pages/CreateCampaign';
 import EditCampaign from './pages/EditCampaign';
 import CampaignDisplay from './pages/CampaignDisplay';
 
-// Investment related pages (NEW)
+// Investment related pages
 import PaymentVerification from './pages/PaymentVerification';
 
 // Protected Route Component

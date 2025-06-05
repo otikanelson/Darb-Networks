@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   Heart,
   Share2,
@@ -23,12 +23,12 @@ import {
   Building,
   Mail,
   Phone,
-  FileText
-} from 'lucide-react';
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
-import CampaignCard from '../components/ui/CampaignCard';
-import InvestmentModal from '../components/ui/InvestmentModal';
+  FileText,
+} from "lucide-react";
+import UnifiedNavbar from "../components/layout/Navbars";
+import Footer from "../components/layout/Footer";
+import CampaignCard from "../components/ui/CampaignCard";
+import InvestmentModal from "../components/ui/InvestmentModal";
 
 const CampaignDisplay = () => {
   const { id } = useParams();
@@ -43,11 +43,10 @@ const CampaignDisplay = () => {
   const [relatedCampaigns, setRelatedCampaigns] = useState([]);
 
   // UI state
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [showInvestmentModal, setShowInvestmentModal] = useState(false);
-
 
   // Load campaign data
   useEffect(() => {
@@ -69,38 +68,37 @@ const CampaignDisplay = () => {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       const headers = {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       };
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
       console.log(`👀 Loading campaign ${id} with headers:`, headers);
 
       const response = await fetch(`/api/campaigns/${id}`, { headers });
-      
-      console.log('📡 Campaign API Response Status:', response.status);
-      console.log('📡 Campaign API Response Headers:', response.headers);
+
+      console.log("📡 Campaign API Response Status:", response.status);
+      console.log("📡 Campaign API Response Headers:", response.headers);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Campaign API Error Response:', errorText);
+        console.error("❌ Campaign API Error Response:", errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('📦 Full Campaign API Result:', result);
-      
-      
+      console.log("📦 Full Campaign API Result:", result);
+
       if (!result.success) {
-        throw new Error(result.message || 'Failed to load campaign');
+        throw new Error(result.message || "Failed to load campaign");
       }
 
       // Enhanced data processing
       const campaignData = result.data;
-      
+
       // Normalize field names (handle different field naming conventions)
       const normalizedCampaign = {
         id: campaignData.id,
@@ -108,55 +106,81 @@ const CampaignDisplay = () => {
         description: campaignData.description,
         category: campaignData.category,
         location: campaignData.location,
-        
+
         // Handle different naming conventions for amounts (prioritize camelCase from API)
-        target_amount: campaignData.targetAmount || campaignData.target_amount || 0,
-        current_amount: campaignData.currentAmount || campaignData.current_amount || 0,
-        minimum_investment: campaignData.minimumInvestment || campaignData.minimum_investment || 0,
-        
+        target_amount:
+          campaignData.targetAmount || campaignData.target_amount || 0,
+        current_amount:
+          campaignData.currentAmount || campaignData.current_amount || 0,
+        minimum_investment:
+          campaignData.minimumInvestment ||
+          campaignData.minimum_investment ||
+          0,
+
         // Handle creator/founder data (prioritize creator object)
-        founder_id: campaignData.creator?.id || campaignData.founder_id || campaignData.founderId,
-        founder_name: campaignData.creator?.fullName || campaignData.creator?.name || campaignData.founder_name || campaignData.founderName || 'Unknown Creator',
-        founder_company: campaignData.creator?.companyName || campaignData.founder_company || campaignData.founderCompany,
-        founder_avatar: campaignData.creator?.profileImageUrl || campaignData.creator?.avatar || campaignData.founder_avatar || campaignData.founderAvatar,
-        founder_email: campaignData.creator?.email || campaignData.founder_email,
-        
+        founder_id:
+          campaignData.creator?.id ||
+          campaignData.founder_id ||
+          campaignData.founderId,
+        founder_name:
+          campaignData.creator?.fullName ||
+          campaignData.creator?.name ||
+          campaignData.founder_name ||
+          campaignData.founderName ||
+          "Unknown Creator",
+        founder_company:
+          campaignData.creator?.companyName ||
+          campaignData.founder_company ||
+          campaignData.founderCompany,
+        founder_avatar:
+          campaignData.creator?.profileImageUrl ||
+          campaignData.creator?.avatar ||
+          campaignData.founder_avatar ||
+          campaignData.founderAvatar,
+        founder_email:
+          campaignData.creator?.email || campaignData.founder_email,
+
         // Handle different naming conventions for stats (prioritize camelCase from API)
         view_count: campaignData.viewCount || campaignData.view_count || 0,
-        favorite_count: campaignData.favoriteCount || campaignData.favorite_count || 0,
-        investor_count: campaignData.investorCount || campaignData.investor_count || 0,
-        
+        favorite_count:
+          campaignData.favoriteCount || campaignData.favorite_count || 0,
+        investor_count:
+          campaignData.investorCount || campaignData.investor_count || 0,
+
         // Status and features (prioritize camelCase from API)
         status: campaignData.status,
-        is_featured: campaignData.isFeatured || campaignData.is_featured || false,
-        
+        is_featured:
+          campaignData.isFeatured || campaignData.is_featured || false,
+
         // Content (prioritize camelCase from API)
-        problem_statement: campaignData.problemStatement || campaignData.problem_statement,
+        problem_statement:
+          campaignData.problemStatement || campaignData.problem_statement,
         solution: campaignData.solution,
         business_plan: campaignData.businessPlan || campaignData.business_plan,
         video_url: campaignData.videoUrl || campaignData.video_url,
-        main_image_url: campaignData.mainImageUrl || campaignData.main_image_url,
-        
+        main_image_url:
+          campaignData.mainImageUrl || campaignData.main_image_url,
+
         // Timestamps (prioritize camelCase from API)
         created_at: campaignData.createdAt || campaignData.created_at,
         updated_at: campaignData.updatedAt || campaignData.updated_at,
         approved_at: campaignData.approvedAt || campaignData.approved_at,
         submitted_at: campaignData.submittedAt || campaignData.submitted_at,
         rejected_at: campaignData.rejectedAt || campaignData.rejected_at,
-        
+
         // Additional fields
         days_left: campaignData.daysLeft || campaignData.days_left || 30,
         isFavorited: campaignData.isFavorited || false,
         can_edit: campaignData.canEdit || false,
-        admin_comments: campaignData.adminComments || campaignData.admin_comments
+        admin_comments:
+          campaignData.adminComments || campaignData.admin_comments,
       };
 
-      console.log('✅ Normalized Campaign Data:', normalizedCampaign);
+      console.log("✅ Normalized Campaign Data:", normalizedCampaign);
       setCampaign(normalizedCampaign);
       setIsFavorited(normalizedCampaign.isFavorited);
-
     } catch (error) {
-      console.error('❌ Error loading campaign:', error);
+      console.error("❌ Error loading campaign:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -166,76 +190,76 @@ const CampaignDisplay = () => {
   const loadRelatedCampaigns = async () => {
     try {
       const response = await fetch(`/api/campaigns?limit=3`);
-      
+
       if (response.ok) {
         const result = await response.json();
-        console.log('📦 Related Campaigns Result:', result);
-        
+        console.log("📦 Related Campaigns Result:", result);
+
         if (result.success && result.data) {
           const filtered = result.data
-            .filter(c => c.id !== parseInt(id))
+            .filter((c) => c.id !== parseInt(id))
             .slice(0, 3);
           setRelatedCampaigns(filtered);
         }
       }
     } catch (error) {
-      console.error('❌ Error loading related campaigns:', error);
+      console.error("❌ Error loading related campaigns:", error);
     }
   };
 
   const trackView = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       if (!token) return;
 
       const response = await fetch(`/api/campaigns/${id}/view`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
-        console.log('✅ View tracked successfully');
+        console.log("✅ View tracked successfully");
       }
     } catch (error) {
-      console.error('❌ Error tracking view:', error);
+      console.error("❌ Error tracking view:", error);
     }
   };
 
   const handleFavoriteToggle = async () => {
     if (!isAuthenticated()) {
-      alert('Please log in to save campaigns');
+      alert("Please log in to save campaigns");
       return;
     }
 
     setFavoriteLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
 
       const response = await fetch(`/api/campaigns/${id}/favorite`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
         const result = await response.json();
-        
+
         if (result.success) {
           setIsFavorited(result.data.isFavorited);
-          
-          setCampaign(prev => ({
+
+          setCampaign((prev) => ({
             ...prev,
-            favorite_count: result.data.favoriteCount || prev.favorite_count
+            favorite_count: result.data.favoriteCount || prev.favorite_count,
           }));
         }
       }
     } catch (error) {
-      console.error('❌ Error toggling favorite:', error);
+      console.error("❌ Error toggling favorite:", error);
     } finally {
       setFavoriteLoading(false);
     }
@@ -243,29 +267,32 @@ const CampaignDisplay = () => {
 
   const handleShare = () => {
     const campaignUrl = `${window.location.origin}/campaign/${id}`;
-    
+
     if (navigator.share) {
       navigator.share({
         title: campaign.title,
         text: campaign.description,
-        url: campaignUrl
+        url: campaignUrl,
       });
     } else {
       navigator.clipboard.writeText(campaignUrl);
-      alert('Campaign link copied to clipboard!');
+      alert("Campaign link copied to clipboard!");
     }
   };
 
   // Investment handlers
   const handleInvestClick = () => {
     if (!isAuthenticated()) {
-      alert('Please log in to invest in campaigns');
-      navigate('/login');
+      alert("Please log in to invest in campaigns");
+      navigate("/login");
       return;
     }
 
-    if (user?.userType?.toLowerCase() === 'founder' && user?.id === campaign?.founder_id) {
-      alert('You cannot invest in your own campaign');
+    if (
+      user?.userType?.toLowerCase() === "founder" &&
+      user?.id === campaign?.founder_id
+    ) {
+      alert("You cannot invest in your own campaign");
       return;
     }
 
@@ -274,21 +301,24 @@ const CampaignDisplay = () => {
 
   const handleInvestmentSuccess = () => {
     loadCampaign();
-    alert('Investment successful! Check your email for confirmation.');
+    alert("Investment successful! Check your email for confirmation.");
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount || 0);
   };
 
   const calculateProgress = () => {
     if (!campaign?.target_amount || campaign.target_amount === 0) return 0;
-    return Math.min((campaign.current_amount / campaign.target_amount) * 100, 100);
+    return Math.min(
+      (campaign.current_amount / campaign.target_amount) * 100,
+      100
+    );
   };
 
   const getDaysLeft = () => {
@@ -337,15 +367,17 @@ const CampaignDisplay = () => {
   };
 
   const canEdit = () => {
-    return isAuthenticated() && 
-           user?.id === campaign?.founder_id && 
-           ['draft', 'rejected'].includes(campaign?.status);
+    return (
+      isAuthenticated() &&
+      user?.id === campaign?.founder_id &&
+      ["draft", "rejected"].includes(campaign?.status)
+    );
   };
 
   const canInvest = () => {
     if (!isAuthenticated()) return false;
     if (user?.id === campaign?.founder_id) return false;
-    if (campaign?.status !== 'approved') return false;
+    if (campaign?.status !== "approved") return false;
     if (calculateProgress() >= 100) return false;
     if (getDaysLeft() <= 0) return false;
     return true;
@@ -353,91 +385,104 @@ const CampaignDisplay = () => {
 
   const getImageUrl = () => {
     const imageUrl = campaign?.main_image_url || campaign?.mainImageUrl;
-    
-    console.log('🖼️ Campaign image URL:', imageUrl);
-    
+
+    console.log("🖼️ Campaign image URL:", imageUrl);
+
     if (!imageUrl) {
-      console.log('🖼️ No image URL found, using placeholder');
-      return '/placeholder-campaign.jpg';
+      console.log("🖼️ No image URL found, using placeholder");
+      return "/placeholder-campaign.jpg";
     }
-    
+
     // If it's already a full URL, use it as-is
-    if (imageUrl.startsWith('http')) {
-      console.log('🖼️ Using full URL:', imageUrl);
+    if (imageUrl.startsWith("http")) {
+      console.log("🖼️ Using full URL:", imageUrl);
       return imageUrl;
     }
-    
+
     // If it starts with /uploads or similar, prepend the API base
-    if (imageUrl.startsWith('/uploads') || imageUrl.startsWith('/media')) {
+    if (imageUrl.startsWith("/uploads") || imageUrl.startsWith("/media")) {
       const fullUrl = `http://localhost:5000${imageUrl}`;
-      console.log('🖼️ Constructed API URL:', fullUrl);
+      console.log("🖼️ Constructed API URL:", fullUrl);
       return fullUrl;
     }
-    
+
     // For other relative paths
     const fullUrl = `http://localhost:5000/api${imageUrl}`;
-    console.log('🖼️ Constructed full URL:', fullUrl);
+    console.log("🖼️ Constructed full URL:", fullUrl);
     return fullUrl;
   };
 
   const getCreatorAvatarUrl = () => {
-    const avatarUrl = campaign?.founder_avatar || campaign?.creator?.profileImageUrl;
-    
-    console.log('👤 Creator avatar URL:', avatarUrl);
-    
+    const avatarUrl =
+      campaign?.founder_avatar || campaign?.creator?.profileImageUrl;
+
+    console.log("👤 Creator avatar URL:", avatarUrl);
+
     if (!avatarUrl) {
-      console.log('👤 No avatar URL found');
+      console.log("👤 No avatar URL found");
       return null;
     }
-    
+
     // If it's already a full URL, use it as-is
-    if (avatarUrl.startsWith('http')) {
-      console.log('👤 Using full avatar URL:', avatarUrl);
+    if (avatarUrl.startsWith("http")) {
+      console.log("👤 Using full avatar URL:", avatarUrl);
       return avatarUrl;
     }
-    
+
     // If it starts with /uploads or similar, prepend the API base
-    if (avatarUrl.startsWith('/uploads') || avatarUrl.startsWith('/media')) {
+    if (avatarUrl.startsWith("/uploads") || avatarUrl.startsWith("/media")) {
       const fullUrl = `http://localhost:5000${avatarUrl}`;
-      console.log('👤 Constructed avatar API URL:', fullUrl);
+      console.log("👤 Constructed avatar API URL:", fullUrl);
       return fullUrl;
     }
-    
+
     // For other relative paths
     const fullUrl = `http://localhost:5000/api${avatarUrl}`;
-    console.log('👤 Constructed full avatar URL:', fullUrl);
+    console.log("👤 Constructed full avatar URL:", fullUrl);
     return fullUrl;
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'overview':
+      case "overview":
         return (
           <div className="space-y-8">
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">About This Campaign</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                About This Campaign
+              </h3>
               <p className="text-gray-700 leading-relaxed">
-                {campaign?.description || 'No description available'}
+                {campaign?.description || "No description available"}
               </p>
             </div>
 
             {campaign?.problem_statement && (
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Problem Statement</h3>
-                <p className="text-gray-700 leading-relaxed">{campaign.problem_statement}</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  Problem Statement
+                </h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {campaign.problem_statement}
+                </p>
               </div>
             )}
 
             {campaign?.solution && (
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Our Solution</h3>
-                <p className="text-gray-700 leading-relaxed">{campaign.solution}</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  Our Solution
+                </h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {campaign.solution}
+                </p>
               </div>
             )}
 
             {campaign?.video_url && (
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Campaign Video</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  Campaign Video
+                </h3>
                 <div className="relative bg-gray-100 rounded-lg overflow-hidden">
                   <div className="aspect-video flex items-center justify-center">
                     <button
@@ -453,10 +498,12 @@ const CampaignDisplay = () => {
           </div>
         );
 
-      case 'business-plan':
+      case "business-plan":
         return (
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Business Plan</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Business Plan
+            </h3>
             {campaign?.business_plan ? (
               <div className="prose max-w-none">
                 <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -472,14 +519,18 @@ const CampaignDisplay = () => {
           </div>
         );
 
-      case 'updates':
+      case "updates":
         return (
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Campaign Updates</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Campaign Updates
+            </h3>
             <div className="text-center py-12 text-gray-500">
               <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <p>No updates posted yet.</p>
-              <p className="text-sm">Updates from the campaign creator will appear here.</p>
+              <p className="text-sm">
+                Updates from the campaign creator will appear here.
+              </p>
             </div>
           </div>
         );
@@ -489,11 +540,10 @@ const CampaignDisplay = () => {
     }
   };
 
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+        <UnifiedNavbar variant="display" />
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent"></div>
         </div>
@@ -505,13 +555,15 @@ const CampaignDisplay = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+        <UnifiedNavbar variant="display" />
         <div className="max-w-2xl mx-auto px-4 py-16 text-center">
           <AlertTriangle className="mx-auto h-16 w-16 text-red-500 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Campaign Not Found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Campaign Not Found
+          </h1>
           <p className="text-gray-600 mb-8">{error}</p>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate("/dashboard")}
             className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
           >
             Browse Other Campaigns
@@ -525,11 +577,15 @@ const CampaignDisplay = () => {
   if (!campaign) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+        <UnifiedNavbar variant="display" />
         <div className="max-w-2xl mx-auto px-4 py-16 text-center">
           <AlertTriangle className="mx-auto h-16 w-16 text-orange-500 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">No Campaign Data</h1>
-          <p className="text-gray-600 mb-8">Campaign data could not be loaded</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            No Campaign Data
+          </h1>
+          <p className="text-gray-600 mb-8">
+            Campaign data could not be loaded
+          </p>
           <button
             onClick={() => window.location.reload()}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors mr-4"
@@ -537,7 +593,7 @@ const CampaignDisplay = () => {
             Reload Page
           </button>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate("/dashboard")}
             className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
           >
             Browse Other Campaigns
@@ -550,8 +606,7 @@ const CampaignDisplay = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
+      <UnifiedNavbar variant="display" />
       {/* Hero Section */}
       <div className="relative">
         <div className="absolute top-4 left-4 z-10">
@@ -571,11 +626,11 @@ const CampaignDisplay = () => {
                 alt={campaign.title}
                 className="w-full h-full object-contain bg-gray-900"
                 onError={(e) => {
-                  e.target.src = '/placeholder-campaign.jpg';
+                  e.target.src = "/placeholder-campaign.jpg";
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              
+
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="max-w-7xl mx-auto">
                   <div className="flex items-center gap-3 mb-4">
@@ -584,7 +639,9 @@ const CampaignDisplay = () => {
                     </span>
                     {getStatusBadge()}
                   </div>
-                  <h1 className="text-4xl font-bold text-white mb-2">{campaign.title}</h1>
+                  <h1 className="text-4xl font-bold text-white mb-2">
+                    {campaign.title}
+                  </h1>
                   <div className="flex items-center text-white/90">
                     <MapPin className="h-4 w-4 mr-2" />
                     {campaign.location}
@@ -607,13 +664,17 @@ const CampaignDisplay = () => {
                   onClick={handleFavoriteToggle}
                   disabled={favoriteLoading}
                   className={`flex items-center px-4 py-2 rounded-lg border transition-colors ${
-                    isFavorited 
-                      ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100' 
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    isFavorited
+                      ? "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
                 >
-                  <Heart className={`h-4 w-4 mr-2 ${isFavorited ? 'fill-current' : ''}`} />
-                  {isFavorited ? 'Saved' : 'Save'}
+                  <Heart
+                    className={`h-4 w-4 mr-2 ${
+                      isFavorited ? "fill-current" : ""
+                    }`}
+                  />
+                  {isFavorited ? "Saved" : "Save"}
                 </button>
 
                 <button
@@ -651,17 +712,17 @@ const CampaignDisplay = () => {
             <div className="border-b border-gray-200 mb-8">
               <nav className="flex space-x-8">
                 {[
-                  { id: 'overview', label: 'Overview' },
-                  { id: 'business-plan', label: 'Business Plan' },
-                  { id: 'updates', label: 'Updates' }
+                  { id: "overview", label: "Overview" },
+                  { id: "business-plan", label: "Business Plan" },
+                  { id: "updates", label: "Updates" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       activeTab === tab.id
-                        ? 'border-green-600 text-green-700'
-                        : 'border-transparent text-gray-500 hover:text-green-700 hover:border-green-300'
+                        ? "border-green-600 text-green-700"
+                        : "border-transparent text-gray-500 hover:text-green-700 hover:border-green-300"
                     }`}
                   >
                     {tab.label}
@@ -709,11 +770,15 @@ const CampaignDisplay = () => {
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="text-center">
-                  <div className="text-lg font-bold text-gray-900">{campaign.investor_count || 0}</div>
+                  <div className="text-lg font-bold text-gray-900">
+                    {campaign.investor_count || 0}
+                  </div>
                   <div className="text-sm text-gray-600">Investors</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-gray-900">{getDaysLeft()}</div>
+                  <div className="text-lg font-bold text-gray-900">
+                    {getDaysLeft()}
+                  </div>
                   <div className="text-sm text-gray-600">Days Left</div>
                 </div>
               </div>
@@ -721,7 +786,9 @@ const CampaignDisplay = () => {
               {/* Investment Details */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">Minimum Investment</span>
+                  <span className="text-sm text-gray-600">
+                    Minimum Investment
+                  </span>
                   <span className="font-semibold text-gray-900">
                     {formatCurrency(campaign.minimum_investment || 0)}
                   </span>
@@ -730,7 +797,7 @@ const CampaignDisplay = () => {
 
               {/* Investment Button */}
               {canInvest() ? (
-                <button 
+                <button
                   onClick={handleInvestClick}
                   className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center"
                 >
@@ -739,25 +806,35 @@ const CampaignDisplay = () => {
                 </button>
               ) : (
                 <div className="w-full py-3 px-4 rounded-lg font-semibold text-center bg-gray-100 text-gray-500">
-                  {!isAuthenticated() ? 'Login to Invest' : 
-                   user?.id === campaign?.founder_id ? 'Your Campaign' :
-                   calculateProgress() >= 100 ? 'Fully Funded' :
-                   getDaysLeft() <= 0 ? 'Campaign Ended' :
-                   campaign?.status !== 'approved' ? 'Not Available' : 'Cannot Invest'}
+                  {!isAuthenticated()
+                    ? "Login to Invest"
+                    : user?.id === campaign?.founder_id
+                    ? "Your Campaign"
+                    : calculateProgress() >= 100
+                    ? "Fully Funded"
+                    : getDaysLeft() <= 0
+                    ? "Campaign Ended"
+                    : campaign?.status !== "approved"
+                    ? "Not Available"
+                    : "Cannot Invest"}
                 </div>
               )}
 
-              {isAuthenticated() && user?.userType?.toLowerCase() === 'investor' && canInvest() && (
-                <p className="text-xs text-gray-500 text-center mt-3">
-                  Secure payments powered by Paystack
-                </p>
-              )}
+              {isAuthenticated() &&
+                user?.userType?.toLowerCase() === "investor" &&
+                canInvest() && (
+                  <p className="text-xs text-gray-500 text-center mt-3">
+                    Secure payments powered by Paystack
+                  </p>
+                )}
             </div>
 
             {/* Creator Info */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Campaign Creator</h3>
-              
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Campaign Creator
+              </h3>
+
               <div className="flex items-start space-x-4">
                 <div className="h-12 w-12 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
                   {getCreatorAvatarUrl() ? (
@@ -765,31 +842,38 @@ const CampaignDisplay = () => {
                       src={getCreatorAvatarUrl()}
                       alt={campaign.founder_name}
                       className="h-full w-full object-cover"
-                      onLoad={() => console.log('✅ Creator avatar loaded successfully')}
+                      onLoad={() =>
+                        console.log("✅ Creator avatar loaded successfully")
+                      }
                       onError={(e) => {
-                        console.error('❌ Creator avatar failed to load:', getCreatorAvatarUrl());
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
+                        console.error(
+                          "❌ Creator avatar failed to load:",
+                          getCreatorAvatarUrl()
+                        );
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
                       }}
                     />
                   ) : null}
-                  <div 
+                  <div
                     className="h-full w-full flex items-center justify-center text-gray-600 font-medium"
-                    style={{ display: getCreatorAvatarUrl() ? 'none' : 'flex' }}
+                    style={{ display: getCreatorAvatarUrl() ? "none" : "flex" }}
                   >
-                    {campaign.founder_name?.charAt(0) || 'A'}
+                    {campaign.founder_name?.charAt(0) || "A"}
                   </div>
                 </div>
-                
+
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900">{campaign.founder_name || 'Unknown Creator'}</h4>
+                  <h4 className="font-semibold text-gray-900">
+                    {campaign.founder_name || "Unknown Creator"}
+                  </h4>
                   {campaign.founder_company && (
                     <p className="text-sm text-gray-600 flex items-center mt-1">
                       <Building className="h-3 w-3 mr-1" />
                       {campaign.founder_company}
                     </p>
                   )}
-                  
+
                   <div className="mt-3 space-y-2">
                     <button className="w-full bg-gray-100 text-gray-700 py-2 px-3 rounded-lg text-sm hover:bg-gray-200 transition-colors flex items-center justify-center">
                       <Mail className="h-4 w-4 mr-2" />
@@ -802,26 +886,34 @@ const CampaignDisplay = () => {
 
             {/* Campaign Details */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Campaign Details</h3>
-              
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Campaign Details
+              </h3>
+
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Created</span>
                   <span className="text-gray-900">
-                    {campaign.created_at ? new Date(campaign.created_at).toLocaleDateString() : 'N/A'}
+                    {campaign.created_at
+                      ? new Date(campaign.created_at).toLocaleDateString()
+                      : "N/A"}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-gray-600">Category</span>
-                  <span className="text-gray-900">{campaign.category || 'General'}</span>
+                  <span className="text-gray-900">
+                    {campaign.category || "General"}
+                  </span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-gray-600">Location</span>
-                  <span className="text-gray-900">{campaign.location || 'Not specified'}</span>
+                  <span className="text-gray-900">
+                    {campaign.location || "Not specified"}
+                  </span>
                 </div>
-                
+
                 {campaign.approved_at && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Approved</span>
@@ -838,7 +930,9 @@ const CampaignDisplay = () => {
         {/* Related Campaigns */}
         {relatedCampaigns.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">More Campaigns You Might Like</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-8">
+              More Campaigns You Might Like
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedCampaigns.map((relatedCampaign) => (
                 <CampaignCard
@@ -875,9 +969,11 @@ const CampaignDisplay = () => {
             </button>
             <div className="aspect-video bg-black rounded-lg overflow-hidden">
               <iframe
-                src={campaign.video_url.includes('youtube.com') 
-                  ? campaign.video_url.replace('watch?v=', 'embed/') 
-                  : campaign.video_url}
+                src={
+                  campaign.video_url.includes("youtube.com")
+                    ? campaign.video_url.replace("watch?v=", "embed/")
+                    : campaign.video_url
+                }
                 className="w-full h-full"
                 frameBorder="0"
                 allowFullScreen

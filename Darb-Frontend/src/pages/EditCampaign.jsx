@@ -1,14 +1,14 @@
 // src/pages/EditCampaign.jsx - Complete edit campaign functionality
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { 
-  Save, 
-  Send, 
-  Upload, 
-  AlertCircle, 
-  Check, 
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import {
+  Save,
+  Send,
+  Upload,
+  AlertCircle,
+  Check,
   DollarSign,
   MapPin,
   Building,
@@ -17,32 +17,32 @@ import {
   Video,
   Loader,
   ArrowLeft,
-  Eye
-} from 'lucide-react';
-import DashboardNavbar from '../components/Navbars/DashboardNavbar';
-import Footer from '../components/layout/Footer';
+  Eye,
+} from "lucide-react";
+import UnifiedNavbar from "../components/layout/Navbars";
+import Footer from "../components/layout/Footer";
 
 const EditCampaign = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user, isAuthenticated } = useAuth();
-  
+
   // Campaign state
   const [campaign, setCampaign] = useState(null);
   const [originalStatus, setOriginalStatus] = useState(null);
-  
+
   // Form state
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    location: '',
-    targetAmount: '',
-    minimumInvestment: '',
-    problemStatement: '',
-    solution: '',
-    businessPlan: '',
-    videoUrl: ''
+    title: "",
+    description: "",
+    category: "",
+    location: "",
+    targetAmount: "",
+    minimumInvestment: "",
+    problemStatement: "",
+    solution: "",
+    businessPlan: "",
+    videoUrl: "",
   });
 
   // UI state
@@ -50,34 +50,34 @@ const EditCampaign = () => {
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [existingImage, setExistingImage] = useState(null);
 
   // Categories
   const categories = [
-    'Technology',
-    'Healthcare',
-    'Education',
-    'Finance',
-    'Energy & Green Tech',
-    'Agriculture',
-    'Real Estate',
-    'E-commerce',
-    'Transportation',
-    'Food & Beverages',
-    'Other'
+    "Technology",
+    "Healthcare",
+    "Education",
+    "Finance",
+    "Energy & Green Tech",
+    "Agriculture",
+    "Real Estate",
+    "E-commerce",
+    "Transportation",
+    "Food & Beverages",
+    "Other",
   ];
 
   // Redirect if not authenticated or not a founder
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
-    if (user?.userType !== 'founder') {
-      navigate('/dashboard');
+    if (user?.userType !== "founder") {
+      navigate("/dashboard");
       return;
     }
   }, [isAuthenticated, user, navigate]);
@@ -92,68 +92,70 @@ const EditCampaign = () => {
   const loadCampaign = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
-      
+      const token = localStorage.getItem("authToken");
+
       console.log(`📝 Loading campaign ${id} for editing`);
-      
-      const response = await fetch(`http://localhost:5000/api/campaigns/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+
+      const response = await fetch(
+        `http://localhost:5000/api/campaigns/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Campaign not found');
+        throw new Error("Campaign not found");
       }
 
       const result = await response.json();
-      console.log('📝 Campaign loaded:', result);
+      console.log("📝 Campaign loaded:", result);
 
       if (!result.success) {
-        throw new Error(result.message || 'Failed to load campaign');
+        throw new Error(result.message || "Failed to load campaign");
       }
 
       const campaignData = result.data;
-      
+
       // Check if this campaign belongs to the current user
       if (campaignData.creator && user.id !== campaignData.creator.id) {
-        navigate('/my-campaigns');
+        navigate("/my-campaigns");
         return;
       }
 
       // Check if campaign can be edited (only draft and rejected)
-      if (!['draft', 'rejected'].includes(campaignData.status)) {
-        alert('Only draft and rejected campaigns can be edited');
-        navigate('/my-campaigns');
+      if (!["draft", "rejected"].includes(campaignData.status)) {
+        alert("Only draft and rejected campaigns can be edited");
+        navigate("/my-campaigns");
         return;
       }
 
       setCampaign(campaignData);
       setOriginalStatus(campaignData.status);
-      
+
       // Populate form with existing data
       setFormData({
-        title: campaignData.title || '',
-        description: campaignData.description || '',
-        category: campaignData.category || '',
-        location: campaignData.location || '',
-        targetAmount: campaignData.targetAmount || '',
-        minimumInvestment: campaignData.minimumInvestment || '',
-        problemStatement: campaignData.problemStatement || '',
-        solution: campaignData.solution || '',
-        businessPlan: campaignData.businessPlan || '',
-        videoUrl: campaignData.videoUrl || ''
+        title: campaignData.title || "",
+        description: campaignData.description || "",
+        category: campaignData.category || "",
+        location: campaignData.location || "",
+        targetAmount: campaignData.targetAmount || "",
+        minimumInvestment: campaignData.minimumInvestment || "",
+        problemStatement: campaignData.problemStatement || "",
+        solution: campaignData.solution || "",
+        businessPlan: campaignData.businessPlan || "",
+        videoUrl: campaignData.videoUrl || "",
       });
 
       // Set existing image
       if (campaignData.mainImageUrl) {
         setExistingImage(campaignData.mainImageUrl);
       }
-
     } catch (error) {
-      console.error('❌ Error loading campaign:', error);
+      console.error("❌ Error loading campaign:", error);
       setErrors({ general: error.message });
-      setTimeout(() => navigate('/my-campaigns'), 3000);
+      setTimeout(() => navigate("/my-campaigns"), 3000);
     } finally {
       setLoading(false);
     }
@@ -162,14 +164,14 @@ const EditCampaign = () => {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     // Clear errors for this field
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
+      setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
 
@@ -180,52 +182,68 @@ const EditCampaign = () => {
 
     // Validate file
     if (file.size > 10 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, image: 'Image must be less than 10MB' }));
+      setErrors((prev) => ({ ...prev, image: "Image must be less than 10MB" }));
       return;
     }
 
-    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-      setErrors(prev => ({ ...prev, image: 'Only JPG and PNG formats allowed' }));
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only JPG and PNG formats allowed",
+      }));
       return;
     }
 
     setSelectedImage(file);
     setImagePreview(URL.createObjectURL(file));
-    
+
     if (errors.image) {
-      setErrors(prev => ({ ...prev, image: null }));
+      setErrors((prev) => ({ ...prev, image: null }));
     }
   };
 
   // Validate form
   const validateForm = (isDraft = false) => {
     const newErrors = {};
-    
+
     if (!isDraft) {
       // Required fields for submission
-      if (!formData.title.trim()) newErrors.title = 'Title is required';
-      if (!formData.description.trim()) newErrors.description = 'Description is required';
-      if (!formData.category) newErrors.category = 'Category is required';
-      if (!formData.location.trim()) newErrors.location = 'Location is required';
-      if (!formData.targetAmount) newErrors.targetAmount = 'Target amount is required';
-      if (!formData.minimumInvestment) newErrors.minimumInvestment = 'Minimum investment is required';
-      
+      if (!formData.title.trim()) newErrors.title = "Title is required";
+      if (!formData.description.trim())
+        newErrors.description = "Description is required";
+      if (!formData.category) newErrors.category = "Category is required";
+      if (!formData.location.trim())
+        newErrors.location = "Location is required";
+      if (!formData.targetAmount)
+        newErrors.targetAmount = "Target amount is required";
+      if (!formData.minimumInvestment)
+        newErrors.minimumInvestment = "Minimum investment is required";
+
       // Validate amounts
       if (formData.targetAmount && parseFloat(formData.targetAmount) <= 0) {
-        newErrors.targetAmount = 'Target amount must be greater than 0';
+        newErrors.targetAmount = "Target amount must be greater than 0";
       }
-      if (formData.minimumInvestment && parseFloat(formData.minimumInvestment) <= 0) {
-        newErrors.minimumInvestment = 'Minimum investment must be greater than 0';
+      if (
+        formData.minimumInvestment &&
+        parseFloat(formData.minimumInvestment) <= 0
+      ) {
+        newErrors.minimumInvestment =
+          "Minimum investment must be greater than 0";
       }
-      if (formData.minimumInvestment && formData.targetAmount && 
-          parseFloat(formData.minimumInvestment) > parseFloat(formData.targetAmount)) {
-        newErrors.minimumInvestment = 'Minimum investment cannot exceed target amount';
+      if (
+        formData.minimumInvestment &&
+        formData.targetAmount &&
+        parseFloat(formData.minimumInvestment) >
+          parseFloat(formData.targetAmount)
+      ) {
+        newErrors.minimumInvestment =
+          "Minimum investment cannot exceed target amount";
       }
     }
 
     // Image is required (either existing or new)
     if (!existingImage && !selectedImage) {
-      newErrors.image = 'Please upload a campaign image';
+      newErrors.image = "Please upload a campaign image";
     }
 
     setErrors(newErrors);
@@ -238,21 +256,24 @@ const EditCampaign = () => {
       setSaving(true);
       setErrors({});
 
-      const token = localStorage.getItem('authToken');
-      
-      console.log('💾 Updating campaign as draft');
-      
-      const response = await fetch(`http://localhost:5000/api/campaigns/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          isDraft: true
-        })
-      });
+      const token = localStorage.getItem("authToken");
+
+      console.log("💾 Updating campaign as draft");
+
+      const response = await fetch(
+        `http://localhost:5000/api/campaigns/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...formData,
+            isDraft: true,
+          }),
+        }
+      );
 
       const result = await response.json();
 
@@ -261,15 +282,15 @@ const EditCampaign = () => {
         if (selectedImage) {
           await uploadImage();
         }
-        
-        setSuccess('Campaign saved as draft successfully');
-        setTimeout(() => setSuccess(''), 3000);
+
+        setSuccess("Campaign saved as draft successfully");
+        setTimeout(() => setSuccess(""), 3000);
       } else {
-        setErrors({ general: result.message || 'Failed to save draft' });
+        setErrors({ general: result.message || "Failed to save draft" });
       }
     } catch (error) {
-      console.error('❌ Save draft error:', error);
-      setErrors({ general: 'Failed to save draft: ' + error.message });
+      console.error("❌ Save draft error:", error);
+      setErrors({ general: "Failed to save draft: " + error.message });
     } finally {
       setSaving(false);
     }
@@ -285,21 +306,24 @@ const EditCampaign = () => {
       setSubmitting(true);
       setErrors({});
 
-      const token = localStorage.getItem('authToken');
-      
-      console.log('📤 Submitting campaign for approval');
-      
-      const response = await fetch(`http://localhost:5000/api/campaigns/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          isDraft: false
-        })
-      });
+      const token = localStorage.getItem("authToken");
+
+      console.log("📤 Submitting campaign for approval");
+
+      const response = await fetch(
+        `http://localhost:5000/api/campaigns/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...formData,
+            isDraft: false,
+          }),
+        }
+      );
 
       const result = await response.json();
 
@@ -308,19 +332,21 @@ const EditCampaign = () => {
         if (selectedImage) {
           await uploadImage();
         }
-        
-        setSuccess('Campaign submitted for approval successfully!');
-        
+
+        setSuccess("Campaign submitted for approval successfully!");
+
         // Navigate back to my campaigns after delay
         setTimeout(() => {
-          navigate('/my-campaigns', { state: { tab: 'submitted', refresh: true } });
+          navigate("/my-campaigns", {
+            state: { tab: "submitted", refresh: true },
+          });
         }, 2000);
       } else {
-        setErrors({ general: result.message || 'Failed to submit campaign' });
+        setErrors({ general: result.message || "Failed to submit campaign" });
       }
     } catch (error) {
-      console.error('❌ Submit campaign error:', error);
-      setErrors({ general: 'Failed to submit campaign: ' + error.message });
+      console.error("❌ Submit campaign error:", error);
+      setErrors({ general: "Failed to submit campaign: " + error.message });
     } finally {
       setSubmitting(false);
     }
@@ -329,35 +355,38 @@ const EditCampaign = () => {
   // Upload image
   const uploadImage = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       const imageFormData = new FormData();
-      imageFormData.append('campaignImage', selectedImage);
-      
-      const imageResponse = await fetch(`http://localhost:5000/api/campaigns/${id}/image`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: imageFormData
-      });
+      imageFormData.append("campaignImage", selectedImage);
+
+      const imageResponse = await fetch(
+        `http://localhost:5000/api/campaigns/${id}/image`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: imageFormData,
+        }
+      );
 
       if (!imageResponse.ok) {
-        console.warn('⚠️ Image upload failed');
+        console.warn("⚠️ Image upload failed");
       } else {
-        console.log('✅ Image uploaded successfully');
+        console.log("✅ Image uploaded successfully");
       }
     } catch (error) {
-      console.error('❌ Image upload error:', error);
+      console.error("❌ Image upload error:", error);
     }
   };
 
   // Format currency display
   const formatCurrency = (value) => {
-    if (!value) return '';
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0
+    if (!value) return "";
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
     }).format(value);
   };
 
@@ -365,8 +394,8 @@ const EditCampaign = () => {
   const getCurrentImageUrl = () => {
     if (imagePreview) return imagePreview;
     if (existingImage) {
-      return existingImage.startsWith('http') 
-        ? existingImage 
+      return existingImage.startsWith("http")
+        ? existingImage
         : `http://localhost:5000${existingImage}`;
     }
     return null;
@@ -382,14 +411,14 @@ const EditCampaign = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardNavbar />
-      
+      <UnifiedNavbar variant="dashboard" />
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-700 to-blue-900 rounded-xl p-8 text-white mb-8">
           <div className="flex items-center mb-4">
             <button
-              onClick={() => navigate('/my-campaigns')}
+              onClick={() => navigate("/my-campaigns")}
               className="bg-white/10 hover:bg-white/20 p-2 rounded-lg mr-4 transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -397,15 +426,21 @@ const EditCampaign = () => {
             <div>
               <h1 className="text-3xl font-bold mb-2">Edit Campaign</h1>
               <p className="text-blue-100">
-                Status: <span className="font-semibold capitalize">{originalStatus}</span>
-                {originalStatus === 'rejected' && ' - Fix the issues and resubmit for approval'}
+                Status:{" "}
+                <span className="font-semibold capitalize">
+                  {originalStatus}
+                </span>
+                {originalStatus === "rejected" &&
+                  " - Fix the issues and resubmit for approval"}
               </p>
             </div>
           </div>
-          
+
           {campaign?.adminComments && (
             <div className="bg-red-500/20 border border-red-300/20 rounded-lg p-4 mt-4">
-              <h3 className="font-semibold text-red-100 mb-2">Admin Feedback:</h3>
+              <h3 className="font-semibold text-red-100 mb-2">
+                Admin Feedback:
+              </h3>
               <p className="text-red-100">{campaign.adminComments}</p>
             </div>
           )}
@@ -487,7 +522,7 @@ const EditCampaign = () => {
                 <Building className="h-5 w-5 mr-2" />
                 Basic Information
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -499,11 +534,13 @@ const EditCampaign = () => {
                     value={formData.title}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.title ? 'border-red-500' : 'border-gray-300'
+                      errors.title ? "border-red-500" : "border-gray-300"
                     }`}
                     placeholder="Enter a compelling title for your campaign"
                   />
-                  {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title}</p>}
+                  {errors.title && (
+                    <p className="mt-1 text-sm text-red-500">{errors.title}</p>
+                  )}
                 </div>
 
                 <div>
@@ -515,15 +552,21 @@ const EditCampaign = () => {
                     value={formData.category}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.category ? 'border-red-500' : 'border-gray-300'
+                      errors.category ? "border-red-500" : "border-gray-300"
                     }`}
                   >
                     <option value="">Select a category</option>
-                    {categories.map(category => (
-                      <option key={category} value={category}>{category}</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
                     ))}
                   </select>
-                  {errors.category && <p className="mt-1 text-sm text-red-500">{errors.category}</p>}
+                  {errors.category && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.category}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -538,12 +581,16 @@ const EditCampaign = () => {
                       value={formData.location}
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        errors.location ? 'border-red-500' : 'border-gray-300'
+                        errors.location ? "border-red-500" : "border-gray-300"
                       }`}
                       placeholder="e.g., Lagos, Nigeria"
                     />
                   </div>
-                  {errors.location && <p className="mt-1 text-sm text-red-500">{errors.location}</p>}
+                  {errors.location && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.location}
+                    </p>
+                  )}
                 </div>
 
                 <div className="md:col-span-2">
@@ -556,11 +603,15 @@ const EditCampaign = () => {
                     onChange={handleInputChange}
                     rows={4}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.description ? 'border-red-500' : 'border-gray-300'
+                      errors.description ? "border-red-500" : "border-gray-300"
                     }`}
                     placeholder="Describe your project and what makes it unique..."
                   />
-                  {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
+                  {errors.description && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.description}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -571,7 +622,7 @@ const EditCampaign = () => {
                 <DollarSign className="h-5 w-5 mr-2" />
                 Financial Information
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -585,7 +636,7 @@ const EditCampaign = () => {
                     min="0"
                     step="1000"
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.targetAmount ? 'border-red-500' : 'border-gray-300'
+                      errors.targetAmount ? "border-red-500" : "border-gray-300"
                     }`}
                     placeholder="e.g., 5000000"
                   />
@@ -594,12 +645,17 @@ const EditCampaign = () => {
                       {formatCurrency(formData.targetAmount)}
                     </p>
                   )}
-                  {errors.targetAmount && <p className="mt-1 text-sm text-red-500">{errors.targetAmount}</p>}
+                  {errors.targetAmount && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.targetAmount}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Minimum Investment (NGN) <span className="text-red-500">*</span>
+                    Minimum Investment (NGN){" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -609,7 +665,9 @@ const EditCampaign = () => {
                     min="0"
                     step="1000"
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.minimumInvestment ? 'border-red-500' : 'border-gray-300'
+                      errors.minimumInvestment
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                     placeholder="e.g., 50000"
                   />
@@ -618,7 +676,11 @@ const EditCampaign = () => {
                       {formatCurrency(formData.minimumInvestment)}
                     </p>
                   )}
-                  {errors.minimumInvestment && <p className="mt-1 text-sm text-red-500">{errors.minimumInvestment}</p>}
+                  {errors.minimumInvestment && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.minimumInvestment}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -629,7 +691,7 @@ const EditCampaign = () => {
                 <FileText className="h-5 w-5 mr-2" />
                 Project Details
               </h2>
-              
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -681,7 +743,7 @@ const EditCampaign = () => {
                 <ImageIcon className="h-5 w-5 mr-2" />
                 Media
               </h2>
-              
+
               <div className="space-y-6">
                 {/* Image Upload */}
                 <div>
@@ -691,9 +753,9 @@ const EditCampaign = () => {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
                     {getCurrentImageUrl() ? (
                       <div className="relative">
-                        <img 
-                          src={getCurrentImageUrl()} 
-                          alt="Campaign preview" 
+                        <img
+                          src={getCurrentImageUrl()}
+                          alt="Campaign preview"
                           className="max-h-64 mx-auto rounded-lg"
                         />
                         <button
@@ -741,7 +803,9 @@ const EditCampaign = () => {
                       </div>
                     )}
                   </div>
-                  {errors.image && <p className="mt-1 text-sm text-red-500">{errors.image}</p>}
+                  {errors.image && (
+                    <p className="mt-1 text-sm text-red-500">{errors.image}</p>
+                  )}
                 </div>
 
                 {/* Video URL */}
@@ -772,12 +836,12 @@ const EditCampaign = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-between">
                 <button
                   type="button"
-                  onClick={() => navigate('/my-campaigns')}
+                  onClick={() => navigate("/my-campaigns")}
                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     type="button"
@@ -788,7 +852,7 @@ const EditCampaign = () => {
                     <Save className="h-5 w-5 mr-2" />
                     Save as Draft
                   </button>
-                  
+
                   <button
                     type="button"
                     onClick={submitForApproval}
@@ -809,20 +873,19 @@ const EditCampaign = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="mt-4 text-sm text-blue-600 text-center">
                 <p>
-                  {originalStatus === 'rejected' 
-                    ? 'Address the admin feedback above before resubmitting for approval.'
-                    : 'Once submitted, your campaign will be reviewed by our admin team.'
-                  }
+                  {originalStatus === "rejected"
+                    ? "Address the admin feedback above before resubmitting for approval."
+                    : "Once submitted, your campaign will be reviewed by our admin team."}
                 </p>
               </div>
             </div>
           </form>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );
