@@ -1,8 +1,8 @@
 # Darb Network - Nigerian Startup Crowdfunding Platform
 
 <div align="center">
-  <img src="./frontend/src/assets/Logo.png" alt="Darb Network Logo" width="200"/>
-  
+  <img src="assets/Logo.png" alt="Darb Network Logo" width="200"/>
+
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
   [![React Version](https://img.shields.io/badge/react-18.2.0-blue)](https://reactjs.org/)
@@ -110,7 +110,7 @@ Before setting up the project, ensure you have the following installed:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/darb-network.git
+git clone https://github.com/otikanelson/darb-network.git
 cd darb-network
 ```
 
@@ -153,12 +153,8 @@ CLIENT_ORIGIN=http://localhost:5173
 NODE_ENV=development
 
 # Paystack Configuration (Optional for development)
-PAYSTACK_SECRET_KEY=sk_test_your_paystack_test_key
-PAYSTACK_PUBLIC_KEY=pk_test_your_paystack_public_key
-
-# Email Configuration (Optional)
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_gmail_app_password
+PAYSTACK_SECRET_KEY=pk_test_ea0d848cec6a2e81e72725d69efed66b8cee91cc
+PAYSTACK_PUBLIC_KEY=sk_test_6861e282bc112e55b5a42f81013f898b29831768
 ```
 
 ### 4. Database Setup
@@ -228,17 +224,17 @@ The sample data includes test accounts for each user type:
 
 #### Admin Account
 - **Email**: `admin@darbnetwork.com`
-- **Password**: `password123`
+- **Password**: `admin2025`
 - **Access**: Full platform administration
 
 #### Founder Account
-- **Email**: `founder@test.com`
-- **Password**: `password123`
+- **Email**: `otikanelson29`
+- **Password**: `292025`
 - **Access**: Create and manage campaigns
 
 #### Investor Account
-- **Email**: `investor@test.com`
-- **Password**: `password123`
+- **Email**: `otikanelson`
+- **Password**: `2025`
 - **Access**: Browse and invest in campaigns
 
 ### Getting Started
