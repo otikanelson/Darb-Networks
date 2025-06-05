@@ -1,4 +1,3 @@
-// src/components/layout/UnifiedNavbar.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -264,7 +263,7 @@ const Navbars = ({
             value={searchQuery}
             onChange={handleSearchInputChange}
             onFocus={() => setShowSearchSuggestions(searchQuery.length > 0)}
-            placeholder="Search campaigns, categories, or keywords..."
+            placeholder="Search campaign categories"
             className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-full 
                      focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 
                      bg-white shadow-sm text-gray-900 placeholder-gray-500"
