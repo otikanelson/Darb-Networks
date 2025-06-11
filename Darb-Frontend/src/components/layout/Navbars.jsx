@@ -465,24 +465,24 @@ return (
             </>
           ) : (
             // Logged out view - varies by variant
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center pl-4 space-x-4">
               {variant === 'default' ? (
                 // Home page style
                 <>
                   <Link 
                     to="/login" 
-                    className="text-gray-600 hover:text-purple-700 font-bold"
+                    className="text-sm text-gray-500 hover:text-purple-700 font-bold"
                   >
                     Login
                   </Link>
                   <Link 
-                    className="text-gray-600 hover:text-green-700 font-bold"
+                    className="text-gray-500 hover:text-green-700 font-bold"
                   >
                     /
                   </Link>
                   <Link 
                     to="/Register" 
-                    className="text-gray-600 hover:text-purple-700 font-bold"
+                    className="text-sm text-gray-500 hover:text-purple-700 font-bold"
                   >
                     SignUp
                   </Link>
