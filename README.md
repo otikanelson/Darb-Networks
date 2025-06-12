@@ -140,7 +140,7 @@ Edit the `.env` file with your configuration:
 # Database Configuration
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_mysql_password
+DB_PASSWORD=RADson292005
 DB_NAME=darb_network_db
 
 # JWT Configuration
