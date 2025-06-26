@@ -785,7 +785,7 @@ const Dashboard = () => {
               <p className="text-gray-600 mt-1">
                 {filteredCount > 0 ? (
                   <>
-                    Showing {((currentPage - 1) * limit) + 1}-{Math.min(currentPage * limit, filteredCount)} of {filteredCount} campaigns
+                    Showing {Math.min(currentPage * limit, filteredCount)} / {totalCampaigns} campaigns
                     {(searchTerm || selectedCategory !== "All Categories" || selectedFilter !== "All Campaigns") && (
                       <span className="text-green-600 font-medium"> (filtered from {totalCampaigns} total)</span>
                     )}

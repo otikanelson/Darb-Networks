@@ -9,6 +9,16 @@
   [![MySQL Version](https://img.shields.io/badge/mysql-8.0-orange)](https://www.mysql.com/)
 </div>
 
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+
 ## 📖 Table of Contents
 
 - [Overview](#overview)
@@ -140,7 +150,7 @@ Edit the `.env` file with your configuration:
 # Database Configuration
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=RADson292005
+DB_PASSWORD=Your_db_root_Password
 DB_NAME=darb_network_db
 
 # JWT Configuration
@@ -152,9 +162,6 @@ PORT=5000
 CLIENT_ORIGIN=http://localhost:5173
 NODE_ENV=development
 
-# Paystack Configuration (Optional for development)
-PAYSTACK_SECRET_KEY=pk_test_ea0d848cec6a2e81e72725d69efed66b8cee91cc
-PAYSTACK_PUBLIC_KEY=sk_test_6861e282bc112e55b5a42f81013f898b29831768
 ```
 
 ### 4. Database Setup
@@ -409,13 +416,6 @@ darb-network/
 └── README.md              # This file
 ```
 
-## 👨‍💻 Development Guidelines
-
-### Code Style
-- **Backend**: Follow Node.js best practices with ESLint
-- **Frontend**: React best practices with functional components and hooks
-- **Database**: Use consistent naming conventions (snake_case for columns)
-
 ### Git Workflow
 ```bash
 # Create feature branch
@@ -428,31 +428,6 @@ git commit -m "feat: add new feature description"
 # Push and create pull request
 git push origin feature/your-feature-name
 ```
-
-### Commit Convention
-Follow conventional commits:
-- `feat:` - New features
-- `fix:` - Bug fixes
-- `docs:` - Documentation changes
-- `style:` - Code style changes
-- `refactor:` - Code refactoring
-- `test:` - Adding tests
-- `chore:` - Maintenance tasks
-
-### Environment-Specific Development
-
-#### Development Mode
-- Hot reloading enabled
-- Detailed error logging
-- CORS configured for localhost
-- Sample data available
-
-#### Production Considerations
-- Environment variables validation
-- Error handling and logging
-- Security headers
-- Database connection pooling
-- File upload limits
 
 ## 🚀 Deployment
 
@@ -482,25 +457,7 @@ sudo apt install mysql-server
 sudo npm install -g pm2
 ```
 
-#### 2. Application Deployment
-```bash
-# Clone repository
-git clone https://github.com/yourusername/darb-network.git
-cd darb-network
-
-# Install dependencies
-cd backend && npm install --production
-cd ../frontend && npm install && npm run build
-
-# Setup environment
-cp backend/.env.example backend/.env
-# Edit .env with production values
-
-# Setup database
-mysql -u root -p < database/schema.sql
-```
-
-#### 3. Process Management
+#### 2. Process Management
 ```bash
 # Start backend with PM2
 cd backend
@@ -511,7 +468,7 @@ sudo apt install nginx
 # Configure nginx to serve frontend build files
 ```
 
-#### 4. SSL and Domain
+#### 3. SSL and Domain
 ```bash
 # Install Certbot for Let's Encrypt
 sudo apt install certbot python3-certbot-nginx
@@ -556,9 +513,9 @@ We welcome contributions to Darb Network! Here's how you can help:
 - Documentation must be updated
 
 ### Getting Help
-- Join our Discord community (link coming soon)
+- Join My Discord community (link coming soon)
 - Open an issue for bugs or questions
-- Email us at dev@darbnetwork.com
+- Email me at otikanelson29@gmail.com
 
 ## 🔧 Troubleshooting
 
@@ -621,12 +578,6 @@ Include:
 - Steps to reproduce
 - Expected vs actual behavior
 
-#### Priority Support
-For urgent issues affecting production:
-- Email: support@darbnetwork.com
-- Include "URGENT" in subject line
-- Provide detailed system information
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -641,21 +592,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-### Project Maintainers
-- **Lead Developer**: Your Name (your.email@example.com)
-- **Project Manager**: PM Name (pm.email@example.com)
-- **Design Lead**: Designer Name (design.email@example.com)
+### Project Maintainer
+- **Solo Developer**: Otika Somtochukwu Nelson (otikanelson29@Gmail.com)
 
 ### Community
 - **Website**: https://darbnetwork.com
-- **Email**: hello@darbnetwork.com
-- **Twitter**: [@DarbNetwork](https://twitter.com/DarbNetwork)
-- **LinkedIn**: [Darb Network](https://linkedin.com/company/darb-network)
-
-### Business Inquiries
-- **Partnerships**: partnerships@darbnetwork.com
-- **Investment**: investors@darbnetwork.com
-- **Press**: press@darbnetwork.com
 
 ---
 
@@ -679,12 +620,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Upcoming Features
 - 🔔 Real-time notifications
-- 📧 Email marketing integration
 - 🎯 Advanced analytics dashboard
 - 📱 Mobile application
 - 🌍 Multi-language support
 - 🏦 Bank integration for faster KYC
+- 📈 Contribution Contracting and monitoring
+- 🔔 Campaign Progress and Contributions Notifications
+- 📊 Platform-wide analytics and reporting
+- 🛡️ Fraud prevention and security monitoring
+- 🔍 Broad Campaign Definitions
+- 📋 Prominent History Feature
 
 ---
 
-> **Note**: This project is actively maintained and under continuous development. For the latest updates and features, please check our [releases page](https://github.com/yourusername/darb-network/releases).
