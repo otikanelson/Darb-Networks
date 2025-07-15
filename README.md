@@ -9,32 +9,15 @@
   [![MySQL Version](https://img.shields.io/badge/mysql-8.0-orange)](https://www.mysql.com/)
 </div>
 
-## 📖 Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Installation & Setup](#installation--setup)
-- [Usage](#usage)
-- [API Documentation](#api-documentation)
-- [Database Schema](#database-schema)
-- [Project Structure](#project-structure)
-- [Development Guidelines](#development-guidelines)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
-- [Contact](#contact)
 
 ## 🌟 Overview
 
-Darb Network is a comprehensive crowdfunding platform specifically designed for the Nigerian startup ecosystem. It connects ambitious entrepreneurs with verified investors through a transparent, milestone-based funding approach that ensures accountability and reduces investment risk.
+Darb Network is a comprehensive crowdfunding platform specifically designed for the Nigerian startup ecosystem. It connects ambitious entrepreneurs with verified investors through a transparent, milestone-based funding approach that ensures accountability and reduces investment risk. This is the central idea I was going for. Darb is a Reactjs, and Tailwind web application project with simple UI and basic crowdfunding platform functionalities implemented along with an SQL database.
 
-### Why Darb Network?
+### Feature Goals
 
 - **🇳🇬 Nigerian-Focused**: Built specifically for Nigerian startups with local payment integration and regulatory compliance
-- **✅ Verified Ecosystem**: BVN and CAC verification ensures authentic participants
+- **✅ Verified Ecosystem**: BVN and CAC verification ensure authentic participants
 - **📊 Transparent Process**: Real-time tracking of campaign progress and fund utilization
 - **🎯 Milestone-Based**: Investors fund specific project phases, reducing risk
 - **👨‍💼 Admin Oversight**: Professional review and approval process for quality control
@@ -135,28 +118,6 @@ npm install
 cp .env.example .env
 ```
 
-Edit the `.env` file with your configuration:
-```env
-# Database Configuration
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=RADson292005
-DB_NAME=darb_network_db
-
-# JWT Configuration
-JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_random
-JWT_EXPIRES_IN=24h
-
-# Server Configuration
-PORT=5000
-CLIENT_ORIGIN=http://localhost:5173
-NODE_ENV=development
-
-# Paystack Configuration (Optional for development)
-PAYSTACK_SECRET_KEY=pk_test_ea0d848cec6a2e81e72725d69efed66b8cee91cc
-PAYSTACK_PUBLIC_KEY=sk_test_6861e282bc112e55b5a42f81013f898b29831768
-```
-
 ### 4. Database Setup
 
 #### Create Database and Tables
@@ -193,7 +154,7 @@ echo "VITE_API_BASE_URL=http://localhost:5000" > .env.local
 
 ### 6. Start the Application
 
-#### Option 1: Start Both Services Separately
+#### Start Both Services Separately
 ```bash
 # Terminal 1 - Backend
 cd backend
@@ -204,11 +165,6 @@ cd frontend
 npm run dev
 ```
 
-#### Option 2: Start Both Services Concurrently
-```bash
-# From project root
-npm run dev
-```
 
 ### 7. Access the Application
 
@@ -532,7 +488,7 @@ docker build -t darb-frontend ./frontend
 
 ## 🤝 Contributing
 
-We welcome contributions to Darb Network! Here's how you can help:
+I welcome contributions to the Darb Networks project! Here's how you can help:
 
 ### Ways to Contribute
 - 🐛 Report bugs
