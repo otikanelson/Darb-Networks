@@ -22,6 +22,8 @@ Darb Network is a comprehensive crowdfunding platform specifically designed for 
 - **🎯 Milestone-Based**: Investors fund specific project phases, reducing risk
 - **👨‍💼 Admin Oversight**: Professional review and approval process for quality control
 
+  <img src="Screenshot 2025-06-13 004915" alt="Darb Network Logo" width="200"/>
+
 ## ✨ Features
 
 ### For Founders 👨‍💼
