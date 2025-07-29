@@ -37,6 +37,15 @@ Currently, two official plugins are available:
 - [License](#license)
 - [Contact](#contact)
 
+  <div align="center">
+  <img src="Darb-Backend/Screen-Shot_assets/Home.png"  width="200"/>
+
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
+  [![React Version](https://img.shields.io/badge/react-18.2.0-blue)](https://reactjs.org/)
+  [![MySQL Version](https://img.shields.io/badge/mysql-8.0-orange)](https://www.mysql.com/)
+</div>
+
 ## 🌟 Overview
 
 Darb Network is a comprehensive crowdfunding platform specifically designed for the Nigerian startup ecosystem. It connects ambitious entrepreneurs with verified investors through a transparent, milestone-based funding approach that ensures accountability and reduces investment risk.
