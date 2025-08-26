@@ -1,7 +1,7 @@
 # Darb Network - Nigerian Startup Crowdfunding Platform
 
 <div align="center">
-  <img src="assets/Logo.png" alt="Darb Network Logo" width="200"/>
+  <img src="Darb-Backend\Screen-Shot_assets\Logo.png" alt="Darb Network Logo" width="200"/>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
@@ -9,6 +9,7 @@
   [![MySQL Version](https://img.shields.io/badge/mysql-8.0-orange)](https://www.mysql.com/)
 </div>
 
+<<<<<<< HEAD
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -36,18 +37,22 @@ Currently, two official plugins are available:
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 - [Contact](#contact)
+=======
+>>>>>>> 095854de385174def9b000d03d205722823c0518
 
 ## 🌟 Overview
 
-Darb Network is a comprehensive crowdfunding platform specifically designed for the Nigerian startup ecosystem. It connects ambitious entrepreneurs with verified investors through a transparent, milestone-based funding approach that ensures accountability and reduces investment risk.
+Darb Network is a comprehensive crowdfunding platform specifically designed for the Nigerian startup ecosystem. It connects ambitious entrepreneurs with verified investors through a transparent, milestone-based funding approach that ensures accountability and reduces investment risk. This is the central idea I was going for. Darb is a Reactjs, and Tailwind web application project with simple UI and basic crowdfunding platform functionalities implemented along with an SQL database.
 
-### Why Darb Network?
+### Feature Goals
 
 - **🇳🇬 Nigerian-Focused**: Built specifically for Nigerian startups with local payment integration and regulatory compliance
-- **✅ Verified Ecosystem**: BVN and CAC verification ensures authentic participants
+- **✅ Verified Ecosystem**: BVN and CAC verification ensure authentic participants
 - **📊 Transparent Process**: Real-time tracking of campaign progress and fund utilization
 - **🎯 Milestone-Based**: Investors fund specific project phases, reducing risk
 - **👨‍💼 Admin Oversight**: Professional review and approval process for quality control
+
+  <img src="Darb-Backend\Screen-Shot_assets\Screenshot 2025-06-13 004915" width="200"/>
 
 ## ✨ Features
 
@@ -145,6 +150,7 @@ npm install
 cp .env.example .env
 ```
 
+<<<<<<< HEAD
 Edit the `.env` file with your configuration:
 ```env
 # Database Configuration
@@ -164,6 +170,8 @@ NODE_ENV=development
 
 ```
 
+=======
+>>>>>>> 095854de385174def9b000d03d205722823c0518
 ### 4. Database Setup
 
 #### Create Database and Tables
@@ -200,7 +208,7 @@ echo "VITE_API_BASE_URL=http://localhost:5000" > .env.local
 
 ### 6. Start the Application
 
-#### Option 1: Start Both Services Separately
+#### Start Both Services Separately
 ```bash
 # Terminal 1 - Backend
 cd backend
@@ -211,11 +219,6 @@ cd frontend
 npm run dev
 ```
 
-#### Option 2: Start Both Services Concurrently
-```bash
-# From project root
-npm run dev
-```
 
 ### 7. Access the Application
 
@@ -489,7 +492,7 @@ docker build -t darb-frontend ./frontend
 
 ## 🤝 Contributing
 
-We welcome contributions to Darb Network! Here's how you can help:
+I welcome contributions to the Darb Networks project! Here's how you can help:
 
 ### Ways to Contribute
 - 🐛 Report bugs

@@ -3,8 +3,11 @@
  * API base URL - Change this to your backend API URL in production
  * Using window.env for environment variables in the browser
  */
-export const API_BASE_URL = 'http://localhost:5000/api';
+export const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-backend-app.vercel.app/api'
+  : 'http://localhost:5000/api';
 
+export { API_BASE_URL };
 /**
  * API Endpoints for all backend services
  */

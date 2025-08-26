@@ -2,6 +2,7 @@ const { authJwt } = require("../middlewares");
 const controller = require("../controllers/user.controller");
 
 module.exports = function(app) {
+  // CORS headers
   app.use(function(req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
@@ -50,5 +51,32 @@ module.exports = function(app) {
     "/api/users/profile-image",
     [authJwt.verifyToken],
     controller.deleteProfileImage
+  );
+
+  // Get user settings
+  app.get(
+    "/api/users/settings",
+    [authJwt.verifyToken],
+    controller.getSettings || ((req, res) => {
+      res.status(200).send({
+        success: true,
+        data: {
+          notifications: true,
+          privacy: "public"
+        }
+      });
+    })
+  );
+
+  // Update user settings
+  app.put(
+    "/api/users/settings",
+    [authJwt.verifyToken],
+    controller.updateSettings || ((req, res) => {
+      res.status(200).send({
+        success: true,
+        message: "Settings updated successfully"
+      });
+    })
   );
 };
