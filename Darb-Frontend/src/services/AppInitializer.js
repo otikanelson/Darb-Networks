@@ -1,7 +1,7 @@
 // src/services/AppInitializer.js
 import LocalStorageService from './LocalStorageService';
 import AuthService from './authService';
-import CampaignService from './CampaignService';
+import CampaignService from './campaignService';
 import PaymentService from './paymentService';
 import UserService from './userService';
 
