@@ -1,7 +1,7 @@
 // src/services/AppInitializer.js
 import LocalStorageService from './LocalStorageService';
 import AuthService from './authService';
-import CampaignService from './campaignService';
+import CampaignService from './CampaignService'; // Fixed: Use uppercase C to match actual filename
 import PaymentService from './paymentService';
 import UserService from './userService';
 
@@ -13,7 +13,11 @@ export const initializeApp = () => {
   console.log('Initializing application services...');
   
   // Initialize local storage
-  LocalStorageService.initializeLocalStorage();
+  try {
+    LocalStorageService.initializeLocalStorage();
+  } catch (error) {
+    console.warn('LocalStorageService initialization failed:', error);
+  }
   
   // Initialize other services
   // These already initialize their own storage, but calling them
