@@ -1,7 +1,7 @@
 # Darb Network - Nigerian Startup Crowdfunding Platform
 
 <div align="center">
-  <img src="Darb-Backend\Screen-Shot_assets\Logo.png" alt="Darb Network Logo" width="200"/>
+  <img src="assets/Logo.png" alt="Darb Network Logo" width="200"/>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
@@ -37,8 +37,6 @@ Currently, two official plugins are available:
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 - [Contact](#contact)
-=======
->>>>>>> 095854de385174def9b000d03d205722823c0518
 
 ## 🌟 Overview
 
