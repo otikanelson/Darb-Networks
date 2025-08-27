@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CustomNav } from '../../hooks/CustomNavigation';
 import CampaignCard from '../ui/CampaignCard';
-import CampaignService from '../../services/campaignService';
+import CampaignService from '../../services/CampaignService';
 import { useAuth } from '../../context/AuthContext';
 
 const FeaturedStartups = () => {
