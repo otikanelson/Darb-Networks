@@ -5,7 +5,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import CampaignCard from "../ui/CampaignCard";
 import { CustomNav } from "../../hooks/CustomNavigation";
-import CampaignService from "../../services/campaignService";
+import CampaignService from "../../services/CampaignService";
 
 const UserCampaignsSection = () => {
   const { user, isAuthenticated } = useAuth();
