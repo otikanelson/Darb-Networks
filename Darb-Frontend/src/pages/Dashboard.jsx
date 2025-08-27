@@ -5,7 +5,7 @@ import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
 import MobileFilters from "../components/MobileFilters";
 import CampaignCard from "../components/ui/CampaignCard";
-import CampaignService from "../services/campaignService";
+import CampaignService from "../services/CampaignService";
 
 import {
   Search,

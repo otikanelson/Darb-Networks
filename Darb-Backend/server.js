@@ -1,9 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const path = require('path');
+
+// Load environment variables
 require('dotenv').config();
 
 const app = express();
+
+console.log("🚀 Starting Darb Network API...");
 
 // CORS configuration - Updated for production
 const corsOptions = {
@@ -13,7 +17,7 @@ const corsOptions = {
     process.env.CLIENT_ORIGIN,
     process.env.FRONTEND_URL,
     /\.vercel\.app$/ // Allow any Vercel app
-  ],
+  ].filter(Boolean), // Remove undefined values
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token', 'Origin', 'Accept']
@@ -21,38 +25,43 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Parse requests of content-type - application/json
+// Parse requests with larger limits for production
 app.use(express.json({ limit: '10mb' }));
-
-// Parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files middleware
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Static files middleware with error handling
+try {
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+} catch (error) {
+  console.warn("⚠️ Static files setup failed:", error.message);
+}
 
-// Logging middleware for debugging
+// Basic logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-// Health check endpoints
+// Health check endpoints - These should work without database
 app.get("/", (req, res) => {
-  res.json({ 
-    message: "Welcome to Darb Network API.",
-    status: "running",
+  res.status(200).json({ 
+    success: true,
+    message: "Darb Network API is running",
+    status: "healthy",
     timestamp: new Date().toISOString(),
-    version: "1.0.0"
+    version: "1.0.0",
+    environment: process.env.NODE_ENV || "development"
   });
 });
 
 app.get("/api", (req, res) => {
-  res.json({ 
-    message: "Darb Network API is running",
+  res.status(200).json({ 
+    success: true,
+    message: "Darb Network API endpoints",
     version: "1.0.0",
     endpoints: {
       auth: "/api/auth/*",
-      users: "/api/users/*",
+      users: "/api/users/*",  
       campaigns: "/api/campaigns/*",
       investments: "/api/investments/*",
       admin: "/api/admin/*"
@@ -61,87 +70,243 @@ app.get("/api", (req, res) => {
   });
 });
 
-// Test endpoint for uploads
-app.get('/test-static', (req, res) => {
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Test endpoint without database dependency
+app.get('/test', (req, res) => {
   try {
-    const fs = require('fs');
-    const uploadDir = path.join(__dirname, 'uploads', 'profiles');
-    
-    console.log('📁 Upload directory:', uploadDir);
-    console.log('📂 Directory exists:', fs.existsSync(uploadDir));
-    
-    if (fs.existsSync(uploadDir)) {
-      const files = fs.readdirSync(uploadDir);
-      console.log('📄 Files in directory:', files);
-      res.json({
-        directory: uploadDir,
-        exists: true,
-        files: files,
-        success: true
-      });
-    } else {
-      res.json({
-        directory: uploadDir,
-        exists: false,
-        files: [],
-        success: true
-      });
-    }
+    res.status(200).json({
+      success: true,
+      message: "Test endpoint working",
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        hasDbHost: !!process.env.DB_HOST,
+        hasJwtSecret: !!process.env.JWT_SECRET,
+      },
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error checking uploads directory",
+      message: "Test endpoint failed",
       error: error.message
     });
   }
 });
 
-// Database connection
-const db = require("./models");
+// Initialize database with error handling
+let dbInitialized = false;
+let dbError = null;
 
-// Initialize database connection
 const initializeDatabase = async () => {
   try {
-    await db.sequelize.authenticate();
-    console.log("Database connection has been established successfully.");
+    console.log("🔧 Attempting to initialize database...");
     
-    // Only sync in development - avoid in production
-    if (process.env.NODE_ENV !== 'production') {
-      await db.sequelize.sync();
-      console.log("Database synchronized successfully");
+    // Only try to connect to database if we have the required environment variables
+    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
+      throw new Error("Missing required database environment variables");
     }
+    
+    const db = require("./models");
+    
+    console.log("🔧 Database config check:", {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      hasPassword: !!process.env.DB_PASSWORD
+    });
+    
+    await db.sequelize.authenticate();
+    console.log("✅ Database connection established successfully");
+    
+    // Only sync in development
+    if (process.env.NODE_ENV !== 'production') {
+      await db.sequelize.sync({ alter: false });
+      console.log("✅ Database synchronized successfully");
+    }
+    
+    dbInitialized = true;
+    return true;
   } catch (error) {
-    console.error("Database connection failed:", error);
-    // Don't exit the process in production - let it continue without DB
-    if (process.env.NODE_ENV !== 'production') {
-      process.exit(1);
-    }
+    console.error("❌ Database initialization failed:", error.message);
+    dbError = error;
+    return false;
   }
 };
 
-// Initialize database
+// Database status endpoint
+app.get("/api/db-status", (req, res) => {
+  res.status(200).json({
+    success: true,
+    database: {
+      initialized: dbInitialized,
+      error: dbError ? dbError.message : null,
+      hasConfig: {
+        host: !!process.env.DB_HOST,
+        user: !!process.env.DB_USER,
+        database: !!process.env.DB_NAME,
+        password: !!process.env.DB_PASSWORD
+      }
+    }
+  });
+});
+
+// Middleware to check database connection for routes that need it
+const requireDatabase = (req, res, next) => {
+  if (!dbInitialized) {
+    return res.status(503).json({
+      success: false,
+      message: "Database not available",
+      error: dbError ? dbError.message : "Database not initialized"
+    });
+  }
+  next();
+};
+
+// Initialize database (don't block startup if it fails)
 initializeDatabase();
 
-// Routes - Load all route modules
-try {
-  require('./routes/auth.routes')(app);
-  require('./routes/user.routes')(app);
-  require('./routes/passwordReset.routes')(app);
-  require('./routes/campaign.routes')(app);
-  require('./routes/admin.routes')(app);
-  require('./routes/investment.routes')(app);
-  console.log("✅ All routes loaded successfully");
-} catch (error) {
-  console.error("❌ Error loading routes:", error);
-}
+// Load routes with error handling
+const loadRoutes = () => {
+  try {
+    console.log("🔧 Loading routes...");
+    
+    // Load routes that don't require database first
+    const simpleRoutes = [
+      { name: 'passwordReset', path: './routes/passwordReset.routes' }
+    ];
+    
+    // Load routes that require database
+    const dbRoutes = [
+      { name: 'auth', path: './routes/auth.routes' },
+      { name: 'user', path: './routes/user.routes' },
+      { name: 'campaign', path: './routes/campaign.routes' },
+      { name: 'admin', path: './routes/admin.routes' },
+      { name: 'investment', path: './routes/investment.routes' }
+    ];
+    
+    // Load simple routes
+    simpleRoutes.forEach(route => {
+      try {
+        require(route.path)(app);
+        console.log(`✅ ${route.name} routes loaded`);
+      } catch (error) {
+        console.error(`❌ Failed to load ${route.name} routes:`, error.message);
+      }
+    });
+    
+    // Load database-dependent routes with database check
+    dbRoutes.forEach(route => {
+      try {
+        // Wrap route with database requirement
+        const originalRoute = require(route.path);
+        
+        // Create a wrapper that checks database before routing
+        const wrappedRoute = (app) => {
+          // Add database check middleware to all routes in this module
+          const originalUse = app.use;
+          const originalGet = app.get;
+          const originalPost = app.post;
+          const originalPut = app.put;
+          const originalDelete = app.delete;
+          
+          // Temporarily override methods to add database check
+          app.use = function(...args) {
+            if (args[0] && args[0].startsWith('/api/')) {
+              return originalUse.call(this, args[0], requireDatabase, ...args.slice(1));
+            }
+            return originalUse.apply(this, args);
+          };
+          
+          app.get = function(...args) {
+            if (args[0] && args[0].startsWith('/api/')) {
+              return originalGet.call(this, args[0], requireDatabase, ...args.slice(1));
+            }
+            return originalGet.apply(this, args);
+          };
+          
+          app.post = function(...args) {
+            if (args[0] && args[0].startsWith('/api/')) {
+              return originalPost.call(this, args[0], requireDatabase, ...args.slice(1));
+            }
+            return originalPost.apply(this, args);
+          };
+          
+          app.put = function(...args) {
+            if (args[0] && args[0].startsWith('/api/')) {
+              return originalPut.call(this, args[0], requireDatabase, ...args.slice(1));
+            }
+            return originalPut.apply(this, args);
+          };
+          
+          app.delete = function(...args) {
+            if (args[0] && args[0].startsWith('/api/')) {
+              return originalDelete.call(this, args[0], requireDatabase, ...args.slice(1));
+            }
+            return originalDelete.apply(this, args);
+          };
+          
+          // Load the actual routes
+          originalRoute(app);
+          
+          // Restore original methods
+          app.use = originalUse;
+          app.get = originalGet;
+          app.post = originalPost;
+          app.put = originalPut;
+          app.delete = originalDelete;
+        };
+        
+        wrappedRoute(app);
+        console.log(`✅ ${route.name} routes loaded (with DB check)`);
+      } catch (error) {
+        console.error(`❌ Failed to load ${route.name} routes:`, error.message);
+        
+        // Create fallback routes for failed modules
+        app.all(`/api/${route.name}/*`, (req, res) => {
+          res.status(503).json({
+            success: false,
+            message: `${route.name} service unavailable`,
+            error: error.message
+          });
+        });
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Critical error loading routes:", error);
+  }
+};
 
-// Error handling middleware
+// Load routes
+loadRoutes();
+
+// Global error handling middleware
 app.use((err, req, res, next) => {
-  console.error('❌ Global Error:', err);
+  console.error('❌ Global Error:', {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    path: req.path,
+    method: req.method
+  });
+  
   res.status(err.status || 500).json({
     success: false,
     message: err.message || 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    path: req.path,
+    timestamp: new Date().toISOString(),
+    error: process.env.NODE_ENV === 'development' ? {
+      stack: err.stack,
+      details: err
+    } : undefined
   });
 });
 
@@ -155,21 +320,24 @@ app.use((req, res) => {
     availableEndpoints: [
       'GET /',
       'GET /api',
+      'GET /health',
+      'GET /test',
+      'GET /api/db-status',
       'POST /api/auth/register',
       'POST /api/auth/login',
-      'GET /api/auth/profile',
-      'GET /api/campaigns',
-      'POST /api/campaigns'
-    ]
+      'GET /api/campaigns'
+    ],
+    timestamp: new Date().toISOString()
   });
 });
 
 // For local development only
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && require.main === module) {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 API available at http://localhost:${PORT}/api`);
+    console.log(`🏥 Health check: http://localhost:${PORT}/health`);
   });
 }
 
