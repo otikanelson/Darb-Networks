@@ -148,7 +148,6 @@ npm install
 cp .env.example .env
 ```
 
-<<<<<<< HEAD
 Edit the `.env` file with your configuration:
 ```env
 # Database Configuration
@@ -166,10 +165,6 @@ PORT=5000
 CLIENT_ORIGIN=http://localhost:5173
 NODE_ENV=development
 
-```
-
-=======
->>>>>>> 095854de385174def9b000d03d205722823c0518
 ### 4. Database Setup
 
 #### Create Database and Tables
