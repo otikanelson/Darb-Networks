@@ -1,13 +1,13 @@
 {
-  "name": "darb-network-frontend",
+  "name": "darb-network",
   "private": true,
   "version": "1.0.0",
-  "description": "Darb Network - Crowdfunding Platform Frontend",
+  "description": "Darb Network - Crowdfunding Platform",
   "type": "module",
   "homepage": "https://darbnetwork.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/darb-network.git"
+    "url": "https://github.com/otikanelson/darb-network.git"
   },
   "author": {
     "name": "Darb Network Team",
@@ -16,7 +16,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite --host",
-    "build": "npx vite build",
+    "build": "vite build",
+    "postinstall": "node -e \"try{require('fs').chmodSync('node_modules/.bin/vite',0o755)}catch(e){}\"",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext js,jsx --fix",
     "preview": "vite preview",
@@ -118,7 +119,7 @@
     ]
   },
   "engines": {
-    "node": ">=16.0.0",
+    "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
   "keywords": [
@@ -131,6 +132,6 @@
     "vite"
   ],
   "bugs": {
-    "url": "https://github.com/yourusername/darb-network/issues"
+    "url": "https://github.com/otikanelson/darb-network/issues"
   }
 }
