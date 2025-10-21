@@ -756,7 +756,7 @@ const Dashboard = () => {
         <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-green-700 via-purple-600 to-green-500">
           <img
-            src="/src/assets/featured-bg.png"
+            src="/assets/featured-bg.png"
             alt="Background Pattern"
             className="w-full h-full object-cover opacity-10"
           />
