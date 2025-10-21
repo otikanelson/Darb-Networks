@@ -59,14 +59,14 @@ const Login = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-green-700 to-green-900 p-12 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-green-800/95 to-green-900/90" />
         <img 
-          src="/src/assets/featured-bg.png" 
+          src="/assets/featured-bg.png" 
           alt="Background Pattern" 
           className="absolute inset-0 w-full h-full object-cover opacity-10"
         />
         <div className="relative z-10 flex flex-col justify-between h-full">
           <div>
             <img 
-              src="/src/assets/Logo.png" 
+              src="/assets/Logo.png" 
               alt="Logo" 
               className="h-16 w-auto mb-12"
             />
