@@ -1,0 +1,8 @@
+DB_HOST=trolley.proxy.rlwy.net
+DB_PORT=18225
+DB_USER=root
+DB_PASSWORD=GUvbHioVYfXSdHDRyKuRiAilavqnSFqT
+DB_NAME=railway
+JWT_SECRET=f48c2dafd3e60392566d872320fb94f900ff0264368b122f523fa1e3537202d3
+NODE_ENV=production
+CLIENT_ORIGIN=https://darb-networks-n7lf.vercel.app
