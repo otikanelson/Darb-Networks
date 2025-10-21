@@ -414,7 +414,7 @@ return (
         <div className="flex items-center flex-shrink-0">
           <Link to="/" className="flex-shrink-0 flex items-center">
             <img 
-              src="/../public/assets/Logo.png" 
+              src="/Logo.png" 
               alt="Logo" 
               className="h-14 w-auto"
             />
