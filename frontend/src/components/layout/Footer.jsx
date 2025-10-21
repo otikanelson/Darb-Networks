@@ -14,8 +14,8 @@ const Footer = () => {
               <div className="space-y-6">
                 <div className="flex items-center space-x-2">
                   <img 
-                    src="/src/public/assets/Logo.png" 
-                    alt="StartupFund Logo" 
+                    src="/src/assets/Logo.png" 
+                    alt="Logo" 
                     className="w-24 h-14 object-contain"
                   />
                 </div>
@@ -104,19 +104,19 @@ const Footer = () => {
               
               <div className="flex space-x-6 mt-6 md:mt-0">
                 <a href="#" className="text-gray-400 hover:text-white flex items-center border-x-2 border-y-2 border-green-900 rounded-b-3xl rounded-t-3xl px-1">
-                  <img src="/src/public/assets/instagram.svg" alt="Instagram" className="h-5 w-5" />
+                  <img src="/src/assets/instagram.svg" alt="Instagram" className="h-5 w-5" />
                   <p className="text-stone-950 text-sm m-2">Instagram</p>
                 </a>
                 <a href="#" className="text-gray-400 hover:text-white flex items-center border-x-2 border-y-2 border-green-900 rounded-b-3xl rounded-t-3xl px-1">
-                  <img src="/src/public/assets/facebook.svg" alt="Facebook" className="h-5 w-5" />
+                  <img src="/src/assets/facebook.svg" alt="Facebook" className="h-5 w-5" />
                   <p className="text-stone-950 text-sm m-2">Facebook</p>
                 </a>
                 <a href="#" className="text-gray-400 hover:text-white flex items-center border-x-2 border-y-2 border-green-900 rounded-b-3xl rounded-t-3xl px-1">
-                  <img src="/src/public/assets/twitter.svg" alt="Twitter" className="h-5 w-5" />
+                  <img src="/src/assets/twitter.svg" alt="Twitter" className="h-5 w-5" />
                   <p className="text-stone-950 text-sm m-2">Twitter</p>
                 </a>
                 <a href="#" className="text-gray-400 hover:text-white flex items-center border-x-2 border-y-2 border-green-900 rounded-b-3xl rounded-t-3xl px-1">
-                  <img src="/src/public/assets/linkedin.svg" alt="LinkedIn" className="h-5 w-5" />
+                  <img src="/src/assets/linkedin.svg" alt="LinkedIn" className="h-5 w-5" />
                   <p className="text-stone-950 text-sm m-2">Linkedin</p>
                 </a>
               </div>

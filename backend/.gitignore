@@ -1,5 +1,6 @@
 # Environment variables
 .env
+db.config.js
 API.md
 
 # Dependency directories
