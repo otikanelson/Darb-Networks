@@ -1,4 +1,4 @@
-# Darb Network - Nigerian Startup Crowdfunding Platform
+# Darb Network - Startup Crowdfunding Platform
 
 <div align="center">
   <img src="src/assets/Logo.png" alt="Darb Network Logo" width="200"/>
