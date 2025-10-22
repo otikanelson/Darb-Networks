@@ -8,6 +8,7 @@ const sequelize = new Sequelize(
   {
     host: dbConfig.HOST,
     dialect: dbConfig.dialect,
+    dialectModule: require('mysql2'), // Explicitly require mysql2
     operatorsAliases: 0,
     pool: {
       max: dbConfig.pool.max,
