@@ -1,5 +1,5 @@
 {
-  "name": "darb-network-backend",
+  "name": "darb-network",
   "version": "1.0.0",
   "description": "Backend for Darb Network P2P Lending Platform",
   "main": "server.js",
@@ -23,5 +23,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
