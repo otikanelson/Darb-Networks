@@ -1,7 +1,7 @@
 {
   "name": "darb-network",
   "version": "1.0.0",
-  "description": "Backend for Darb Network P2P Lending Platform",
+  "description": "The Backend for Darb Network P2P Lending Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
