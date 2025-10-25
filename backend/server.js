@@ -192,12 +192,12 @@ const loadRoutes = () => {
     console.log("🔧 Loading routes...");
     
     const routes = [
-      { name: 'passwordReset', path: './backend/routes/passwordReset.routes', requiresDb: false },
-      { name: 'auth', path: './backend/routes/auth.routes', requiresDb: true },
-      { name: 'user', path: './backend/routes/user.routes', requiresDb: true },
-      { name: 'campaign', path: './backend/routes/campaign.routes', requiresDb: true },
-      { name: 'admin', path: './backend/routes/admin.routes', requiresDb: true },
-      { name: 'investment', path: './backend/routes/investment.routes', requiresDb: true }
+      { name: 'passwordReset', path: './routes/passwordReset.routes', requiresDb: false },
+      { name: 'auth', path: './routes/auth.routes', requiresDb: true },
+      { name: 'user', path: './routes/user.routes', requiresDb: true },
+      { name: 'campaign', path: './routes/campaign.routes', requiresDb: true },
+      { name: 'admin', path: './routes/admin.routes', requiresDb: true },
+      { name: 'investment', path: './routes/investment.routes', requiresDb: true }
     ];
     
     routes.forEach(route => {
