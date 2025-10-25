@@ -174,6 +174,39 @@ const requireDatabase = (req, res, next) => {
 // Initialize database (don't block startup if it fails)
 initializeDatabase();
 
+// File structure check endpoint
+app.get('/test', (req, res) => {
+  try {
+    const fs = require('fs');
+    
+    // Check what's in the current directory
+    const currentDir = fs.readdirSync('./');
+    const hasRoutes = fs.existsSync('./routes');
+    
+    let routeFiles = [];
+    if (hasRoutes) {
+      routeFiles = fs.readdirSync('./routes');
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: "File structure check",
+      currentDirectory: __dirname,
+      filesInRoot: currentDir,
+      hasRoutesFolder: hasRoutes,
+      filesInRoutes: routeFiles,
+      nodeEnv: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // Load routes with error handling
 const loadRoutes = () => {
   try {
