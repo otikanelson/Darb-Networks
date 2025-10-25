@@ -80,27 +80,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Test endpoint without database dependency
-app.get('/test', (req, res) => {
-  try {
-    res.status(200).json({
-      success: true,
-      message: "Test endpoint working",
-      environment: {
-        nodeEnv: process.env.NODE_ENV,
-        hasDbHost: !!process.env.DB_HOST,
-        hasJwtSecret: !!process.env.JWT_SECRET,
-      },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Test endpoint failed",
-      error: error.message
-    });
-  }
-});
 
 // Initialize database with error handling
 let dbInitialized = false;
