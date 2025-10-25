@@ -6,3 +6,13 @@ DB_NAME=railway
 JWT_SECRET=f48c2dafd3e60392566d872320fb94f900ff0264368b122f523fa1e3537202d3
 NODE_ENV=production
 CLIENT_ORIGIN=https://darb-networks-n7lf.vercel.app
+
+MYSQL_DATABASE=railway
+MYSQL_PUBLIC_URL=mysql://root:GUvbHioVYfXSdHDRyKuRiAilavqnSFqT@trolley.proxy.rlwy.net:18225/railway
+MYSQL_ROOT_PASSWORD=GUvbHioVYfXSdHDRyKuRiAilavqnSFqT
+MYSQL_URL=mysql://root:GUvbHioVYfXSdHDRyKuRiAilavqnSFqT@mysql.railway.internal:3306/railway
+MYSQLDATABASE=railway
+MYSQLHOST=mysql.railway.internal
+MYSQLPASSWORD=GUvbHioVYfXSdHDRyKuRiAilavqnSFqT
+MYSQLPORT=3306
+MYSQLUSER=root

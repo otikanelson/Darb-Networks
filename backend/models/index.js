@@ -7,7 +7,9 @@ const sequelize = new Sequelize(
   dbConfig.PASSWORD, 
   {
     host: dbConfig.HOST,
+    port: dbConfig.PORT,
     dialect: dbConfig.dialect,
+    dialectOptions: dbConfig.dialectOptions,
     dialectModule: require('mysql2'), // Explicitly require mysql2
     operatorsAliases: 0,
     pool: {

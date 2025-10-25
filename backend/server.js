@@ -1,7 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const path = require('path');
-
+// Serverless function export for Vercel
+if (process.env.VERCEL) {
+  console.log('🔷 Running on Vercel serverless');
+}
 // Load environment variables
 require('dotenv').config();
 

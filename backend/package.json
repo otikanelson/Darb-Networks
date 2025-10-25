@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "The Backend for Darb Network P2P Lending Platform",
   "main": "server.js",
+    "engines": {
+    "node": ">=18.x"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
