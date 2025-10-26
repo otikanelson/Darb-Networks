@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
+import { buildApiUrl, buildImageUrl } from '../config/apiUrl';
+
 import {
   User,
   Mail,
@@ -91,8 +93,8 @@ const Profile = () => {
       setLoading(true);
 
       const token = localStorage.getItem("authToken");
-      const response = await fetch("http://localhost:5000/api/users/profile", {
-        headers: {
+      const response = await fetch(buildApiUrl('/users/profile'), {
+          headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
@@ -125,11 +127,10 @@ const Profile = () => {
           if (userData.profileImageUrl.startsWith("http")) {
             imageUrl = userData.profileImageUrl;
           } else if (userData.profileImageUrl.startsWith("/uploads")) {
-            imageUrl = `http://localhost:5000${userData.profileImageUrl}`;
+            imageUrl = buildImageUrl(userData.profileImageUrl);
           } else {
-            imageUrl = `http://localhost:5000/uploads/profiles/${userData.profileImageUrl}`;
-          }
-
+            imageUrl = buildImageUrl(`/uploads/profiles/${userData.profileImageUrl}`);
+}
           console.log("Constructed image URL:", imageUrl);
 
           // Test if the image actually loads
@@ -244,7 +245,7 @@ const Profile = () => {
 
       const token = localStorage.getItem("authToken");
       const response = await fetch(
-        "http://localhost:5000/api/users/profile-image",
+          buildApiUrl('/users/profile-image'),
         {
           method: "POST",
           headers: {
@@ -258,7 +259,7 @@ const Profile = () => {
       console.log("📡 Upload response:", result);
 
       if (response.ok && result.success) {
-        const newImageUrl = `http://localhost:5000${result.data.profileImageUrl}`;
+        const newImageUrl = buildImageUrl(result.data.profileImageUrl);
         console.log("🎯 New image URL:", newImageUrl);
 
         // Update local preview
@@ -300,7 +301,7 @@ const Profile = () => {
     if (user && user.profileImageUrl && !imagePreview) {
       const imageUrl = user.profileImageUrl.startsWith("http")
         ? user.profileImageUrl
-        : `http://localhost:5000${user.profileImageUrl}`;
+        : buildImageUrl(user.profileImageUrl);
       console.log("Syncing profile image from context:", imageUrl);
       setImagePreview(imageUrl);
     }
@@ -328,7 +329,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem("authToken");
       const response = await fetch(
-        "http://localhost:5000/api/users/profile-image",
+        buildApiUrl('/users/profile-image'),
         {
           method: "DELETE",
           headers: {
@@ -366,14 +367,14 @@ const Profile = () => {
       setErrors({});
 
       const token = localStorage.getItem("authToken");
-      const response = await fetch("http://localhost:5000/api/users/profile", {
+      buildApiUrl('/users/profile-image'), {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(profileData),
-      });
+      };
 
       const result = await response.json();
 
@@ -414,7 +415,7 @@ const Profile = () => {
       setErrors({});
 
       const token = localStorage.getItem("authToken");
-      const response = await fetch("http://localhost:5000/api/users/password", {
+      const response = await fetch(buildApiUrl('/users/password'), {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -455,7 +456,7 @@ const Profile = () => {
       setErrors({});
 
       const token = localStorage.getItem("authToken");
-      const response = await fetch("http://localhost:5000/api/users/email", {
+      const response = await fetch(buildApiUrl('/users/email'), {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

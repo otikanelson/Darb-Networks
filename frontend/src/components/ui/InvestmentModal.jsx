@@ -1,4 +1,3 @@
-// src/components/ui/InvestmentModal.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -87,7 +86,7 @@ const InvestmentModal = ({
 
       console.log('🚀 Creating investment:', investmentData);
 
-      const response = await fetch('http://localhost:5000/api/investments/create', {
+      const response = await fetch(buildApiUrl(`/investments/create`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

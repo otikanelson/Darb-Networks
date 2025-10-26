@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { buildApiUrl, buildImageUrl } from '../config/apiUrl';
 import {
   Save,
   Send,
@@ -97,7 +98,7 @@ const EditCampaign = () => {
       console.log(`📝 Loading campaign ${id} for editing`);
 
       const response = await fetch(
-        `http://localhost:5000/api/campaigns/${id}`,
+        buildApiUrl(`/campaigns/${id}`),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -261,7 +262,7 @@ const EditCampaign = () => {
       console.log("💾 Updating campaign as draft");
 
       const response = await fetch(
-        `http://localhost:5000/api/campaigns/${id}`,
+        buildApiUrl(`/campaigns/${id}`),
         {
           method: "PUT",
           headers: {
@@ -311,7 +312,7 @@ const EditCampaign = () => {
       console.log("📤 Submitting campaign for approval");
 
       const response = await fetch(
-        `http://localhost:5000/api/campaigns/${id}`,
+        buildApiUrl(`/campaigns/${id}`),
         {
           method: "PUT",
           headers: {
@@ -360,7 +361,7 @@ const EditCampaign = () => {
       imageFormData.append("campaignImage", selectedImage);
 
       const imageResponse = await fetch(
-        `http://localhost:5000/api/campaigns/${id}/image`,
+        buildApiUrl(`/campaigns/${id}/image`),
         {
           method: "POST",
           headers: {
@@ -396,7 +397,7 @@ const EditCampaign = () => {
     if (existingImage) {
       return existingImage.startsWith("http")
         ? existingImage
-        : `http://localhost:5000${existingImage}`;
+        : buildImageUrl(existingImage);
     }
     return null;
   };

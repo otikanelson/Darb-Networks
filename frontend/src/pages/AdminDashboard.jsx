@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { buildApiUrl, buildImageUrl } from './utils/apiUrl';
 import {
   Users,
   FileText,
@@ -61,7 +62,7 @@ const AdminDashboard = () => {
       console.log("🔑 Using token:", token ? "Token exists" : "No token");
 
       const response = await fetch(
-        "http://localhost:5000/api/admin/dashboard-stats",
+          buildApiUrl('/admin/dashboard-stats'),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -102,7 +103,7 @@ const AdminDashboard = () => {
         ...(searchTerm && { search: searchTerm }),
       });
 
-      const url = `http://localhost:5000/api/admin/campaigns?${params}`;
+      const url = `${buildApiUrl('/admin/campaigns')}?${params}`;
       console.log("📋 Requesting URL:", url);
 
       const response = await fetch(url, {
@@ -149,7 +150,7 @@ const AdminDashboard = () => {
       console.log(`✅ Approving campaign ${campaignId}`);
       const token = localStorage.getItem("authToken");
       const response = await fetch(
-        `http://localhost:5000/api/admin/campaigns/${campaignId}/approve`,
+          buildApiUrl(`/admin/campaigns/${campaignId}/approve`),
         {
           method: "PUT",
           headers: {
@@ -185,7 +186,7 @@ const AdminDashboard = () => {
       console.log(`❌ Rejecting campaign ${campaignId}`);
       const token = localStorage.getItem("authToken");
       const response = await fetch(
-        `http://localhost:5000/api/admin/campaigns/${campaignId}/reject`,
+            buildApiUrl(`/admin/campaigns/${campaignId}/reject`),
         {
           method: "PUT",
           headers: {
@@ -690,7 +691,7 @@ const CampaignReviewCard = ({
                   Campaign Image
                 </h4>
                 <img
-                  src={`http://localhost:5000${campaign.main_image_url}`}
+                  src={buildImageUrl(campaign.main_image_url)}
                   alt="Campaign"
                   className="max-w-md rounded-lg border border-gray-200"
                 />

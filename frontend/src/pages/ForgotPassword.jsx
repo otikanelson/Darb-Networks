@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { buildApiUrl } from '../config/apiUrl';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -14,8 +15,8 @@ const ForgotPassword = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
-        method: 'POST',
+      const response = await fetch(buildApiUrl('/auth/forgot-password'), {
+          method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },

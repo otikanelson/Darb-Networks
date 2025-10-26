@@ -3,10 +3,9 @@
  * Updated to work with existing API endpoints
  */
 import axios from 'axios';
-import AuthService from './authService';
+import { API_URL } from '../config/apiUrl';
 
-// Get base API URL
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = API_URL;
 
 // Define endpoints manually to avoid import issues
 // Added fallback endpoints to ensure compatibility with existing backend

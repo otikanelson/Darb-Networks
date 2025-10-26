@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { buildApiUrl, buildImageUrl } from '../config/apiUrl';
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
 import MobileFilters from "../components/MobileFilters";
@@ -186,8 +187,8 @@ const Dashboard = () => {
       
       console.log('🔍 Loading campaigns...');
       
-      const response = await fetch('http://localhost:5000/api/campaigns');
-      
+      const response = await fetch(buildApiUrl('/campaigns'));
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -528,7 +529,7 @@ const Dashboard = () => {
             <div className="w-64 h-48 flex-shrink-0 relative">
               <img
                 src={campaign.main_image_url 
-                  ? `http://localhost:5000${campaign.main_image_url}`
+                  ? buildImageUrl(campaign.main_image_url)
                   : '/placeholder-campaign.jpg'
                 }
                 alt={campaign.title}
@@ -613,7 +614,7 @@ const Dashboard = () => {
                       <img
                         src={campaign.founder_avatar.startsWith('http') 
                           ? campaign.founder_avatar 
-                          : `http://localhost:5000${campaign.founder_avatar}`
+                          : buildImageUrl(campaign.founder_avatar)
                         }
                         alt={campaign.founder_name}
                         className="h-full w-full object-cover"

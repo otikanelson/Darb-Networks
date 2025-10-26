@@ -1,8 +1,7 @@
-// Updated sections of CreateCampaign.jsx - Fix the main issues
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { buildApiUrl } from '../config/apiUrl';
 import {
   Save,
   Send,
@@ -183,8 +182,8 @@ const CreateCampaign = () => {
 
       console.log("💾 Saving draft with data:", formData);
 
-      const response = await fetch("http://localhost:5000/api/campaigns", {
-        method: "POST",
+      const response = await fetch(buildApiUrl('/campaigns'), {
+          method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -209,7 +208,7 @@ const CreateCampaign = () => {
           imageFormData.append("campaignImage", selectedImage);
 
           const imageResponse = await fetch(
-            `http://localhost:5000/api/campaigns/${campaignId}/image`,
+            buildApiUrl(`/campaigns/${campaignId}/image`),
             {
               method: "POST",
               headers: {
@@ -256,8 +255,8 @@ const CreateCampaign = () => {
       console.log("📸 Selected image:", selectedImage);
 
       // Create campaign first
-      const response = await fetch("http://localhost:5000/api/campaigns", {
-        method: "POST",
+      const response = await fetch(buildApiUrl('/campaigns'), {
+          method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -285,7 +284,7 @@ const CreateCampaign = () => {
           console.log("📤 FormData for image upload created");
 
           const imageResponse = await fetch(
-            `http://localhost:5000/api/campaigns/${campaignId}/image`,
+            buildApiUrl(`/campaigns/${campaignId}/image`),
             {
               method: "POST",
               headers: {

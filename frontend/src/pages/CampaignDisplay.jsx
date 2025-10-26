@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { buildImageUrl, buildUrl } from '../config/apiUrl';
 import {
   Heart,
   Share2,
@@ -401,13 +402,13 @@ const CampaignDisplay = () => {
 
     // If it starts with /uploads or similar, prepend the API base
     if (imageUrl.startsWith("/uploads") || imageUrl.startsWith("/media")) {
-      const fullUrl = `http://localhost:5000${imageUrl}`;
+      const fullUrl = buildImageUrl(imageUrl);
       console.log("🖼️ Constructed API URL:", fullUrl);
       return fullUrl;
     }
 
     // For other relative paths
-    const fullUrl = `http://localhost:5000/api${imageUrl}`;
+    const fullUrl = buildUrl(`/api${imageUrl}`);
     console.log("🖼️ Constructed full URL:", fullUrl);
     return fullUrl;
   };
@@ -431,13 +432,13 @@ const CampaignDisplay = () => {
 
     // If it starts with /uploads or similar, prepend the API base
     if (avatarUrl.startsWith("/uploads") || avatarUrl.startsWith("/media")) {
-      const fullUrl = `http://localhost:5000${avatarUrl}`;
+      const fullUrl = buildImageUrl(avatarUrl);
       console.log("👤 Constructed avatar API URL:", fullUrl);
       return fullUrl;
     }
 
     // For other relative paths
-    const fullUrl = `http://localhost:5000/api${avatarUrl}`;
+    const fullUrl = buildUrl(`/api${avatarUrl}`);
     console.log("👤 Constructed full avatar URL:", fullUrl);
     return fullUrl;
   };

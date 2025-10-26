@@ -14,6 +14,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { buildImageUrl } from '../../config/apiUrl';
 
 const CampaignCard = ({ 
   campaign, 
@@ -103,7 +104,7 @@ const CampaignCard = ({
   // Get main image URL
   const getImageUrl = () => {
     if (campaign.main_image_url) {
-      return `http://localhost:5000${campaign.main_image_url}`;
+      return buildImageUrl(campaign.main_image_url);
     }
     return '/placeholder-campaign.jpg'; // Add a placeholder image to your public folder
   };
@@ -343,11 +344,11 @@ const CampaignCard = ({
                       
                       // If it starts with /, assume it's a server path
                       if (avatarUrl.startsWith('/')) {
-                        return `http://localhost:5000${avatarUrl}`;
+                        return buildImageUrl(avatarUrl);
                       }
                       
                       // Otherwise, construct the full path
-                      return `http://localhost:5000/uploads/profiles/${avatarUrl}`;
+                      return buildImageUrl(`/uploads/profiles/${avatarUrl}`);
                     })()
                   }
                   alt={campaign.founder_name || campaign.founderName || 'Founder'}

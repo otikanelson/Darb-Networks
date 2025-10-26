@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
+import { buildApiUrl } from '../config/apiUrl';
 import CampaignCard from "../components/ui/CampaignCard";
 import CampaignService from "../services/CampaignService";
 import {
@@ -88,7 +89,7 @@ const MyCampaigns = () => {
       const token = localStorage.getItem("authToken");
 
       const response = await fetch(
-        `http://localhost:5000/api/campaigns/${campaignId}`,
+        buildApiUrl(`/campaigns/${campaignId}`),
         {
           method: "DELETE",
           headers: {

@@ -1,6 +1,5 @@
-// src/components/CampaignAnalytics.jsx - Analytics component for campaign viewing
-
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../config/apiUrl';
 import { 
   Eye, 
   Heart, 
@@ -29,7 +28,7 @@ const CampaignAnalytics = ({ campaignId, isOwner = false }) => {
       setError(null);
 
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:5000/api/campaigns/${campaignId}/analytics`, {
+      const response = await fetch(buildApiUrl(`/campaigns/${campaignId}/analytics`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
