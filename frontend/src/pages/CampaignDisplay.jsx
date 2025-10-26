@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { buildImageUrl, buildUrl } from '../config/apiUrl';
+import { buildImageUrl, buildApiUrl } from '../config/apiUrl';
 import {
   Heart,
   Share2,
@@ -408,7 +408,7 @@ const CampaignDisplay = () => {
     }
 
     // For other relative paths
-    const fullUrl = buildUrl(`/api${imageUrl}`);
+    const fullUrl = buildApiUrl(`/api${imageUrl}`);
     console.log("🖼️ Constructed full URL:", fullUrl);
     return fullUrl;
   };
@@ -438,7 +438,7 @@ const CampaignDisplay = () => {
     }
 
     // For other relative paths
-    const fullUrl = buildUrl(`/api${avatarUrl}`);
+    const fullUrl = buildApiUrl(`/api${avatarUrl}`);
     console.log("👤 Constructed full avatar URL:", fullUrl);
     return fullUrl;
   };
