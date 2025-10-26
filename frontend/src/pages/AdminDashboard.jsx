@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { buildApiUrl, buildImageUrl } from './utils/apiUrl';
+import { buildApiUrl, buildImageUrl } from '../config/apiUrl';
 import {
   Users,
   FileText,
