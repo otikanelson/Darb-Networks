@@ -1,7 +1,8 @@
 // Production API configuration
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://darb-networks-sxdr-r3fqf7v1l-otikanelsons-projects.vercel.app/api'
-  : 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.MODE === 'production' 
+    ? 'https://darb-backend.vercel.app/api'
+    : 'http://localhost:5000/api');
 
 /**
  * API Endpoints for all backend services
