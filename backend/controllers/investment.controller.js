@@ -8,7 +8,7 @@ let PaystackService;
 try {
   PaystackService = require("../services/paymentService");
 } catch (error) {
-  console.log('⚠️ PaystackService not found, using mock service');
+  console.log('âš ï¸ PaystackService not found, using mock service');
   PaystackService = {
     initializePayment: async (data) => ({ 
       success: true, 
@@ -41,7 +41,7 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
     const investorId = req.userId;
     const { campaignId, amount, investorMessage } = req.body;
 
-    console.log('🚀 Initiating investment:', { campaignId, amount, investorId });
+    console.log('ðŸš€ Initiating investment:', { campaignId, amount, investorId });
 
     // Validate input
     if (!campaignId || !amount) {
@@ -81,7 +81,7 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
     if (amount < campaign.minimum_investment) {
       return res.status(400).send({
         success: false,
-        message: `Minimum investment amount is ₦${campaign.minimum_investment.toLocaleString()}`
+        message: `Minimum investment amount is â‚¦${campaign.minimum_investment.toLocaleString()}`
       });
     }
 
@@ -176,7 +176,7 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
       });
     }
 
-    console.log('✅ Investment and payment initialized:', { investmentId, paymentReference });
+    console.log('âœ… Investment and payment initialized:', { investmentId, paymentReference });
 
     res.status(201).send({
       success: true,
@@ -203,7 +203,7 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error initiating investment:', error);
+    console.error('âŒ Error initiating investment:', error);
     res.status(500).send({
       success: false,
       message: 'Error initiating investment',
@@ -220,7 +220,7 @@ exports.verifyPayment = async (req, res) => {
     const { paymentReference } = req.params;
     const userId = req.userId;
 
-    console.log('🔍 Verifying payment:', { paymentReference, userId });
+    console.log('ðŸ” Verifying payment:', { paymentReference, userId });
 
     // Get investment details
     const [investment] = await db.sequelize.query(
@@ -327,7 +327,7 @@ exports.verifyPayment = async (req, res) => {
     // Create notifications
     await this.createInvestmentNotifications(investment);
 
-    console.log('✅ Payment verified and investment confirmed:', paymentReference);
+    console.log('âœ… Payment verified and investment confirmed:', paymentReference);
 
     res.status(200).send({
       success: true,
@@ -343,7 +343,7 @@ exports.verifyPayment = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error verifying payment:', error);
+    console.error('âŒ Error verifying payment:', error);
     res.status(500).send({
       success: false,
       message: 'Error verifying payment',
@@ -360,7 +360,7 @@ exports.handlePaystackWebhook = async (req, res) => {
     const signature = req.headers['x-paystack-signature'];
     const payload = JSON.stringify(req.body);
 
-    console.log('📡 Received Paystack webhook');
+    console.log('ðŸ“¡ Received Paystack webhook');
 
     if (!signature) {
       return res.status(400).send({
@@ -384,7 +384,7 @@ exports.handlePaystackWebhook = async (req, res) => {
     }
 
   } catch (error) {
-    console.error('❌ Webhook processing error:', error);
+    console.error('âŒ Webhook processing error:', error);
     res.status(500).send({
       success: false,
       message: 'Webhook processing failed'
@@ -432,7 +432,7 @@ exports.getPaymentStatus = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error getting payment status:', error);
+    console.error('âŒ Error getting payment status:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching payment status'
@@ -450,7 +450,7 @@ exports.getMyInvestments = async (req, res) => {
     const userId = req.userId;
     const { status, page = 1, limit = 10 } = req.query;
 
-    console.log('📊 Getting investments for user:', userId);
+    console.log('ðŸ“Š Getting investments for user:', userId);
 
     let whereClause = 'WHERE i.investor_id = ?';
     let replacements = [userId];
@@ -530,7 +530,7 @@ exports.getMyInvestments = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error getting user investments:', error);
+    console.error('âŒ Error getting user investments:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching investment history',
@@ -547,7 +547,7 @@ exports.getCampaignInvestors = async (req, res) => {
     const founderId = req.userId;
     const { campaignId } = req.params;
 
-    console.log('👥 Getting investors for campaign:', { campaignId, founderId });
+    console.log('ðŸ‘¥ Getting investors for campaign:', { campaignId, founderId });
 
     // Verify campaign ownership
     const [campaign] = await db.sequelize.query(
@@ -628,7 +628,7 @@ exports.getCampaignInvestors = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error getting campaign investors:', error);
+    console.error('âŒ Error getting campaign investors:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaign investors',
@@ -704,7 +704,7 @@ exports.getCampaignInvestmentAnalytics = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error getting investment analytics:', error);
+    console.error('âŒ Error getting investment analytics:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching investment analytics',
@@ -724,7 +724,7 @@ exports.createRepaymentBatch = async (req, res) => {
     const { campaignId } = req.params;
     const { repaymentAmount, repaymentType, interestRate, founderMessage } = req.body;
 
-    console.log('💰 Creating repayment batch:', { campaignId, repaymentAmount, repaymentType });
+    console.log('ðŸ’° Creating repayment batch:', { campaignId, repaymentAmount, repaymentType });
 
     // Validate input
     if (!repaymentAmount || repaymentAmount <= 0) {
@@ -785,7 +785,7 @@ exports.createRepaymentBatch = async (req, res) => {
     }
 
   } catch (error) {
-    console.error('❌ Error creating repayment batch:', error);
+    console.error('âŒ Error creating repayment batch:', error);
     res.status(500).send({
       success: false,
       message: 'Error creating repayment batch',
@@ -830,7 +830,7 @@ exports.getRepaymentHistory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error getting repayment history:', error);
+    console.error('âŒ Error getting repayment history:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching repayment history',
@@ -861,7 +861,7 @@ exports.getInvestmentNotifications = async (req, res) => {
     const notifications = await db.sequelize.query(
       `SELECT * FROM investment_notifications 
        ${whereClause}
-       ORDER BY created_at DESC
+       ORDER BY createdAt DESC
        LIMIT ? OFFSET ?`,
       {
         replacements: [...replacements, parseInt(limit), parseInt(offset)],
@@ -875,7 +875,7 @@ exports.getInvestmentNotifications = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error getting notifications:', error);
+    console.error('âŒ Error getting notifications:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching notifications',
@@ -900,8 +900,8 @@ exports.createInvestmentNotifications = async (investment) => {
         replacements: [
           investment.id,
           investment.investor_id,
-          'Investment Confirmed! 🎉',
-          `Your investment of ₦${investment.amount.toLocaleString()} in "${investment.campaign_title}" has been confirmed.`
+          'Investment Confirmed! ðŸŽ‰',
+          `Your investment of â‚¦${investment.amount.toLocaleString()} in "${investment.campaign_title}" has been confirmed.`
         ],
         type: db.sequelize.QueryTypes.INSERT
       }
@@ -916,8 +916,8 @@ exports.createInvestmentNotifications = async (investment) => {
         replacements: [
           investment.id,
           investment.founder_id,
-          'New Investment Received! 💰',
-          `${investment.investor_name} invested ₦${investment.amount.toLocaleString()} in your campaign "${investment.campaign_title}".`
+          'New Investment Received! ðŸ’°',
+          `${investment.investor_name} invested â‚¦${investment.amount.toLocaleString()} in your campaign "${investment.campaign_title}".`
         ],
         type: db.sequelize.QueryTypes.INSERT
       }

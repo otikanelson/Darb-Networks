@@ -35,7 +35,7 @@ exports.getAllCampaignsForReview = async (req, res) => {
            ELSE 5 
          END,
          c.submitted_at DESC, 
-         c.created_at DESC
+         c.createdAt DESC
        LIMIT ? OFFSET ?`,
       {
         replacements: [...replacements, parseInt(limit), parseInt(offset)],
@@ -44,8 +44,8 @@ exports.getAllCampaignsForReview = async (req, res) => {
       }
     );
 
-    console.log('🔍 DEBUG: Found campaigns:', campaigns.length);
-    console.log('🔍 DEBUG: First campaign:', campaigns[0]);
+    console.log('ðŸ” DEBUG: Found campaigns:', campaigns.length);
+    console.log('ðŸ” DEBUG: First campaign:', campaigns[0]);
 
     // Get total count
     const [countResult] = await db.sequelize.query(
@@ -58,7 +58,7 @@ exports.getAllCampaignsForReview = async (req, res) => {
       }
     );
 
-    console.log('🔍 DEBUG: Total count:', countResult.total);
+    console.log('ðŸ” DEBUG: Total count:', countResult.total);
 
     // Get status counts
     const statusCounts = await db.sequelize.query(
@@ -88,12 +88,12 @@ exports.getAllCampaignsForReview = async (req, res) => {
       }, {})
     };
 
-    console.log('🔍 DEBUG: Sending response:', responseData);
+    console.log('ðŸ” DEBUG: Sending response:', responseData);
 
     res.status(200).send(responseData);
 
   } catch (error) {
-    console.error('🔍 DEBUG: Get campaigns for review error:', error);
+    console.error('ðŸ” DEBUG: Get campaigns for review error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaigns',
@@ -387,7 +387,7 @@ exports.getDashboardStats = async (req, res) => {
          c.id,
          c.title,
          c.status,
-         c.created_at,
+         c.createdAt,
          c.submitted_at,
          c.approved_at,
          u.fullName as founder_name
@@ -396,7 +396,7 @@ exports.getDashboardStats = async (req, res) => {
        ORDER BY 
          CASE 
            WHEN c.submitted_at IS NOT NULL THEN c.submitted_at
-           ELSE c.created_at
+           ELSE c.createdAt
          END DESC
        LIMIT 10`,
       {
