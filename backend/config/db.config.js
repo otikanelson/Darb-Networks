@@ -10,10 +10,10 @@ module.exports = {
   
   // Railway requires SSL configuration
   dialectOptions: {
-    ssl: {
+    ssl: process.env.NODE_ENV === 'production' ? {
       require: true,
       rejectUnauthorized: false // Required for Railway MySQL
-    },
+    } : undefined,
     connectTimeout: 60000 // 60 seconds timeout
   },
   

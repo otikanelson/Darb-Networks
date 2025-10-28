@@ -50,10 +50,10 @@ const createCampaign = async (req, res) => {
       }
     );
     
-    console.log('🔍 DEBUG: User from database:', userCheck);
+    console.log('ðŸ” DEBUG: User from database:', userCheck);
     
     if (!userCheck) {
-      console.error('❌ DEBUG: User not found in database!');
+      console.error('âŒ DEBUG: User not found in database!');
       return res.status(404).send({
         success: false,
         message: 'User not found'
@@ -61,15 +61,15 @@ const createCampaign = async (req, res) => {
     }
     
     if (userCheck.userType !== 'founder') {
-      console.error('❌ DEBUG: User is not a founder:', userCheck.userType);
+      console.error('âŒ DEBUG: User is not a founder:', userCheck.userType);
       return res.status(403).send({
         success: false,
         message: 'Only founders can create campaigns'
       });
     }
     
-    console.log('✅ DEBUG: User verification passed');
-    console.log('📝 DEBUG: Creating campaign with request body:', req.body);
+    console.log('âœ… DEBUG: User verification passed');
+    console.log('ðŸ“ DEBUG: Creating campaign with request body:', req.body);
     
     const {
       title,
@@ -90,7 +90,7 @@ const createCampaign = async (req, res) => {
       const requiredFields = ['title', 'description', 'category', 'location', 'targetAmount', 'minimumInvestment'];
       for (const field of requiredFields) {
         if (!req.body[field]) {
-          console.log(`❌ DEBUG: Missing required field: ${field}`);
+          console.log(`âŒ DEBUG: Missing required field: ${field}`);
           return res.status(400).send({
             success: false,
             message: `${field} is required`
@@ -103,8 +103,8 @@ const createCampaign = async (req, res) => {
     const status = isDraft ? 'draft' : 'submitted';
     const submittedAt = isDraft ? null : new Date();
 
-    console.log(`💾 DEBUG: Saving campaign with status: ${status}`);
-    console.log(`💾 DEBUG: Using founderId: ${founderId} for campaign creation`);
+    console.log(`ðŸ’¾ DEBUG: Saving campaign with status: ${status}`);
+    console.log(`ðŸ’¾ DEBUG: Using founderId: ${founderId} for campaign creation`);
 
     // Create campaign with EXPLICIT founder_id logging
     const [result] = await db.sequelize.query(
@@ -134,7 +134,7 @@ const createCampaign = async (req, res) => {
     );
 
     const campaignId = result;
-    console.log(`✅ DEBUG: Campaign created with ID: ${campaignId}`);
+    console.log(`âœ… DEBUG: Campaign created with ID: ${campaignId}`);
     
     // Immediately verify the campaign was created correctly
     const [verifyCreation] = await db.sequelize.query(
@@ -148,10 +148,10 @@ const createCampaign = async (req, res) => {
       }
     );
     
-    console.log('🔍 DEBUG: Campaign verification after creation:', verifyCreation);
+    console.log('ðŸ” DEBUG: Campaign verification after creation:', verifyCreation);
     
     if (verifyCreation.founder_id !== founderId) {
-      console.error('❌ DEBUG: CRITICAL ERROR - founder_id mismatch!');
+      console.error('âŒ DEBUG: CRITICAL ERROR - founder_id mismatch!');
       console.error('Expected:', founderId);
       console.error('Actual:', verifyCreation.founder_id);
     }
@@ -168,7 +168,7 @@ const createCampaign = async (req, res) => {
       }
     );
 
-    console.log('📤 DEBUG: Sending response:', {
+    console.log('ðŸ“¤ DEBUG: Sending response:', {
       campaignId: campaign.id,
       founderId: campaign.founder_id,
       founderName: campaign.founder_name,
@@ -194,7 +194,7 @@ const createCampaign = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ DEBUG: Create campaign error:', error);
+    console.error('âŒ DEBUG: Create campaign error:', error);
     res.status(500).send({
       success: false,
       message: 'Error creating campaign',
@@ -211,12 +211,12 @@ const uploadCampaignImage = [
       const { campaignId } = req.params;
       const founderId = req.userId;
       
-      console.log(`📸 Uploading image for campaign ${campaignId}`);
-      console.log('📁 File received:', req.file);
-      console.log('📝 Request body:', req.body);
+      console.log(`ðŸ“¸ Uploading image for campaign ${campaignId}`);
+      console.log('ðŸ“ File received:', req.file);
+      console.log('ðŸ“ Request body:', req.body);
       
       if (!req.file) {
-        console.log('❌ No file in request');
+        console.log('âŒ No file in request');
         return res.status(400).send({
           success: false,
           message: 'No image file provided'
@@ -233,7 +233,7 @@ const uploadCampaignImage = [
       );
 
       if (!campaign) {
-        console.log('❌ Campaign not found');
+        console.log('âŒ Campaign not found');
         return res.status(404).send({
           success: false,
           message: 'Campaign not found'
@@ -250,7 +250,7 @@ const uploadCampaignImage = [
       );
 
       if (campaign.founder_id !== founderId && user.userType !== 'admin') {
-        console.log('❌ Unauthorized access');
+        console.log('âŒ Unauthorized access');
         return res.status(403).send({
           success: false,
           message: 'Unauthorized to upload image for this campaign'
@@ -258,7 +258,7 @@ const uploadCampaignImage = [
       }
 
       const imageUrl = `/uploads/campaigns/${req.file.filename}`;
-      console.log('🔗 Generated image URL:', imageUrl);
+      console.log('ðŸ”— Generated image URL:', imageUrl);
 
       // Update campaign with image URL
       await db.sequelize.query(
@@ -269,7 +269,7 @@ const uploadCampaignImage = [
         }
       );
 
-      console.log(`✅ Image uploaded successfully: ${imageUrl}`);
+      console.log(`âœ… Image uploaded successfully: ${imageUrl}`);
 
       res.status(200).send({
         success: true,
@@ -281,13 +281,13 @@ const uploadCampaignImage = [
       });
 
     } catch (error) {
-      console.error('❌ Upload campaign image error:', error);
+      console.error('âŒ Upload campaign image error:', error);
       
       // Clean up uploaded file if there was an error
       if (req.file && req.file.path) {
         try {
           fs.unlinkSync(req.file.path);
-          console.log('🧹 Cleaned up uploaded file after error');
+          console.log('ðŸ§¹ Cleaned up uploaded file after error');
         } catch (cleanupError) {
           console.error('Error cleaning up file:', cleanupError);
         }
@@ -363,9 +363,9 @@ const createCampaignWithImage = async (req, res) => {
   try {
     const founderId = req.userId;
     
-    console.log('📝 Creating campaign with image');
-    console.log('📁 Files received:', req.files);
-    console.log('📝 Form data:', req.body);
+    console.log('ðŸ“ Creating campaign with image');
+    console.log('ðŸ“ Files received:', req.files);
+    console.log('ðŸ“ Form data:', req.body);
     
     // First create the campaign
     const campaignData = {
@@ -408,7 +408,7 @@ const createCampaignWithImage = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Create campaign with image error:', error);
+    console.error('âŒ Create campaign with image error:', error);
     res.status(500).send({
       success: false,
       message: 'Error creating campaign',
@@ -424,8 +424,8 @@ const updateCampaign = async (req, res) => {
     const founderId = req.userId;
     const updateData = req.body;
 
-    console.log(`📝 Updating campaign ${id} for founder ${founderId}`);
-    console.log('📝 Update data:', updateData);
+    console.log(`ðŸ“ Updating campaign ${id} for founder ${founderId}`);
+    console.log('ðŸ“ Update data:', updateData);
 
     // Verify campaign belongs to this founder
     const [campaign] = await db.sequelize.query(
@@ -512,8 +512,8 @@ const updateCampaign = async (req, res) => {
     // Add campaign ID for WHERE clause
     values.push(id);
 
-    console.log('📝 SQL Updates:', updates.join(', '));
-    console.log('📝 SQL Values:', values);
+    console.log('ðŸ“ SQL Updates:', updates.join(', '));
+    console.log('ðŸ“ SQL Values:', values);
 
     // Execute update
     await db.sequelize.query(
@@ -533,7 +533,7 @@ const updateCampaign = async (req, res) => {
       }
     );
 
-    console.log('✅ Campaign updated successfully');
+    console.log('âœ… Campaign updated successfully');
 
     res.status(200).send({
       success: true,
@@ -548,7 +548,7 @@ const updateCampaign = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Update campaign error:', error);
+    console.error('âŒ Update campaign error:', error);
     res.status(500).send({
       success: false,
       message: 'Error updating campaign',
@@ -563,7 +563,7 @@ const deleteCampaign = async (req, res) => {
     const { id } = req.params;
     const founderId = req.userId;
 
-    console.log(`🗑️ Deleting campaign ${id} for founder ${founderId}`);
+    console.log(`ðŸ—‘ï¸ Deleting campaign ${id} for founder ${founderId}`);
 
     // Verify campaign belongs to this founder and is still a draft
     const [campaign] = await db.sequelize.query(
@@ -605,7 +605,7 @@ const deleteCampaign = async (req, res) => {
       }
     );
 
-    console.log('✅ Campaign deleted successfully');
+    console.log('âœ… Campaign deleted successfully');
 
     res.status(200).send({
       success: true,
@@ -613,7 +613,7 @@ const deleteCampaign = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Delete campaign error:', error);
+    console.error('âŒ Delete campaign error:', error);
     res.status(500).send({
       success: false,
       message: 'Error deleting campaign',
@@ -629,10 +629,10 @@ const getMyCampaigns = async (req, res) => {
   try {
     const founderId = req.userId;
     
-    console.log(`📋 Getting all campaigns for founder: ${founderId}`);
+    console.log(`ðŸ“‹ Getting all campaigns for founder: ${founderId}`);
     
     const campaigns = await db.sequelize.query(
-      `SELECT * FROM campaign_details WHERE founder_id = ? ORDER BY created_at DESC`,
+      `SELECT * FROM campaign_details WHERE founder_id = ? ORDER BY createdAt DESC`,
       {
         replacements: [founderId],
         type: db.sequelize.QueryTypes.SELECT
@@ -648,7 +648,7 @@ const getMyCampaigns = async (req, res) => {
       all: campaigns
     };
 
-    console.log(`✅ Found campaigns:`, {
+    console.log(`âœ… Found campaigns:`, {
       total: campaigns.length,
       drafts: categorizedCampaigns.drafts.length,
       submitted: categorizedCampaigns.submitted.length,
@@ -702,7 +702,7 @@ const getMyCampaigns = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get my campaigns error:', error);
+    console.error('âŒ Get my campaigns error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaigns',
@@ -716,7 +716,7 @@ const getAllCampaigns = async (req, res) => {
   try {
     const { category, status, search, page = 1, limit = 12, featured } = req.query;
     
-    console.log('🔍 Getting all campaigns with filters:', { category, status, search, featured });
+    console.log('ðŸ” Getting all campaigns with filters:', { category, status, search, featured });
     
     let whereClause = "WHERE status = 'approved'";
     let replacements = [];
@@ -740,7 +740,7 @@ const getAllCampaigns = async (req, res) => {
     const campaigns = await db.sequelize.query(
       `SELECT * FROM campaign_details 
        ${whereClause}
-       ORDER BY is_featured DESC, created_at DESC 
+       ORDER BY is_featured DESC, createdAt DESC 
        LIMIT ? OFFSET ?`,
       {
         replacements: [...replacements, parseInt(limit), parseInt(offset)],
@@ -748,7 +748,7 @@ const getAllCampaigns = async (req, res) => {
       }
     );
 
-    console.log(`✅ Found ${campaigns.length} approved campaigns`);
+    console.log(`âœ… Found ${campaigns.length} approved campaigns`);
 
     const formattedCampaigns = campaigns.map(campaign => {
       console.log(`Campaign ${campaign.id} - Founder: ${campaign.founder_name}, Profile: ${campaign.founder_avatar}`);
@@ -780,7 +780,7 @@ const getAllCampaigns = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get all campaigns error:', error);
+    console.error('âŒ Get all campaigns error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaigns',
@@ -796,7 +796,7 @@ const getCampaignById = async (req, res) => {
     const userId = req.userId || null;
     const ipAddress = req.ip;
 
-    console.log(`👀 Getting campaign ${id} for user ${userId || 'anonymous'}`);
+    console.log(`ðŸ‘€ Getting campaign ${id} for user ${userId || 'anonymous'}`);
 
     // Get campaign details using the view
     const [campaign] = await db.sequelize.query(
@@ -917,7 +917,7 @@ const getCampaignById = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get campaign by ID error:', error);
+    console.error('âŒ Get campaign by ID error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaign',
@@ -931,7 +931,7 @@ const getRelatedCampaigns = async (req, res) => {
     const { id } = req.params;
     const { limit = 3 } = req.query;
 
-    console.log(`🔗 Getting related campaigns for campaign ${id}`);
+    console.log(`ðŸ”— Getting related campaigns for campaign ${id}`);
 
     // First get the current campaign's category
     const [currentCampaign] = await db.sequelize.query(
@@ -955,7 +955,7 @@ const getRelatedCampaigns = async (req, res) => {
        WHERE status = 'approved' 
        AND category = ? 
        AND id != ?
-       ORDER BY view_count DESC, created_at DESC
+       ORDER BY view_count DESC, createdAt DESC
        LIMIT ?`,
       {
         replacements: [currentCampaign.category, id, parseInt(limit)],
@@ -989,7 +989,7 @@ const getRelatedCampaigns = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get related campaigns error:', error);
+    console.error('âŒ Get related campaigns error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching related campaigns',
@@ -1003,7 +1003,7 @@ const getCampaignForEdit = async (req, res) => {
     const { id } = req.params;
     const founderId = req.userId;
 
-    console.log(`✏️ Getting campaign ${id} for editing by founder ${founderId}`);
+    console.log(`âœï¸ Getting campaign ${id} for editing by founder ${founderId}`);
 
     // Get campaign details with ownership verification
     const [campaign] = await db.sequelize.query(
@@ -1059,7 +1059,7 @@ const getCampaignForEdit = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get campaign for edit error:', error);
+    console.error('âŒ Get campaign for edit error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaign for editing',
@@ -1073,7 +1073,7 @@ const getCampaignAnalytics = async (req, res) => {
     const { id } = req.params;
     const founderId = req.userId;
 
-    console.log(`📊 Getting analytics for campaign ${id}`);
+    console.log(`ðŸ“Š Getting analytics for campaign ${id}`);
 
     // Verify ownership
     const [campaign] = await db.sequelize.query(
@@ -1110,12 +1110,12 @@ const getCampaignAnalytics = async (req, res) => {
     // Get favorite analytics
     const favoriteAnalytics = await db.sequelize.query(
       `SELECT 
-         DATE(created_at) as date,
+         DATE(createdAt) as date,
          COUNT(*) as favorites
        FROM campaign_favorites 
        WHERE campaign_id = ?
-       AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-       GROUP BY DATE(created_at)
+       AND createdAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+       GROUP BY DATE(createdAt)
        ORDER BY date DESC`,
       {
         replacements: [id],
@@ -1149,7 +1149,7 @@ const getCampaignAnalytics = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get campaign analytics error:', error);
+    console.error('âŒ Get campaign analytics error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaign analytics',
@@ -1163,13 +1163,13 @@ const getFeaturedCampaigns = async (req, res) => {
   try {
     const { limit = 6 } = req.query;
     
-    console.log(`⭐ Getting ${limit} featured campaigns`);
+    console.log(`â­ Getting ${limit} featured campaigns`);
     
     // FIXED: Use campaign_details view
     const campaigns = await db.sequelize.query(
       `SELECT * FROM campaign_details
        WHERE status = 'approved' AND is_featured = true
-       ORDER BY view_count DESC, created_at DESC
+       ORDER BY view_count DESC, createdAt DESC
        LIMIT ?`,
       {
         replacements: [parseInt(limit)],
@@ -1177,7 +1177,7 @@ const getFeaturedCampaigns = async (req, res) => {
       }
     );
 
-    console.log(`✅ Found ${campaigns.length} featured campaigns`);
+    console.log(`âœ… Found ${campaigns.length} featured campaigns`);
 
     const formattedCampaigns = campaigns.map(campaign => ({
       id: campaign.id,
@@ -1205,7 +1205,7 @@ const getFeaturedCampaigns = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get featured campaigns error:', error);
+    console.error('âŒ Get featured campaigns error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching featured campaigns',
@@ -1221,7 +1221,7 @@ const getViewedCampaigns = async (req, res) => {
   try {
     const userId = req.userId;
     
-    console.log(`👀 Getting viewed campaigns for user: ${userId}`);
+    console.log(`ðŸ‘€ Getting viewed campaigns for user: ${userId}`);
     
     const viewedCampaigns = await db.sequelize.query(
       `SELECT cd.*, MAX(cv.viewed_at) as viewed_at
@@ -1237,7 +1237,7 @@ const getViewedCampaigns = async (req, res) => {
       }
     );
 
-    console.log(`✅ Found ${viewedCampaigns.length} unique viewed campaigns`);
+    console.log(`âœ… Found ${viewedCampaigns.length} unique viewed campaigns`);
 
     const formattedCampaigns = viewedCampaigns.map(campaign => ({
       id: campaign.id,
@@ -1266,7 +1266,7 @@ const getViewedCampaigns = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get viewed campaigns error:', error);
+    console.error('âŒ Get viewed campaigns error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching viewed campaigns',
@@ -1280,22 +1280,22 @@ const getFavoriteCampaigns = async (req, res) => {
   try {
     const userId = req.userId;
     
-    console.log(`❤️ Getting favorite campaigns for user: ${userId}`);
+    console.log(`â¤ï¸ Getting favorite campaigns for user: ${userId}`);
     
     // Use campaign_details view
     const favoriteCampaigns = await db.sequelize.query(
-      `SELECT cd.*, cf.created_at as favorited_at
+      `SELECT cd.*, cf.createdAt as favorited_at
        FROM campaign_details cd
        JOIN campaign_favorites cf ON cd.id = cf.campaign_id
        WHERE cf.user_id = ? AND cd.status = 'approved'
-       ORDER BY cf.created_at DESC`,
+       ORDER BY cf.createdAt DESC`,
       {
         replacements: [userId],
         type: db.sequelize.QueryTypes.SELECT
       }
     );
 
-    console.log(`✅ Found ${favoriteCampaigns.length} unique favorite campaigns`);
+    console.log(`âœ… Found ${favoriteCampaigns.length} unique favorite campaigns`);
 
     const formattedCampaigns = favoriteCampaigns.map(campaign => ({
       id: campaign.id,
@@ -1324,7 +1324,7 @@ const getFavoriteCampaigns = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get favorite campaigns error:', error);
+    console.error('âŒ Get favorite campaigns error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching favorite campaigns',
@@ -1338,7 +1338,7 @@ const getFundedCampaigns = async (req, res) => {
   try {
     const userId = req.userId;
     
-    console.log(`💰 Getting funded campaigns for investor: ${userId}`);
+    console.log(`ðŸ’° Getting funded campaigns for investor: ${userId}`);
     
     // Placeholder - returns empty array until payment system is implemented
     res.status(200).send({
@@ -1348,7 +1348,7 @@ const getFundedCampaigns = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get funded campaigns error:', error);
+    console.error('âŒ Get funded campaigns error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching funded campaigns',
@@ -1363,7 +1363,7 @@ const toggleFavorite = async (req, res) => {
     const { campaignId } = req.params;
     const userId = req.userId;
     
-    console.log(`💖 Toggling favorite for campaign ${campaignId}, user ${userId}`);
+    console.log(`ðŸ’– Toggling favorite for campaign ${campaignId}, user ${userId}`);
 
     // Verify campaign exists
     const [campaign] = await db.sequelize.query(
@@ -1404,7 +1404,7 @@ const toggleFavorite = async (req, res) => {
       );
       isFavorited = false;
       message = 'Campaign removed from favorites';
-      console.log(`❌ Removed from favorites`);
+      console.log(`âŒ Removed from favorites`);
     } else {
       // Add to favorites
       await db.sequelize.query(
@@ -1416,7 +1416,7 @@ const toggleFavorite = async (req, res) => {
       );
       isFavorited = true;
       message = 'Campaign added to favorites';
-      console.log(`✅ Added to favorites`);
+      console.log(`âœ… Added to favorites`);
     }
 
     // Update favorite count manually
@@ -1441,7 +1441,7 @@ const toggleFavorite = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Toggle favorite error:', error);
+    console.error('âŒ Toggle favorite error:', error);
     res.status(500).send({
       success: false,
       message: 'Error toggling favorite',
@@ -1457,7 +1457,7 @@ const trackCampaignView = async (req, res) => {
     const userId = req.userId || null;
     const ipAddress = req.ip;
     
-    console.log(`👁️ Tracking view for campaign ${campaignId}, user ${userId || 'anonymous'}`);
+    console.log(`ðŸ‘ï¸ Tracking view for campaign ${campaignId}, user ${userId || 'anonymous'}`);
 
     // Insert view record (with duplicate prevention)
     try {
@@ -1507,7 +1507,7 @@ const trackCampaignView = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Track view error:', error);
+    console.error('âŒ Track view error:', error);
     res.status(500).send({
       success: false,
       message: 'Error tracking view',
@@ -1535,7 +1535,7 @@ const getCampaignStats = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Get campaign stats error:', error);
+    console.error('âŒ Get campaign stats error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaign statistics',
@@ -1547,7 +1547,7 @@ const getCampaignStats = async (req, res) => {
 // NEW: Admin endpoint to recalculate all stats
 const recalculateAllStats = async (req, res) => {
   try {
-    console.log('🔄 Admin requested stats recalculation');
+    console.log('ðŸ”„ Admin requested stats recalculation');
     
     const result = await CampaignStatsService.recalculateAllCampaignStats();
     
@@ -1558,7 +1558,7 @@ const recalculateAllStats = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error recalculating stats:', error);
+    console.error('âŒ Error recalculating stats:', error);
     res.status(500).send({
       success: false,
       message: 'Error recalculating campaign statistics',
