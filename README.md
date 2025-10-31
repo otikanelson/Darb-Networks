@@ -92,6 +92,12 @@ Darb Network is a comprehensive crowdfunding platform specifically designed for 
 - **Content Moderation**: Ensure quality and compliance standards
 - **Featured Campaigns**: Promote high-potential startups
 
+<div align="center">
+
+<img width="1331" height="667" alt="Screenshot 2025-10-31 030653" src="https://github.com/user-attachments/assets/386d3791-d7c2-4b29-9482-9e5a3e004328" />
+<img width="1350" height="677" alt="Screenshot 2025-10-31 025107" src="https://github.com/user-attachments/assets/606191f6-60f8-4616-9165-6486dc2457c0" />
+
+</div>
 ## 🚀 Tech Stack
 
 ### Backend
