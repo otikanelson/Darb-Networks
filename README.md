@@ -1,7 +1,9 @@
 # Darb Network - Startup Crowdfunding Platform
 
 <div align="center">
-  <img src="src/assets/Logo.png" alt="Darb Network Logo" width="200"/>
+  
+  <img width="111" height="74" alt="Logo2" src="https://github.com/user-attachments/assets/5720b11c-da9d-4601-9e49-639d3aca35d9" />
+
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
@@ -48,8 +50,12 @@ Darb Network is a comprehensive crowdfunding platform specifically designed for 
 - **📊 Transparent Process**: Real-time tracking of campaign progress and fund utilization
 - **🎯 Milestone-Based**: Investors fund specific project phases, reducing risk
 - **👨‍💼 Admin Oversight**: Professional review and approval process for quality control
+<div align="center">
 
-  <img src="Darb-Backend\Screen-Shot_assets\Screenshot 2025-06-13 004915" width="200"/>
+<img width="1365" height="685" alt="Screenshot 2025-06-13 004915" src="https://github.com/user-attachments/assets/2176a353-33c3-4704-b434-f4610113c7ae" />
+<img width="1364" height="687" alt="Screenshot 2025-06-13 005038" src="https://github.com/user-attachments/assets/a6680700-8afe-4a58-84ea-1d5fa85cd29c" />
+
+</div>
 
 ## ✨ Features
 
@@ -59,14 +65,27 @@ Darb Network is a comprehensive crowdfunding platform specifically designed for 
 - **Real-time Analytics**: Track views, favorites, and funding progress
 - **Investor Communication**: Direct messaging with potential investors
 - **Milestone Tracking**: Manage funding milestones and deliverables
+<div align="center">
 
+<img width="1364" height="687" alt="Screenshot 2025-06-13 005038" src="https://github.com/user-attachments/assets/a6680700-8afe-4a58-84ea-1d5fa85cd29c" />
+<img width="1364" height="687" alt="Screenshot 2025-06-13 005038" src="https://github.com/user-attachments/assets/a6680700-8afe-4a58-84ea-1d5fa85cd29c" />
+<img width="1365" height="681" alt="Screenshot 2025-06-13 005005" src="https://github.com/user-attachments/assets/8c225f6d-5930-40d8-8080-587783d686b3" />
+<img width="1365" height="675" alt="Screenshot 2025-06-13 005118" src="https://github.com/user-attachments/assets/400927a6-b41c-4a93-87e1-d8bba162ba5d" />
+
+</div>
 ### For Investors 💰
 - **Campaign Discovery**: Advanced search and filtering options
 - **Portfolio Management**: Track all investments in one place
 - **Due Diligence**: Access detailed founder and project information
 - **Secure Payments**: Integrated payment processing with Paystack
 - **Investment History**: Complete transaction and performance history
+<div align="center">
 
+<img width="1358" height="682" alt="Screenshot 2025-06-13 005127" src="https://github.com/user-attachments/assets/6c85811d-eb5b-41fa-8b93-549453ab8b93" />
+<img width="1365" height="679" alt="Screenshot 2025-06-13 004951" src="https://github.com/user-attachments/assets/1e264b0a-1e38-496a-bcd0-b07846028ef3" />
+
+
+</div>
 ### For Administrators 🛠️
 - **Campaign Review**: Comprehensive review and approval workflow
 - **User Management**: Monitor and manage platform participants
