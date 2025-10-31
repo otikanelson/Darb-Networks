@@ -67,7 +67,6 @@ Darb Network is a comprehensive crowdfunding platform specifically designed for 
 - **Milestone Tracking**: Manage funding milestones and deliverables
 <div align="center">
 
-<img width="1364" height="687" alt="Screenshot 2025-06-13 005038" src="https://github.com/user-attachments/assets/a6680700-8afe-4a58-84ea-1d5fa85cd29c" />
 <img width="1365" height="681" alt="Screenshot 2025-06-13 005005" src="https://github.com/user-attachments/assets/8c225f6d-5930-40d8-8080-587783d686b3" />
 <img width="1365" height="675" alt="Screenshot 2025-06-13 005118" src="https://github.com/user-attachments/assets/400927a6-b41c-4a93-87e1-d8bba162ba5d" />
 
