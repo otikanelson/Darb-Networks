@@ -14,14 +14,27 @@ console.log("🚀 Starting Darb Network API...");
 
 // CORS configuration - Updated for production
 const corsOptions = {
-  origin: [
-    "http://localhost:5173", 
-    "http://localhost:3000",
-    "https://darb-networks-eculloaju-obikanelsons-projects.vercel.app",
-    process.env.CLIENT_ORIGIN,
-    process.env.FRONTEND_URL,
-    /\.vercel\.app$/ // Allow any Vercel app
-  ].filter(Boolean), // Remove undefined values
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      "http://localhost:5173", 
+      "http://localhost:3000",
+      process.env.CLIENT_ORIGIN,
+      process.env.FRONTEND_URL,
+    ].filter(Boolean);
+    
+    // Allow all Vercel preview and production deployments
+    const isVercelDomain = /\.vercel\.app$/.test(origin);
+    const isAllowedOrigin = allowedOrigins.includes(origin);
+    
+    if (isVercelDomain || isAllowedOrigin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token', 'Origin', 'Accept']

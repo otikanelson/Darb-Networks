@@ -53,7 +53,8 @@ exports.requestPasswordReset = async (req, res) => {
     );
 
     // Send email (for now, we'll just log it)
-    const resetUrl = `${process.env.CLIENT_ORIGIN}/reset-password?token=${resetToken}`;
+    const frontendUrl = process.env.CLIENT_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173');
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
     
     console.log(`Password reset link for ${email}: ${resetUrl}`);
     

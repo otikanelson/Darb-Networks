@@ -144,7 +144,7 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
     const investmentId = investmentResult;
 
     // Initialize payment
-    const callbackUrl = `${process.env.CLIENT_ORIGIN || 'http://localhost:5173'}/investment/verify/${paymentReference}`;
+    const callbackUrl = `${process.env.CLIENT_ORIGIN || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173'}/investment/verify/${paymentReference}`;
     
     const paymentData = {
       email: investor.email,
