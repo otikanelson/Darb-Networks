@@ -3,18 +3,18 @@
   "name": "darb-network-backend",
   "builds": [
     {
-      "src": "server.js",
+      "src": "api/index.js",
       "use": "@vercel/node",
       "config": {
         "maxLambdaSize": "50mb",
-        "includeFiles": ["schema.sql", "**/*.js"]
+        "includeFiles": ["**/*.js", "**/*.sql"]
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "server.js"
+      "dest": "api/index.js"
     }
   ],
   "env": {

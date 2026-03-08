@@ -17,6 +17,7 @@ const corsOptions = {
   origin: [
     "http://localhost:5173", 
     "http://localhost:3000",
+    "https://darb-networks-eculloaju-obikanelsons-projects.vercel.app",
     process.env.CLIENT_ORIGIN,
     process.env.FRONTEND_URL,
     /\.vercel\.app$/ // Allow any Vercel app
@@ -190,36 +191,18 @@ app.get('/test', (req, res) => {
 });
 
 // Load routes with error handling
-// Load routes with error handling
 const loadRoutes = () => {
   try {
     console.log("🔧 Loading routes...");
     console.log("🔧 Current directory:", __dirname);
     
-    const fs = require('fs');
-    
-    // Check where routes folder actually is
-    const hasRoutesInCurrent = fs.existsSync(path.join(__dirname, 'routes'));
-    const hasRoutesInBackend = fs.existsSync(path.join(__dirname, 'backend', 'routes'));
-    
-    console.log("🔧 Routes in current dir:", hasRoutesInCurrent);
-    console.log("🔧 Routes in backend dir:", hasRoutesInBackend);
-    
-    // Determine the correct base path
-    let routesBasePath = './routes';
-    if (!hasRoutesInCurrent && hasRoutesInBackend) {
-      routesBasePath = './backend/routes';
-    }
-    
-    console.log("🔧 Using routes path:", routesBasePath);
-    
     const routes = [
-      { name: 'passwordReset', path: `${routesBasePath}/passwordReset.routes`, requiresDb: false },
-      { name: 'auth', path: `${routesBasePath}/auth.routes`, requiresDb: true },
-      { name: 'user', path: `${routesBasePath}/user.routes`, requiresDb: true },
-      { name: 'campaign', path: `${routesBasePath}/campaign.routes`, requiresDb: true },
-      { name: 'admin', path: `${routesBasePath}/admin.routes`, requiresDb: true },
-      { name: 'investment', path: `${routesBasePath}/investment.routes`, requiresDb: true }
+      { name: 'passwordReset', path: './routes/passwordReset.routes', requiresDb: false },
+      { name: 'auth', path: './routes/auth.routes', requiresDb: true },
+      { name: 'user', path: './routes/user.routes', requiresDb: true },
+      { name: 'campaign', path: './routes/campaign.routes', requiresDb: true },
+      { name: 'admin', path: './routes/admin.routes', requiresDb: true },
+      { name: 'investment', path: './routes/investment.routes', requiresDb: true }
     ];
     
     routes.forEach(route => {
