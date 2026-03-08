@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend API Tester</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #16a34a;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border-left: 4px solid #16a34a;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #15803d;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .result.success {
+            background: #d1fae5;
+            border: 1px solid #16a34a;
+            color: #065f46;
+        }
+        .result.error {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+            color: #991b1b;
+        }
+        .result.info {
+            background: #dbeafe;
+            border: 1px solid #2563eb;
+            color: #1e40af;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .url-display {
+            background: #f3f4f6;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Darb Network Backend API Tester</h1>
+        <p class="subtitle">Test your backend endpoints to diagnose issues</p>
+
+        <!-- Health Check -->
+        <div class="test-section">
+            <h3>1. Health Check <span id="health-status" class="status pending">Not Tested</span></h3>
+            <p>Tests if the backend server is running</p>
+            <div class="url-display">GET https://darb-networks-backend.vercel.app/health</div>
+            <button onclick="testHealth()">Test Health Endpoint</button>
+            <div id="health-result"></div>
+        </div>
+
+        <!-- Database Status -->
+        <div class="test-section">
+            <h3>2. Database Status <span id="db-status" class="status pending">Not Tested</span></h3>
+            <p>Checks if database is connected and environment variables are set</p>
+            <div class="url-display">GET https://darb-networks-backend.vercel.app/api/db-status</div>
+            <button onclick="testDbStatus()">Test Database Status</button>
+            <div id="db-result"></div>
+        </div>
+
+        <!-- API Info -->
+        <div class="test-section">
+            <h3>3. API Info <span id="api-status" class="status pending">Not Tested</span></h3>
+            <p>Lists available API endpoints</p>
+            <div class="url-display">GET https://darb-networks-backend.vercel.app/api</div>
+            <button onclick="testApiInfo()">Test API Info</button>
+            <div id="api-result"></div>
+        </div>
+
+        <!-- Campaigns Endpoint -->
+        <div class="test-section">
+            <h3>4. Campaigns Endpoint <span id="campaigns-status" class="status pending">Not Tested</span></h3>
+            <p>Tests the main campaigns endpoint that's failing</p>
+            <div class="url-display">GET https://darb-networks-backend.vercel.app/api/campaigns</div>
+            <button onclick="testCampaigns()">Test Campaigns Endpoint</button>
+            <div id="campaigns-result"></div>
+        </div>
+
+        <!-- Test All -->
+        <div class="test-section" style="border-left-color: #2563eb;">
+            <h3>Run All Tests</h3>
+            <button onclick="testAll()" style="background: #2563eb;">Run All Tests</button>
+            <button onclick="clearAll()" style="background: #6b7280;">Clear Results</button>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'https://darb-networks-backend.vercel.app';
+
+        async function testEndpoint(url, resultId, statusId) {
+            const resultDiv = document.getElementById(resultId);
+            const statusSpan = document.getElementById(statusId);
+            
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+            statusSpan.className = 'status pending';
+            statusSpan.textContent = 'Testing...';
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(url);
+                const duration = Date.now() - startTime;
+                const data = await response.json();
+
+                const resultClass = response.ok ? 'success' : 'error';
+                const statusClass = response.ok ? 'success' : 'error';
+                const statusText = response.ok ? '✓ Success' : '✗ Failed';
+
+                resultDiv.innerHTML = `
+                    <div class="result ${resultClass}">
+                        <strong>Status:</strong> ${response.status} ${response.statusText}
+                        <strong>Time:</strong> ${duration}ms
+                        
+                        <strong>Response:</strong>
+                        ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+
+                statusSpan.className = `status ${statusClass}`;
+                statusSpan.textContent = statusText;
+
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>Error:</strong> ${error.message}
+                        
+                        This usually means:
+                        - CORS is blocking the request
+                        - The server is not responding
+                        - Network connectivity issues
+                    </div>
+                `;
+
+                statusSpan.className = 'status error';
+                statusSpan.textContent = '✗ Error';
+
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testHealth() {
+            return await testEndpoint(`${BASE_URL}/health`, 'health-result', 'health-status');
+        }
+
+        async function testDbStatus() {
+            const result = await testEndpoint(`${BASE_URL}/api/db-status`, 'db-result', 'db-status');
+            
+            if (result.success && result.data) {
+                const dbDiv = document.getElementById('db-result');
+                const db = result.data.database;
+                
+                let diagnosis = '\n\n<strong>Diagnosis:</strong>\n';
+                if (!db.initialized) {
+                    diagnosis += '❌ Database is NOT initialized\n';
+                    if (db.error) {
+                        diagnosis += `Error: ${db.error}\n`;
+                    }
+                    diagnosis += '\n<strong>Missing Environment Variables:</strong>\n';
+                    if (!db.hasConfig.host) diagnosis += '- DB_HOST\n';
+                    if (!db.hasConfig.user) diagnosis += '- DB_USER\n';
+                    if (!db.hasConfig.database) diagnosis += '- DB_NAME\n';
+                    if (!db.hasConfig.password) diagnosis += '- DB_PASSWORD\n';
+                    diagnosis += '\n👉 You need to add these environment variables in Vercel!';
+                } else {
+                    diagnosis += '✅ Database is connected and working!';
+                }
+                
+                dbDiv.innerHTML += `<div class="result info">${diagnosis}</div>`;
+            }
+        }
+
+        async function testApiInfo() {
+            return await testEndpoint(`${BASE_URL}/api`, 'api-result', 'api-status');
+        }
+
+        async function testCampaigns() {
+            const result = await testEndpoint(`${BASE_URL}/api/campaigns`, 'campaigns-result', 'campaigns-status');
+            
+            if (!result.success && result.status === 404) {
+                const campaignsDiv = document.getElementById('campaigns-result');
+                campaignsDiv.innerHTML += `
+                    <div class="result error">
+                        <strong>404 Error Diagnosis:</strong>
+                        
+                        The campaigns endpoint is returning 404, which means:
+                        1. Routes are not loading properly
+                        2. This is usually because the database is not connected
+                        3. Check the Database Status test above
+                        
+                        <strong>Solution:</strong>
+                        Add all required environment variables to Vercel and redeploy.
+                    </div>
+                `;
+            }
+        }
+
+        async function testAll() {
+            await testHealth();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testDbStatus();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testApiInfo();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testCampaigns();
+        }
+
+        function clearAll() {
+            ['health', 'db', 'api', 'campaigns'].forEach(prefix => {
+                document.getElementById(`${prefix}-result`).innerHTML = '';
+                const status = document.getElementById(`${prefix}-status`);
+                status.className = 'status pending';
+                status.textContent = 'Not Tested';
+            });
+        }
+    </script>
+</body>
+</html>
