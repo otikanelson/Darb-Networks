@@ -8,13 +8,13 @@ module.exports = {
   DB: process.env.DB_NAME,
   dialect: "mysql",
   
-  // Railway requires SSL configuration
+  // Aiven requires SSL - always enable when DB_SSL is set
   dialectOptions: {
-    ssl: process.env.NODE_ENV === 'production' ? {
+    ssl: (process.env.DB_SSL === 'true' || process.env.NODE_ENV === 'production') ? {
       require: true,
-      rejectUnauthorized: false // Required for Railway MySQL
+      rejectUnauthorized: false
     } : undefined,
-    connectTimeout: 60000 // 60 seconds timeout
+    connectTimeout: 60000
   },
   
   pool: {
