@@ -14,13 +14,15 @@ import {
   Lock 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ui/ToastContainer';
 
 const RegisterForm = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { toasts, hideToast, success, error: showError } = useToast();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({

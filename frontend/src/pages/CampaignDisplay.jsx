@@ -42,6 +42,8 @@ const CampaignDisplay = () => {
   const [error, setError] = useState(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [relatedCampaigns, setRelatedCampaigns] = useState([]);
+  const [milestones, setMilestones] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
 
   // UI state
   const [activeTab, setActiveTab] = useState("overview");
@@ -54,6 +56,8 @@ const CampaignDisplay = () => {
     if (id) {
       loadCampaign();
       loadRelatedCampaigns();
+      loadMilestones();
+      loadTeamMembers();
     }
   }, [id]);
 
@@ -205,6 +209,52 @@ const CampaignDisplay = () => {
       }
     } catch (error) {
       console.error("❌ Error loading related campaigns:", error);
+    }
+  };
+
+  const loadMilestones = async () => {
+    try {
+      const response = await fetch(`/api/campaigns/${id}/milestones`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log("📦 Milestones Result:", result);
+        
+        if (result.success && result.data) {
+          setMilestones(result.data);
+        } else {
+          setMilestones([]);
+        }
+      } else {
+        console.warn("⚠️ Milestones endpoint returned non-OK status:", response.status);
+        setMilestones([]);
+      }
+    } catch (error) {
+      console.error("❌ Error loading milestones:", error);
+      setMilestones([]);
+    }
+  };
+
+  const loadTeamMembers = async () => {
+    try {
+      const response = await fetch(`/api/campaigns/${id}/team`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log("📦 Team Members Result:", result);
+        
+        if (result.success && result.data) {
+          setTeamMembers(result.data);
+        } else {
+          setTeamMembers([]);
+        }
+      } else {
+        console.warn("⚠️ Team endpoint returned non-OK status:", response.status);
+        setTeamMembers([]);
+      }
+    } catch (error) {
+      console.error("❌ Error loading team members:", error);
+      setTeamMembers([]);
     }
   };
 
@@ -443,6 +493,134 @@ const CampaignDisplay = () => {
     return fullUrl;
   };
 
+  const extractYouTubeId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const renderMilestones = () => {
+    if (milestones.length === 0) {
+      return (
+        <div className="text-center py-12 text-gray-500">
+          <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <p>No milestones added yet.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {milestones.map((milestone) => (
+          <div key={milestone.id} className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {milestone.title}
+                </h3>
+                <p className="text-gray-600 text-sm mb-3">
+                  {milestone.description}
+                </p>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Target: {new Date(milestone.target_date).toLocaleDateString()}
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-4 ${
+                milestone.status === 'completed' ? 'bg-green-100 text-green-800' :
+                milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {milestone.status === 'completed' ? 'Completed' :
+                 milestone.status === 'in_progress' ? 'In Progress' :
+                 'Pending'}
+              </span>
+            </div>
+
+            {/* Media content - images and/or video */}
+            {(milestone.image_url || milestone.video_url) && (
+              <div className="mt-4 space-y-3">
+                {milestone.image_url && (
+                  <img 
+                    src={buildImageUrl(milestone.image_url)}
+                    alt={milestone.title}
+                    className="w-full h-64 object-cover rounded-lg"
+                    onError={(e) => {
+                      console.error('Failed to load milestone image:', milestone.image_url);
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                )}
+                {milestone.video_url && (
+                  <div className="aspect-video">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${extractYouTubeId(milestone.video_url)}`}
+                      className="w-full h-full rounded-lg"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title={milestone.title}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderTeam = () => {
+    if (teamMembers.length === 0) {
+      return (
+        <div className="text-center py-12 text-gray-500">
+          <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <p>No team members added yet.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {teamMembers.map((member) => (
+          <div key={member.id} className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex flex-col items-center text-center">
+              <div className="h-24 w-24 rounded-full overflow-hidden bg-gray-100 mb-4 flex items-center justify-center">
+                {member.profile_image ? (
+                  <img 
+                    src={buildImageUrl(member.profile_image)}
+                    alt={member.name}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      console.error('Failed to load team member image:', member.profile_image);
+                      // Replace failed image with initial fallback
+                      e.target.outerHTML = `<div class="text-2xl font-bold text-gray-400">${member.name.charAt(0).toUpperCase()}</div>`;
+                    }}
+                  />
+                ) : (
+                  <div className="text-2xl font-bold text-gray-400">
+                    {member.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                {member.name}
+              </h3>
+              <p className="text-sm text-green-600 font-medium mb-3">
+                {member.role}
+              </p>
+              <p className="text-sm text-gray-600">
+                {member.bio}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
@@ -496,6 +674,26 @@ const CampaignDisplay = () => {
                 </div>
               </div>
             )}
+          </div>
+        );
+
+      case "milestones":
+        return (
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Campaign Milestones
+            </h3>
+            {renderMilestones()}
+          </div>
+        );
+
+      case "team":
+        return (
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Team & Collaborators
+            </h3>
+            {renderTeam()}
           </div>
         );
 
@@ -714,6 +912,8 @@ const CampaignDisplay = () => {
               <nav className="flex space-x-8">
                 {[
                   { id: "overview", label: "Overview" },
+                  { id: "milestones", label: "Milestones" },
+                  { id: "team", label: "Team" },
                   { id: "business-plan", label: "Business Plan" },
                   { id: "updates", label: "Updates" },
                 ].map((tab) => (

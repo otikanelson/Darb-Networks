@@ -160,6 +160,8 @@ const Dashboard = () => {
     const categoryFromUrl = searchParams.get('category') || 'All Categories';
     const filterFromUrl = searchParams.get('filter') || 'All Campaigns';
     
+    console.log('📍 URL params:', { searchFromUrl, categoryFromUrl, filterFromUrl });
+    
     setSearchTerm(searchFromUrl);
     setSelectedCategory(categoryFromUrl);
     setSelectedFilter(filterFromUrl);
@@ -971,7 +973,7 @@ const Dashboard = () => {
         {/* Main Content Area */}
         <div className="flex gap-8">
           {/* Left Sidebar - Categories */}
-          <div className="hidden md:block w-64 flex-shrink-0">
+          <div className="hidden md:block w-64 flex-shrink-0 sticky top-20 self-start max-h-[calc(100vh-5rem)] overflow-y-auto">
             <CategoryFilter />
 
             {isAuthenticated() && (

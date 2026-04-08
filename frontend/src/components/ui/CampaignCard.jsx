@@ -28,6 +28,8 @@ const CampaignCard = ({
   const { user, isAuthenticated } = useAuth();
   const [isFavorited, setIsFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   // Handle card click to view campaign
   const handleCardClick = () => {
@@ -101,12 +103,45 @@ const CampaignCard = ({
     return campaign.days_left || 30;
   };
 
-  // Get main image URL
+  // Get main image URL with enhanced error handling
   const getImageUrl = () => {
-    if (campaign.main_image_url) {
-      return buildImageUrl(campaign.main_image_url);
+    // Handle edge cases: empty strings, null, undefined, whitespace-only strings
+    if (campaign.main_image_url && 
+        typeof campaign.main_image_url === 'string' && 
+        campaign.main_image_url.trim() !== '') {
+      try {
+        return buildImageUrl(campaign.main_image_url);
+      } catch (error) {
+        console.error('Error building image URL for campaign:', campaign.id, error);
+        return '/placeholder-campaign.jpg';
+      }
     }
-    return '/placeholder-campaign.jpg'; // Add a placeholder image to your public folder
+    return '/placeholder-campaign.jpg';
+  };
+
+  // Get YouTube video ID from URL
+  const getYouTubeVideoId = () => {
+    if (!campaign.video_url) return null;
+    
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = campaign.video_url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const videoId = getYouTubeVideoId();
+
+  // Handle hover for video autoplay
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (videoId) {
+      // Delay showing video slightly for better UX
+      setTimeout(() => setShowVideo(true), 300);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setShowVideo(false);
   };
 
   // Get status badge
@@ -119,8 +154,8 @@ const CampaignCard = ({
 
     if (isExpired && !isFunded) {
       return (
-        <div className="absolute top-3 right-3 bg-gray-900 text-white px-2 py-1 text-xs font-medium rounded-md flex items-center">
-          <Clock className="h-3 w-3 mr-1" />
+        <div className="absolute top-2 right-2 bg-gray-900 text-white px-1.5 py-0.5 text-[10px] font-medium rounded flex items-center">
+          <Clock className="h-2.5 w-2.5 mr-0.5" />
           EXPIRED
         </div>
       );
@@ -128,8 +163,8 @@ const CampaignCard = ({
 
     if (isFunded) {
       return (
-        <div className="absolute top-3 right-3 bg-green-600 text-white px-2 py-1 text-xs font-medium rounded-md flex items-center">
-          <CheckCircle className="h-3 w-3 mr-1" />
+        <div className="absolute top-2 right-2 bg-green-600 text-white px-1.5 py-0.5 text-[10px] font-medium rounded flex items-center">
+          <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
           FUNDED
         </div>
       );
@@ -137,8 +172,8 @@ const CampaignCard = ({
 
     if (campaign.is_featured) {
       return (
-        <div className="absolute top-3 right-3 bg-yellow-600 text-white px-2 py-1 text-xs font-medium rounded-md flex items-center">
-          <Star className="h-3 w-3 mr-1" />
+        <div className="absolute top-2 right-2 bg-yellow-600 text-white px-1.5 py-0.5 text-[10px] font-medium rounded flex items-center">
+          <Star className="h-2.5 w-2.5 mr-0.5" />
           FEATURED
         </div>
       );
@@ -146,7 +181,7 @@ const CampaignCard = ({
 
     if (status === 'draft') {
       return (
-        <div className="absolute top-3 right-3 bg-gray-600 text-white px-2 py-1 text-xs font-medium rounded-md">
+        <div className="absolute top-2 right-2 bg-gray-600 text-white px-1.5 py-0.5 text-[10px] font-medium rounded">
           DRAFT
         </div>
       );
@@ -154,8 +189,8 @@ const CampaignCard = ({
 
     if (status === 'submitted') {
       return (
-        <div className="absolute top-3 right-3 bg-blue-600 text-white px-2 py-1 text-xs font-medium rounded-md flex items-center">
-          <Clock className="h-3 w-3 mr-1" />
+        <div className="absolute top-2 right-2 bg-blue-600 text-white px-1.5 py-0.5 text-[10px] font-medium rounded flex items-center">
+          <Clock className="h-2.5 w-2.5 mr-0.5" />
           PENDING
         </div>
       );
@@ -163,8 +198,8 @@ const CampaignCard = ({
 
     if (status === 'rejected') {
       return (
-        <div className="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 text-xs font-medium rounded-md flex items-center">
-          <AlertCircle className="h-3 w-3 mr-1" />
+        <div className="absolute top-2 right-2 bg-red-600 text-white px-1.5 py-0.5 text-[10px] font-medium rounded flex items-center">
+          <AlertCircle className="h-2.5 w-2.5 mr-0.5" />
           REJECTED
         </div>
       );
@@ -190,24 +225,61 @@ const CampaignCard = ({
   // Get image height based on size
   const getImageHeight = () => {
     switch (size) {
-      case 'compact': return 'h-40';
-      case 'featured': return 'h-56';
-      default: return 'h-48';
+      case 'compact': return 'h-32';
+      case 'featured': return 'h-44';
+      default: return 'h-40';
     }
   };
 
   return (
-    <div className={getCardClasses()} onClick={handleCardClick}>
-      {/* Campaign Image */}
-      <div className={`relative ${getImageHeight()} overflow-hidden`}>
+    <div 
+      className={getCardClasses()} 
+      onClick={handleCardClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Campaign Image/Video */}
+      <div className={`relative ${getImageHeight()} w-full overflow-hidden`}>
+        {/* Image - always show as background */}
         <img 
           src={getImageUrl()}
           alt={campaign.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className={`w-full h-full object-cover transition-all duration-300 ${
+            showVideo && videoId ? 'opacity-0' : 'opacity-100 group-hover:scale-105'
+          }`}
           onError={(e) => {
-            e.target.src = '/placeholder-campaign.jpg';
+            // Enhanced error handling with logging and robust fallback
+            console.warn('Campaign image failed to load:', {
+              campaignId: campaign.id,
+              campaignTitle: campaign.title,
+              attemptedUrl: e.target.src
+            });
+            
+            // Prevent infinite loop if placeholder also fails
+            if (e.target.src !== '/placeholder-campaign.jpg' && 
+                !e.target.src.endsWith('/placeholder-campaign.jpg')) {
+              e.target.src = '/placeholder-campaign.jpg';
+            } else {
+              // Placeholder also failed, hide image gracefully
+              e.target.style.display = 'none';
+              console.error('Placeholder image also failed to load for campaign:', campaign.id);
+            }
           }}
         />
+
+        {/* YouTube Video - show on hover if available */}
+        {videoId && showVideo && (
+          <div className="absolute inset-0 w-full h-full">
+            <iframe
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}`}
+              className="w-full h-full"
+              frameBorder="0"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              title={campaign.title}
+            />
+          </div>
+        )}
         
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
@@ -217,39 +289,39 @@ const CampaignCard = ({
         
         {/* Action Buttons */}
         {showActions && (
-          <div className="absolute py-6 top-3 left-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute py-4 top-2 left-2 flex space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={handleFavoriteClick}
               disabled={isLoading}
-              className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md"
+              className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md"
             >
               <Heart 
-                className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+                className={`h-3.5 w-3.5 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
               />
             </button>
             <button
               onClick={handleShare}
-              className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md"
+              className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md"
             >
-              <Share2 className="h-4 w-4 text-gray-600" />
+              <Share2 className="h-3.5 w-3.5 text-gray-600" />
             </button>
           </div>
         )}
         
         {/* Days Left Indicator */}
         {getDaysLeft() > 0 && (
-          <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm text-gray-900 px-2 py-1 text-xs font-medium rounded-md flex items-center">
-            <Calendar className="h-3 w-3 mr-1" />
+          <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm text-gray-900 px-1.5 py-0.5 text-[10px] font-medium rounded flex items-center">
+            <Calendar className="h-2.5 w-2.5 mr-0.5" />
             {getDaysLeft()} DAYS LEFT
           </div>
         )}
       </div>
       
       {/* Campaign Content */}
-      <div className="p-4 md:p-5">
+      <div className="p-3">
         {/* Category & Location */}
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
             {campaign.category}
           </span>
           <div className="flex items-center text-xs text-gray-500">
@@ -259,19 +331,19 @@ const CampaignCard = ({
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
+        <h3 className="text-base font-bold text-gray-900 mb-1.5 line-clamp-2 group-hover:text-green-700 transition-colors">
           {campaign.title}
         </h3>
         
         {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+        <p className="text-gray-600 text-xs mb-3 line-clamp-2">
           {campaign.description}
         </p>
 
         {/* Progress Section */}
-        <div className="mb-4">
+        <div className="mb-3">
           {/* Progress Bar */}
-          <div className="w-full bg-gray-100 rounded-full h-2 mb-3 overflow-hidden">
+          <div className="w-full bg-gray-100 rounded-full h-1.5 mb-2 overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500 relative"
               style={{ width: `${fundingPercentage()}%` }}
@@ -284,25 +356,25 @@ const CampaignCard = ({
           </div>
           
           {/* Funding Stats */}
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-3 gap-2 text-center">
             <div>
-              <div className="text-sm font-bold text-gray-900">
+              <div className="text-xs font-bold text-gray-900">
                 {formatCurrency(campaign.current_amount || 0)}
               </div>
-              <div className="text-xs text-gray-500">raised</div>
+              <div className="text-[10px] text-gray-500">raised</div>
             </div>
             <div>
-              <div className="text-sm font-bold text-gray-900">
+              <div className="text-xs font-bold text-gray-900">
                 {fundingPercentage()}%
               </div>
-              <div className="text-xs text-gray-500">funded</div>
+              <div className="text-[10px] text-gray-500">funded</div>
             </div>
             <div>
-              <div className="text-sm font-bold text-gray-900">
+              <div className="text-xs font-bold text-gray-900">
                 {campaign.view_count || 0}
               </div>
-              <div className="text-xs text-gray-500 flex items-center justify-center">
-                <Eye className="h-3 w-3 mr-1" />
+              <div className="text-[10px] text-gray-500 flex items-center justify-center">
+                <Eye className="h-2.5 w-2.5 mr-0.5" />
                 views
               </div>
             </div>
@@ -310,25 +382,25 @@ const CampaignCard = ({
         </div>
 
         {/* Target Amount */}
-        <div className="bg-gray-50 rounded-lg p-3 mb-4">
+        <div className="bg-gray-50 rounded-lg p-2 mb-3">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-medium text-gray-600">Target Amount</span>
-            <span className="text-sm font-bold text-gray-900">
+            <span className="text-[10px] font-medium text-gray-600">Target Amount</span>
+            <span className="text-xs font-bold text-gray-900">
               {formatCurrency(campaign.target_amount)}
             </span>
           </div>
-          <div className="flex justify-between items-center mt-1">
-            <span className="text-xs font-medium text-gray-600">Min Investment</span>
-            <span className="text-xs text-gray-700">
+          <div className="flex justify-between items-center mt-0.5">
+            <span className="text-[10px] font-medium text-gray-600">Min Investment</span>
+            <span className="text-[10px] text-gray-700">
               {formatCurrency(campaign.minimum_investment)}
             </span>
           </div>
         </div>
         
         {/* Founder Info */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <div className="flex items-center">
-            <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-sm overflow-hidden">
+            <div className="h-7 w-7 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-xs overflow-hidden">
               {campaign.founder_avatar || campaign.founderAvatar ? (
                 <img 
                   src={
@@ -363,7 +435,7 @@ const CampaignCard = ({
               
               {/* Fallback initials - always present but hidden if image loads */}
               <span 
-                className={`founder-initials text-gray-600 font-medium text-sm ${
+                className={`founder-initials text-gray-600 font-medium text-xs ${
                   campaign.founder_avatar || campaign.founderAvatar ? 'hidden' : 'flex'
                 } items-center justify-center h-full w-full`}
               >
@@ -371,11 +443,11 @@ const CampaignCard = ({
               </span>
             </div>
             <div className="ml-2">
-              <div className="text-sm font-medium text-gray-900">
+              <div className="text-xs font-medium text-gray-900">
                 {campaign.founder_name || campaign.founderName || 'Anonymous'}
               </div>
               {(campaign.founder_company || campaign.founderCompany) && (
-                <div className="text-xs text-gray-500">
+                <div className="text-[10px] text-gray-500">
                   {campaign.founder_company || campaign.founderCompany}
                 </div>
               )}
@@ -385,7 +457,7 @@ const CampaignCard = ({
           {/* Trending Indicator */}
           {(campaign.view_count || campaign.viewCount || 0) > 100 && (
             <div className="flex items-center text-green-600">
-              <TrendingUp className="h-4 w-4" />
+              <TrendingUp className="h-3.5 w-3.5" />
             </div>
           )}
         </div>

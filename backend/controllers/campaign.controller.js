@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const CampaignStatsService = require('../services/campaignStatsService');
+const { saveMilestones, saveCollaborators, getMilestones, getCollaborators } = require('./campaign-milestones-collaborators');
 
 // Configure multer for campaign image uploads
 const storage = multer.diskStorage({
@@ -134,7 +135,29 @@ const createCampaign = async (req, res) => {
     );
 
     const campaignId = result;
-    console.log(`âœ… DEBUG: Campaign created with ID: ${campaignId}`);
+    console.log(`✅ DEBUG: Campaign created with ID: ${campaignId}`);
+    
+    // Parse and save milestones if provided
+    try {
+      const milestonesData = req.body.milestones ? JSON.parse(req.body.milestones) : [];
+      if (milestonesData.length > 0) {
+        await saveMilestones(campaignId, milestonesData, db.sequelize);
+        console.log(`✅ Saved ${milestonesData.length} milestones`);
+      }
+    } catch (milestoneError) {
+      console.error('⚠️ Error saving milestones:', milestoneError);
+    }
+
+    // Parse and save collaborators if provided
+    try {
+      const collaboratorsData = req.body.collaborators ? JSON.parse(req.body.collaborators) : [];
+      if (collaboratorsData.length > 0) {
+        await saveCollaborators(campaignId, collaboratorsData, db.sequelize);
+        console.log(`✅ Saved ${collaboratorsData.length} collaborators`);
+      }
+    } catch (collabError) {
+      console.error('⚠️ Error saving collaborators:', collabError);
+    }
     
     // Immediately verify the campaign was created correctly
     const [verifyCreation] = await db.sequelize.query(
@@ -911,6 +934,22 @@ const getCampaignById = async (req, res) => {
       rejectedAt: campaign.rejected_at
     };
 
+    // Fetch milestones
+    try {
+      formattedCampaign.milestones = await getMilestones(id, db.sequelize);
+    } catch (error) {
+      console.error('Error fetching milestones:', error);
+      formattedCampaign.milestones = [];
+    }
+
+    // Fetch collaborators
+    try {
+      formattedCampaign.collaborators = await getCollaborators(id, db.sequelize);
+    } catch (error) {
+      console.error('Error fetching collaborators:', error);
+      formattedCampaign.collaborators = [];
+    }
+
     res.status(200).send({
       success: true,
       data: formattedCampaign
@@ -1566,6 +1605,93 @@ const recalculateAllStats = async (req, res) => {
     });
   }
 };
+// ================= MILESTONE AND TEAM ENDPOINTS =================
+
+// Get campaign milestones
+const getCampaignMilestones = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log(`🎯 Getting milestones for campaign ${id}`);
+
+    // Verify campaign exists
+    const [campaign] = await db.sequelize.query(
+      'SELECT id, status FROM campaigns WHERE id = ?',
+      {
+        replacements: [id],
+        type: db.sequelize.QueryTypes.SELECT
+      }
+    );
+
+    if (!campaign) {
+      return res.status(404).send({
+        success: false,
+        message: 'Campaign not found'
+      });
+    }
+
+    // Get milestones using helper function
+    const milestones = await getMilestones(id, db.sequelize);
+
+    console.log(`✅ Found ${milestones.length} milestones`);
+
+    res.status(200).send({
+      success: true,
+      data: milestones
+    });
+
+  } catch (error) {
+    console.error('❌ Get campaign milestones error:', error);
+    res.status(500).send({
+      success: false,
+      message: 'Error fetching campaign milestones',
+      error: error.message
+    });
+  }
+};
+
+// Get campaign team/collaborators
+const getCampaignTeam = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log(`👥 Getting team members for campaign ${id}`);
+
+    // Verify campaign exists
+    const [campaign] = await db.sequelize.query(
+      'SELECT id, status FROM campaigns WHERE id = ?',
+      {
+        replacements: [id],
+        type: db.sequelize.QueryTypes.SELECT
+      }
+    );
+
+    if (!campaign) {
+      return res.status(404).send({
+        success: false,
+        message: 'Campaign not found'
+      });
+    }
+
+    // Get collaborators using helper function
+    const teamMembers = await getCollaborators(id, db.sequelize);
+
+    console.log(`✅ Found ${teamMembers.length} team members`);
+
+    res.status(200).send({
+      success: true,
+      data: teamMembers
+    });
+
+  } catch (error) {
+    console.error('❌ Get campaign team error:', error);
+    res.status(500).send({
+      success: false,
+      message: 'Error fetching campaign team',
+      error: error.message
+    });
+  }
+};
 
 // ================= EXPORTS =================
 
@@ -1592,5 +1718,9 @@ module.exports = {
   trackCampaignView,
   getCampaignStats,
   recalculateAllStats,
-  getCampaignForEdit
+  getCampaignForEdit,
+  
+  // Milestone and Team
+  getCampaignMilestones,
+  getCampaignTeam
 };

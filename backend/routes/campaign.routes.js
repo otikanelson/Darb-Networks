@@ -130,6 +130,18 @@ module.exports = function(app) {
     })
   );
 
+  // Get campaign milestones
+  app.get(
+    "/api/campaigns/:id/milestones",
+    controller.getCampaignMilestones
+  );
+
+  // Get campaign team/collaborators
+  app.get(
+    "/api/campaigns/:id/team",
+    controller.getCampaignTeam
+  );
+
   // ============= CAMPAIGN EDITING ROUTES =============
   
   // Get campaign for editing (founder only, restricted access)

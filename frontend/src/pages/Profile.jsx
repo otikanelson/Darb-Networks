@@ -269,7 +269,17 @@ const Profile = () => {
         // *** CRITICAL: Update user context with new data ***
         if (result.data.user) {
           console.log("🔄 Updating user context with:", result.data.user);
-          await updateUserContext(result.data.user);
+          console.log("🔄 Current user context:", user);
+          
+          // Merge with existing user data to preserve all fields
+          const updatedUserData = {
+            ...user,
+            ...result.data.user,
+            profileImageUrl: result.data.profileImageUrl // Ensure we use the correct URL
+          };
+          
+          console.log("🔄 Merged user data:", updatedUserData);
+          await updateUserContext(updatedUserData);
         }
 
         setProfileUpdateSuccess(true);

@@ -30,9 +30,32 @@ export const buildApiUrl = (path) => {
 
 // Helper for image URLs (without /api)
 export const buildImageUrl = (path) => {
-  const base = API_BASE;
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${cleanPath}`;
+  try {
+    // Handle null, undefined, or non-string inputs
+    if (!path || typeof path !== 'string') {
+      return '/placeholder-campaign.jpg';
+    }
+    
+    // Trim whitespace
+    const trimmedPath = path.trim();
+    
+    // Handle empty strings after trimming
+    if (trimmedPath === '') {
+      return '/placeholder-campaign.jpg';
+    }
+    
+    // If it's already a complete URL (http:// or https://), return it as is
+    if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
+      return trimmedPath;
+    }
+    
+    const base = API_BASE;
+    const cleanPath = trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`;
+    return `${base}${cleanPath}`;
+  } catch (error) {
+    console.error('Error in buildImageUrl:', error, 'path:', path);
+    return '/placeholder-campaign.jpg';
+  }
 };
 
 export default {

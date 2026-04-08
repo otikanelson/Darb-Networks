@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
 
 const login = async (credentials) => {
   try {
-    setLoading(true);
+    // DON'T set loading to true here - it causes the entire app to remount
     setError(null);
     console.log("Logging in with:", credentials.email);
     
@@ -110,8 +110,6 @@ const login = async (credentials) => {
     }
     
     throw err;
-  } finally {
-    setLoading(false);
   }
 };
 
@@ -133,18 +131,24 @@ const login = async (credentials) => {
 
   // Function to update the user context data
   const updateUserContext = async (updatedData) => {
-    console.log("Updating user context with:", updatedData);
+    console.log("🔄 AuthContext: updateUserContext called");
+    console.log("📥 Received data:", updatedData);
+    console.log("📦 Current user:", user);
     
     try {
       if (user && updatedData) {
         // Create the updated user object
         const updatedUser = {
           ...user,
-          ...updatedData
+          ...updatedData,
+          // Add timestamp for cache-busting when profile image changes
+          profileImageTimestamp: updatedData.profileImageUrl ? Date.now() : user.profileImageTimestamp
         };
         
-        console.log("Previous user data:", user);
-        console.log("New user data:", updatedUser);
+        console.log("✅ Previous user data:", user);
+        console.log("✅ New user data:", updatedUser);
+        console.log("🖼️ Profile image URL:", updatedUser.profileImageUrl);
+        console.log("⏰ Profile image timestamp:", updatedUser.profileImageTimestamp);
         
         // Update the local state (this triggers re-renders)
         setUser(updatedUser);
@@ -152,13 +156,15 @@ const login = async (credentials) => {
         // Update the stored user data in localStorage
         AuthService.setCurrentUser(updatedUser);
         
-        console.log("User context updated successfully");
-        console.log("New profileImageUrl:", updatedUser.profileImageUrl);
+        console.log("✅ User context updated successfully");
+        console.log("✅ localStorage updated");
         
         return updatedUser;
+      } else {
+        console.warn("⚠️ Cannot update context: missing user or updatedData");
       }
     } catch (error) {
-      console.error("Error updating user context:", error);
+      console.error("❌ Error updating user context:", error);
       setError(error.message);
       throw error;
     }

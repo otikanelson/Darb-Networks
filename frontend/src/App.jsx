@@ -17,7 +17,7 @@ import AdminDashboard from './pages/AdminDashboard';
 
 // Campaign related pages
 import MyCampaigns from './pages/MyCampaigns';
-import CreateCampaign from './pages/CreateCampaign';
+import CreateCampaign from './pages/CreateCampaignNew';
 import EditCampaign from './pages/EditCampaign';
 import CampaignDisplay from './pages/CampaignDisplay';
 

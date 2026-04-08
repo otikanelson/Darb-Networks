@@ -30,23 +30,33 @@ const Footer = () => {
                 <h3 className="font-bold mb-8">Donate</h3>
                 <ul className="space-y-4">
                   <li>
-                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/dashboard?category=Tech & Innovation" className="text-gray-400 hover:text-white font-semibold">
                       Tech & Innovation
                     </Link>
                   </li>
                   <li>
-                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/dashboard?category=Creative Works" className="text-gray-400 hover:text-white font-semibold">
                       Creative Works
                     </Link>
                   </li>
                   <li>
-                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
+                    <Link to="/dashboard?category=Community Projects" className="text-gray-400 hover:text-white font-semibold">
                       Community Projects
                     </Link>
                   </li>
                   <li>
-                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
-                      Disaster
+                    <Link to="/dashboard?category=Clean Energy" className="text-gray-400 hover:text-white font-semibold">
+                      Clean Energy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/dashboard?category=Healthcare" className="text-gray-400 hover:text-white font-semibold">
+                      Healthcare
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/dashboard?category=Agriculture" className="text-gray-400 hover:text-white font-semibold">
+                      Agriculture
                     </Link>
                   </li>
                 </ul>

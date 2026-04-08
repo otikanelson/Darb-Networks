@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { CustomNav } from '../../hooks/CustomNavigation';
+import { buildImageUrl } from '../../config/apiUrl';
 import { 
   Bell, 
   Settings, 
@@ -39,6 +40,15 @@ const Navbars = ({
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
+
+  // Debug: Log when user context changes
+  useEffect(() => {
+    console.log('🔄 Navbar: User context updated:', {
+      profileImageUrl: user?.profileImageUrl,
+      profileImageTimestamp: user?.profileImageTimestamp,
+      fullName: user?.fullName
+    });
+  }, [user?.profileImageUrl, user?.profileImageTimestamp]);
 
   // Campaign categories for search suggestions
   const categories = {
@@ -316,37 +326,60 @@ const Navbars = ({
   );
 
   // Profile dropdown component
-  const ProfileDropdown = () => (
-    <div className="ml-3 relative" ref={dropdownRef}>
-      <button
-        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-      >
-        <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300">
-          {user?.profileImageUrl ? (
-            <img 
-              src={user.profileImageUrl.startsWith('http') 
-                ? user.profileImageUrl 
-                : `http://localhost:5000${user.profileImageUrl}`
-              } 
-              alt="Profile" 
-              className="h-full w-full object-cover"
-              key={user.profileImageUrl}
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.parentNode.querySelector('.fallback-initials').style.display = 'flex';
-              }}
-            />
-          ) : null}
-          
-          <span 
-            className={`text-gray-600 font-medium fallback-initials ${user?.profileImageUrl ? 'hidden' : 'flex'} items-center justify-center`}
-          >
-            {user?.displayName?.charAt(0) || user?.fullName?.charAt(0) || 'U'}
-          </span>
-        </div>
-        <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
-      </button>
+  const ProfileDropdown = () => {
+    // Add cache-busting timestamp to profile image URL
+    const getProfileImageUrl = () => {
+      if (!user?.profileImageUrl) return null;
+      
+      // Use buildImageUrl to get the correct base URL
+      const baseUrl = buildImageUrl(user.profileImageUrl);
+      
+      // Use timestamp from user context for cache-busting
+      const cacheBuster = user.profileImageTimestamp ? `?t=${user.profileImageTimestamp}` : `?t=${Date.now()}`;
+      const finalUrl = `${baseUrl}${cacheBuster}`;
+      
+      console.log('🖼️ Navbar: Building profile image URL:', {
+        profileImageUrl: user.profileImageUrl,
+        timestamp: user.profileImageTimestamp,
+        baseUrl,
+        finalUrl
+      });
+      
+      return finalUrl;
+    };
+
+    const profileImageUrl = getProfileImageUrl();
+
+    return (
+      <div className="ml-3 relative" ref={dropdownRef}>
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+        >
+          <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300">
+            {profileImageUrl ? (
+              <img 
+                src={profileImageUrl} 
+                alt="Profile" 
+                className="h-full w-full object-cover"
+                key={profileImageUrl}
+                onLoad={() => console.log('✅ Navbar: Profile image loaded successfully')}
+                onError={(e) => {
+                  console.error('❌ Navbar: Profile image failed to load:', profileImageUrl);
+                  e.target.style.display = 'none';
+                  e.target.parentNode.querySelector('.fallback-initials').style.display = 'flex';
+                }}
+              />
+            ) : null}
+            
+            <span 
+              className={`text-gray-600 font-medium fallback-initials ${profileImageUrl ? 'hidden' : 'flex'} items-center justify-center`}
+            >
+              {user?.displayName?.charAt(0) || user?.fullName?.charAt(0) || 'U'}
+            </span>
+          </div>
+          <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
+        </button>
 
       {isDropdownOpen && (
         <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
@@ -403,6 +436,7 @@ const Navbars = ({
       )}
     </div>
   );
+};
 
   const navLinks = getNavLinks();
 

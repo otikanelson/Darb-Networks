@@ -1,51 +1,143 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, XCircle } from 'lucide-react';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ui/ToastContainer';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { toasts, hideToast, success, error: showError } = useToast();
 
   // Check for redirect path in URL state
   useEffect(() => {
     if (location.state?.from) {
       localStorage.setItem('redirectPath', location.state.from);
     }
+    
+    // Prevent any errors from causing page reloads
+    const handleError = (e) => {
+      console.error('Global error caught:', e);
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+    
+    const handleUnhandledRejection = (e) => {
+      console.error('Unhandled rejection caught:', e);
+      e.preventDefault();
+      return false;
+    };
+    
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
   }, [location]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  // Prevent any accidental navigation
+  useEffect(() => {
+    // Prevent beforeunload
+    const preventUnload = (e) => {
+      if (isLoading) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
     
+    // Prevent popstate (back/forward navigation)
+    const preventPopState = (e) => {
+      if (isLoading) {
+        e.preventDefault();
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+    
+    // Prevent hashchange
+    const preventHashChange = (e) => {
+      if (isLoading) {
+        e.preventDefault();
+      }
+    };
+    
+    window.addEventListener('beforeunload', preventUnload);
+    window.addEventListener('popstate', preventPopState);
+    window.addEventListener('hashchange', preventHashChange);
+    
+    // Push a state to prevent back navigation
+    window.history.pushState(null, '', window.location.href);
+    
+    return () => {
+      window.removeEventListener('beforeunload', preventUnload);
+      window.removeEventListener('popstate', preventPopState);
+      window.removeEventListener('hashchange', preventHashChange);
+    };
+  }, [isLoading]);
+
+  const handleSubmit = async () => {
+    console.log('handleSubmit called');
+    
+    setIsLoading(true);
+    setErrorMessage(''); // Clear previous errors
+    
+    // Validation
+    if (!email || !password) {
+      const msg = 'Please fill in all fields';
+      console.log('Validation failed:', msg);
+      setErrorMessage(msg);
+      setIsLoading(false);
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      const msg = 'Please enter a valid email address';
+      console.log('Email validation failed:', msg);
+      setErrorMessage(msg);
+      setIsLoading(false);
+      return;
+    }
+
     console.log('Submitting login form with:', { email, password: '******' });
 
     try {
       await login({ email, password });
       
+      success('Login successful! Redirecting...');
+      
       // If login succeeds, navigate to dashboard
-      const redirectPath = localStorage.getItem('redirectPath');
-      if (redirectPath) {
-        localStorage.removeItem('redirectPath');
-        navigate(redirectPath);
-      } else {
-        navigate('/dashboard');
-      }
+      setTimeout(() => {
+        const redirectPath = localStorage.getItem('redirectPath');
+        if (redirectPath) {
+          localStorage.removeItem('redirectPath');
+          navigate(redirectPath);
+        } else {
+          navigate('/dashboard');
+        }
+      }, 1000);
     } catch (err) {
       console.error('Login error:', err);
       
-      setError('Invalid email or password. Please try again.');
-      
+      // STOP EVERYTHING - just set the error message
+      const errorMsg = 'Invalid email or password';
+      console.log('Setting error message:', errorMsg);
+      setErrorMessage(errorMsg);
       setIsLoading(false);
+      console.log('Error handling complete, state updated');
+      
+      // Don't do anything else that might trigger a reload
     }
   };
 
@@ -55,6 +147,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex">
+      <ToastContainer toasts={toasts} onClose={hideToast} />
+      
       {/* Left side - Image */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-green-700 to-green-900 p-12 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-green-800/95 to-green-900/90" />
@@ -105,14 +199,14 @@ const Login = () => {
             </p>
           </div>
           
-          {error && (
-            <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md flex items-center" role="alert">
-              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-          
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); return false; }}>
+            {errorMessage && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start">
+                <XCircle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
+                <p className="text-sm">{errorMessage}</p>
+              </div>
+            )}
+            
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email address
@@ -193,7 +287,8 @@ const Login = () => {
 
             <div>
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 disabled={isLoading}
                 className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
