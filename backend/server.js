@@ -167,8 +167,9 @@ const requireDatabase = (req, res, next) => {
   next();
 };
 
-// Initialize database (don't block startup if it fails)
-initializeDatabase();
+// Initialize database async - don't block route loading
+initializeDatabase().catch(() => {});
+
 
 // File structure check endpoint
 app.get('/test', (req, res) => {
@@ -204,30 +205,29 @@ app.get('/test', (req, res) => {
 });
 
 // Load routes with error handling
+const routeLoadErrors = {};
 const loadRoutes = () => {
   try {
     console.log("🔧 Loading routes...");
     console.log("🔧 Current directory:", __dirname);
     
     const routes = [
-      { name: 'passwordReset', path: './routes/passwordReset.routes', requiresDb: false },
-      { name: 'auth', path: './routes/auth.routes', requiresDb: true },
-      { name: 'user', path: './routes/user.routes', requiresDb: true },
-      { name: 'campaign', path: './routes/campaign.routes', requiresDb: true },
-      { name: 'admin', path: './routes/admin.routes', requiresDb: true },
-      { name: 'investment', path: './routes/investment.routes', requiresDb: true }
+      { name: 'passwordReset', path: './routes/passwordReset.routes' },
+      { name: 'auth', path: './routes/auth.routes' },
+      { name: 'user', path: './routes/user.routes' },
+      { name: 'campaign', path: './routes/campaign.routes' },
+      { name: 'admin', path: './routes/admin.routes' },
+      { name: 'investment', path: './routes/investment.routes' }
     ];
     
     routes.forEach(route => {
       try {
         require(route.path)(app);
-        console.log(`✅ ${route.name} routes loaded from ${route.path}`);
+        console.log(`✅ ${route.name} routes loaded`);
       } catch (error) {
-        console.error(`❌ Failed to load ${route.name} routes:`, error.message);
-        console.error("Full error:", error);
-        
-        // Create fallback routes for failed modules
-        app.all(`/api/${route.name}/*`, (req, res) => {
+        console.error(`❌ Failed to load ${route.name} routes:`, error.message, error.stack);
+        routeLoadErrors[route.name] = error.message;
+        app.all(`/api/${route.name}*`, (req, res) => {
           res.status(503).json({
             success: false,
             message: `${route.name} service unavailable`,
@@ -241,6 +241,11 @@ const loadRoutes = () => {
     console.error("❌ Critical error loading routes:", error);
   }
 };
+
+// Expose route load errors for debugging
+app.get('/api/route-status', (req, res) => {
+  res.json({ routeLoadErrors, timestamp: new Date().toISOString() });
+});
 
 // Load routes
 loadRoutes();
