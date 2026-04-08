@@ -4,11 +4,7 @@
   "builds": [
     {
       "src": "api/index.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxLambdaSize": "50mb",
-        "includeFiles": ["**/*.js", "**/*.sql"]
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
