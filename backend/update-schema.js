@@ -2,12 +2,14 @@ const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
+require('dotenv').config();
+
 const dbConfig = {
-  host: 'mysql-372a7e61-otikanelson29-ffb4.a.aivencloud.com',
-  port: 25252,
-  user: 'avnadmin',
-  password: 'AVNS_i3gMw7Dh2un4SeZZeup',
-  database: 'defaultdb',
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '3306'),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   multipleStatements: true
 };
 

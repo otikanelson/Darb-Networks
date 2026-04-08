@@ -39,7 +39,7 @@ You have 4 env files. 2 are for local development (already on your computer), an
 DB_HOST=mysql-372a7e61-otikanelson29-ffb4.a.aivencloud.com
 DB_PORT=25252
 DB_USER=avnadmin
-DB_PASSWORD=AVNS_i3gMw7Dh2un4SeZZeup
+DB_PASSWORD=<your-aiven-password>
 DB_NAME=defaultdb
 NODE_ENV=production
 JWT_SECRET=dab0fb4a067372e5e2de50617548cea614ab627ad09bfe3493d5867a425635eabaa7cb786353281017b6d920951807ca33d53eb5a5c1c26bce0956ce4955eb16
