@@ -71,25 +71,21 @@ export const AuthProvider = ({ children }) => {
 
 const login = async (credentials) => {
   try {
-    setLoading(true);
     setError(null);
     console.log("Logging in with:", credentials.email);
     
     const loggedInUser = await AuthService.login(credentials);
     console.log("Login response user:", loggedInUser);
     
-    // *** CRITICAL: Fetch complete profile data after login ***
+    // Fetch complete profile data after login
     try {
       const completeProfile = await AuthService.verifyToken();
       if (completeProfile) {
-        console.log("Setting complete user profile:", completeProfile);
         setUser(completeProfile);
       } else {
-        console.log("Verify token failed, using login response");
         setUser(loggedInUser);
       }
     } catch (verifyError) {
-      console.log("Profile fetch failed, using login response:", verifyError);
       setUser(loggedInUser);
     }
     
@@ -110,8 +106,6 @@ const login = async (credentials) => {
     }
     
     throw err;
-  } finally {
-    setLoading(false);
   }
 };
 

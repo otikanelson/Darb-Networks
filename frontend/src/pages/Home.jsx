@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import UnifiedNavbar from '../components/layout/Navbars';
 import Footer from '../components/layout/Footer';
@@ -6,6 +6,7 @@ import HeroSection from '../components/sections/HeroSection';
 import FeaturesSection from '../components/sections/FeaturesSection';
 import FeaturedStartups from '../components/sections/FeaturedStartups';
 import UserCampaignsSection from '../components/sections/UserCampaignsSection';
+import CategoryTabs from '../components/sections/CategoryTabs';
 
 const Home = () => {
   return (
@@ -16,6 +17,9 @@ const Home = () => {
         showSearch={true} 
         showNavLinks={true}
       />
+      
+      {/* Category Tabs - Horizontal Scrolling */}
+      <CategoryTabs />
       
       <main>
         <HeroSection />

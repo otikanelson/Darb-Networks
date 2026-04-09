@@ -1,7 +1,7 @@
-// src/components/sections/FeaturedStartups.jsx - FIXED with horizontal scrolling
+﻿// src/components/sections/FeaturedStartups.jsx - Kickstarter-style dynamic layout
 
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { CustomNav } from '../../hooks/CustomNavigation';
 import CampaignCard from '../ui/CampaignCard';
 import CampaignService from '../../services/CampaignService';
@@ -13,7 +13,7 @@ const FeaturedStartups = () => {
   const [featuredCampaigns, setFeaturedCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const scrollContainerRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   
@@ -23,8 +23,6 @@ const FeaturedStartups = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Get more campaigns for scrolling (6-9 campaigns)
         const campaigns = await CampaignService.getFeaturedCampaigns(9);
         setFeaturedCampaigns(campaigns);
       } catch (error) {
@@ -41,34 +39,31 @@ const FeaturedStartups = () => {
 
   // Handle scroll functionality
   useEffect(() => {
-    const container = document.getElementById('featured-campaigns-container');
+    const container = scrollContainerRef.current;
     if (container) {
       const updateScrollButtons = () => {
         setCanScrollLeft(container.scrollLeft > 0);
         setCanScrollRight(
-          container.scrollLeft < container.scrollWidth - container.clientWidth
+          container.scrollLeft < container.scrollWidth - container.clientWidth - 10
         );
       };
 
       container.addEventListener('scroll', updateScrollButtons);
-      updateScrollButtons(); // Initial check
+      updateScrollButtons();
 
       return () => container.removeEventListener('scroll', updateScrollButtons);
     }
   }, [featuredCampaigns]);
 
-  // Scroll functions
   const scrollLeft = () => {
-    const container = document.getElementById('featured-campaigns-container');
-    if (container) {
-      container.scrollBy({ left: -400, behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -500, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
-    const container = document.getElementById('featured-campaigns-container');
-    if (container) {
-      container.scrollBy({ left: 400, behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 500, behavior: 'smooth' });
     }
   };
 
@@ -94,67 +89,80 @@ const FeaturedStartups = () => {
     }
   };
 
-  return (
-    <section className="relative py-24">
-      {/* Background Image and Overlay */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-green-800/90" />
-        <img 
-          src="/src/assets/featured-bg.png" 
-          alt="Background Pattern" 
-          className="w-full h-full object-cover opacity-10"
-        />
-      </div>
+  // Create varied card sizes for Kickstarter-style layout
+  const getCardStyle = (index) => {
+    const patterns = [
+      { width: 'w-80', marginTop: 'mt-0' },
+      { width: 'w-96', marginTop: 'mt-8' },
+      { width: 'w-80', marginTop: 'mt-4' },
+      { width: 'w-[22rem]', marginTop: 'mt-0' },
+      { width: 'w-80', marginTop: 'mt-6' },
+      { width: 'w-96', marginTop: 'mt-2' },
+    ];
+    return patterns[index % patterns.length];
+  };
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Featured Startups
-          </h2>
-          <p className="text-xl text-green-100 max-w-2xl mx-auto">
-            Discover innovative Nigerian startups that are shaping the future
-          </p>
+  return (
+    <section className="relative py-20 bg-gradient-to-b from-white to-gray-50">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-12">
+          <div>
+            <div className="flex items-center space-x-2 mb-2">
+              <Sparkles className="h-6 w-6 text-green-600" />
+              <span className="text-green-600 font-semibold text-sm uppercase tracking-wide">Featured Projects</span>
+            </div>
+            <h2 className="text-4xl font-bold text-gray-900">
+              Trending Startups
+            </h2>
+            <p className="text-gray-600 mt-2">
+              Discover innovative Nigerian startups making waves
+            </p>
+          </div>
+          
+          <button 
+            onClick={() => navigate('/dashboard')}
+            className="hidden md:flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold transition-colors"
+          >
+            <span>View all</span>
+            <ArrowRight className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Loading state */}
         {loading ? (
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent"></div>
           </div>
         ) : error ? (
-          // Error state
-          <div className="text-center">
-            <p className="text-white text-lg mb-4">{error}</p>
+          <div className="text-center py-20">
+            <p className="text-gray-600 text-lg mb-4">{error}</p>
             <button 
               onClick={() => navigate('/dashboard')}
-              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border border-white/20 
-                      px-8 py-3 rounded-full transition-colors flex items-center space-x-2 mx-auto"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full transition-colors inline-flex items-center space-x-2"
             >
               <span>Browse All Startups</span>
-              <ArrowRight className="h-5 w-5 ml-2" />
+              <ArrowRight className="h-5 w-5" />
             </button>
           </div>
         ) : featuredCampaigns.length === 0 ? (
-          // Empty state
-          <div className="text-center">
-            <p className="text-white text-lg mb-8">No featured campaigns available at the moment.</p>
+          <div className="text-center py-20">
+            <p className="text-gray-600 text-lg mb-8">No featured campaigns available at the moment.</p>
             <button 
               onClick={() => navigate('/dashboard')}
-              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border border-white/20 
-                      px-8 py-3 rounded-full transition-colors flex items-center space-x-2 mx-auto"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full transition-colors inline-flex items-center space-x-2"
             >
               <span>Browse All Startups</span>
-              <ArrowRight className="h-5 w-5 ml-2" />
+              <ArrowRight className="h-5 w-5" />
             </button>
           </div>
         ) : (
-          // FIXED: Horizontal scrollable container
           <div className="relative">
             {/* Scroll buttons */}
             {canScrollLeft && (
               <button
                 onClick={scrollLeft}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-3 rounded-full shadow-lg transition-all"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white hover:bg-gray-50 text-gray-900 p-3 rounded-full shadow-xl border border-gray-200 transition-all transform hover:scale-110"
                 aria-label="Scroll left"
               >
                 <ChevronLeft className="h-6 w-6" />
@@ -164,55 +172,64 @@ const FeaturedStartups = () => {
             {canScrollRight && (
               <button
                 onClick={scrollRight}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-3 rounded-full shadow-lg transition-all"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white hover:bg-gray-50 text-gray-900 p-3 rounded-full shadow-xl border border-gray-200 transition-all transform hover:scale-110"
                 aria-label="Scroll right"
               >
                 <ChevronRight className="h-6 w-6" />
               </button>
             )}
 
-            {/* Scrollable campaigns container */}
+            {/* Gradient overlays for scroll indication */}
+            {canScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+            )}
+            {canScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+            )}
+
+            {/* Scrollable campaigns container with varied heights */}
             <div
-              id="featured-campaigns-container"
-              className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-12"
+              ref={scrollContainerRef}
+              className="flex gap-6 overflow-x-auto scrollbar-hide pb-8 px-12 items-start"
               style={{
-                scrollbarWidth: 'none', /* Firefox */
-                msOverflowStyle: 'none',  /* Internet Explorer 10+ */
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
               }}
             >
-              {featuredCampaigns.map((campaign) => (
-                <div
-                  key={campaign.id}
-                  className="flex-none w-80" // Fixed width for consistent sizing
-                >
-                  <CampaignCard
-                    campaign={campaign}
-                    size="featured"
-                    onFavoriteToggle={handleFavoriteToggle}
-                    onViewClick={handleViewClick}
-                  />
-                </div>
-              ))}
+              {featuredCampaigns.map((campaign, index) => {
+                const style = getCardStyle(index);
+                return (
+                  <div
+                    key={campaign.id}
+                    className={`flex-none ${style.width} ${style.marginTop} transform transition-transform hover:-translate-y-2`}
+                  >
+                    <CampaignCard
+                      campaign={campaign}
+                      size="featured"
+                      onFavoriteToggle={handleFavoriteToggle}
+                      onViewClick={handleViewClick}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* View all button */}
+        {/* Mobile view all button */}
         {featuredCampaigns.length > 0 && (
-          <div className="text-center mt-12">
+          <div className="text-center mt-8 md:hidden">
             <button 
               onClick={() => navigate('/dashboard')}
-              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border border-white/20 
-                      px-8 py-3 rounded-full transition-colors flex items-center space-x-2 mx-auto"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full transition-colors inline-flex items-center space-x-2"
             >
               <span>View All Campaigns</span>
-              <ArrowRight className="h-5 w-5 ml-2" />
+              <ArrowRight className="h-5 w-5" />
             </button>
           </div>
         )}
       </div>
 
-      {/* FIXED: Hide scrollbar styles */}
       <style jsx global>{`
         .scrollbar-hide {
           -webkit-overflow-scrolling: touch;
