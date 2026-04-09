@@ -23,7 +23,37 @@ import {
   Trash2,
   CreditCard,
   MapPin,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
+
+// ── Password strength helpers ────────────────────────────────────────────────
+const passwordStrength = (pw) => {
+  const checks = {
+    length:    pw.length >= 8,
+    uppercase: /[A-Z]/.test(pw),
+    lowercase: /[a-z]/.test(pw),
+    number:    /\d/.test(pw),
+    special:   /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pw),
+  };
+  const score = Object.values(checks).filter(Boolean).length;
+  return { checks, score };
+};
+
+const StrengthBar = ({ score }) => {
+  const colors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-500'];
+  const labels = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'];
+  return (
+    <div className="mt-2">
+      <div className="flex gap-1 mb-1">
+        {[1,2,3,4,5].map(i => (
+          <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= score ? colors[score-1] : 'bg-gray-200'}`} />
+        ))}
+      </div>
+      {score > 0 && <p className={`text-xs ${score < 3 ? 'text-red-500' : score < 5 ? 'text-yellow-600' : 'text-green-600'}`}>{labels[score-1]}</p>}
+    </div>
+  );
+};
 
 const Profile = () => {
   const { user, updateUserContext, isAuthenticated } = useAuth();
@@ -405,8 +435,15 @@ const Profile = () => {
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
 
+    const { score } = passwordStrength(passwordData.newPassword);
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setErrors({ confirmPassword: "Passwords do not match" });
+      return;
+    }
+
+    if (score < 4) {
+      setErrors({ password: "New password is too weak. Please meet all requirements." });
       return;
     }
 
@@ -993,19 +1030,36 @@ const Profile = () => {
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                           onClick={() => setShowNewPassword(!showNewPassword)}
                         >
-                          {showNewPassword ? (
-                            <EyeOff className="h-5 w-5" />
-                          ) : (
-                            <Eye className="h-5 w-5" />
-                          )}
+                          {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
                       </div>
+                      {passwordData.newPassword && (() => {
+                        const { checks, score } = passwordStrength(passwordData.newPassword);
+                        return (
+                          <>
+                            <StrengthBar score={score} />
+                            <ul className="mt-2 space-y-1">
+                              {[
+                                { key: 'length',    label: 'At least 8 characters' },
+                                { key: 'uppercase', label: 'One uppercase letter' },
+                                { key: 'lowercase', label: 'One lowercase letter' },
+                                { key: 'number',    label: 'One number' },
+                                { key: 'special',   label: 'One special character (!@#$…)' },
+                              ].map(({ key, label }) => (
+                                <li key={key} className={`flex items-center gap-1.5 text-xs ${checks[key] ? 'text-green-600' : 'text-gray-400'}`}>
+                                  {checks[key] ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+                                  {label}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        );
+                      })()}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Confirm New Password{" "}
-                        <span className="text-red-500">*</span>
+                        Confirm New Password <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <input
@@ -1014,39 +1068,30 @@ const Profile = () => {
                           value={passwordData.confirmPassword}
                           onChange={handlePasswordChange}
                           className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                            errors.confirmPassword
-                              ? "border-red-500"
-                              : "border-gray-300"
+                            errors.confirmPassword ? "border-red-500" : "border-gray-300"
                           }`}
                           placeholder="Confirm new password"
                         />
                         <button
                           type="button"
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         >
-                          {showConfirmPassword ? (
-                            <EyeOff className="h-5 w-5" />
-                          ) : (
-                            <Eye className="h-5 w-5" />
-                          )}
+                          {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
                       </div>
-                      {errors.confirmPassword && (
-                        <p className="mt-1 text-sm text-red-500">
-                          {errors.confirmPassword}
+                      {passwordData.confirmPassword && passwordData.newPassword === passwordData.confirmPassword && (
+                        <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" /> Passwords match
                         </p>
+                      )}
+                      {errors.confirmPassword && (
+                        <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-500 flex items-center">
-                      <Lock className="h-4 w-4 mr-1 text-gray-400" />
-                      <span>Password must be at least 6 characters</span>
-                    </div>
+                  <div className="flex justify-end">
 
                     <button
                       type="submit"

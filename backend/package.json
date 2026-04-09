@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "The Backend for Darb Network P2P Lending Platform",
   "main": "server.js",
-    "engines": {
+  "engines": {
     "node": ">=18.x"
   },
   "scripts": {
@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "axios": "^1.9.0",
-    "bcryptjs": "^2.4.3",   
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.9.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.3.1",

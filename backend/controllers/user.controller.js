@@ -2,43 +2,23 @@ const db = require("../models");
 const User = db.user;
 const bcrypt = require("bcryptjs");
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 
-// Configure multer for profile image uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '..', 'uploads', 'profiles');
-    console.log('📁 Upload destination:', uploadDir);
-    
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      console.log('📂 Creating directory:', uploadDir);
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const filename = 'profile-' + uniqueSuffix + path.extname(file.originalname);
-    console.log('📄 Generated filename:', filename);
-    cb(null, filename);
-  }
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Use memory storage — no disk writes (required for Vercel)
 const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files are allowed!'), false);
   },
-  fileFilter: function (req, file, cb) {
-    // Only allow image files
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
-    }
-  }
 });
 
 // Get user profile
@@ -311,54 +291,33 @@ exports.uploadProfileImage = [
   async (req, res) => {
     try {
       const userId = req.userId;
-      
-      console.log('🔄 Image upload request for user ID:', userId);
-      console.log('📄 File info:', req.file);
-      
+
       if (!req.file) {
-        return res.status(400).send({
-          success: false,
-          message: "No image file provided."
-        });
+        return res.status(400).send({ success: false, message: "No image file provided." });
       }
-      
-      // Create URL for the uploaded image
-      const imageUrl = `/uploads/profiles/${req.file.filename}`;
-      console.log('🔗 Generated image URL:', imageUrl);
-      
-      // Update user's profile image URL in database with explicit logging
-      console.log('💾 Updating database for user:', userId);
-      console.log('💾 Setting profileImageUrl to:', imageUrl);
-      
+
+      // Upload buffer directly to Cloudinary
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'darb/profiles', resource_type: 'image' },
+          (error, result) => { if (error) reject(error); else resolve(result); }
+        );
+        stream.end(req.file.buffer);
+      });
+
+      const imageUrl = uploadResult.secure_url;
+
       const [affectedRows] = await User.update(
         { profileImageUrl: imageUrl },
-        { 
-          where: { id: userId },
-          logging: console.log // This will show the actual SQL query
-        }
+        { where: { id: userId } }
       );
-      
-      console.log('📊 Database update affected rows:', affectedRows);
-      
+
       if (affectedRows === 0) {
-        console.error('❌ No rows updated - user not found');
-        return res.status(404).send({
-          success: false,
-          message: "User not found."
-        });
+        return res.status(404).send({ success: false, message: "User not found." });
       }
-      
-      // Verify the update worked by fetching the user
-      const updatedUser = await User.findByPk(userId, {
-        attributes: { exclude: ['password'] }
-      });
-      
-      console.log('✅ User after update:', {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        profileImageUrl: updatedUser.profileImageUrl
-      });
-      
+
+      const updatedUser = await User.findByPk(userId, { attributes: { exclude: ['password'] } });
+
       res.status(200).send({
         success: true,
         message: "Profile image updated successfully.",
@@ -369,71 +328,36 @@ exports.uploadProfileImage = [
             email: updatedUser.email,
             fullName: updatedUser.fullName,
             userType: updatedUser.userType,
-            profileImageUrl: updatedUser.profileImageUrl
-          }
-        }
+            profileImageUrl: updatedUser.profileImageUrl,
+          },
+        },
       });
-      
     } catch (error) {
-      console.error("❌ Update profile image error:", error);
-      if (req.file && req.file.path) {
-        try {
-          const fs = require('fs');
-          fs.unlinkSync(req.file.path);
-        } catch (cleanupError) {
-          console.error('Error cleaning up file:', cleanupError);
-        }
-      }
-      res.status(500).send({
-        success: false,
-        message: "Error updating profile image.",
-        error: error.message
-      });
+      console.error("Upload profile image error:", error);
+      res.status(500).send({ success: false, message: "Error updating profile image.", error: error.message });
     }
-  }
+  },
 ];
 
 // Delete profile image
-exports.deleteProfileImage = (req, res) => {
+exports.deleteProfileImage = async (req, res) => {
   const userId = req.userId;
-  
-  User.findByPk(userId)
-    .then(user => {
-      if (!user) {
-        return res.status(404).send({
-          success: false,
-          message: "User not found."
-        });
-      }
-      
-      // Delete file from filesystem if it exists
-      if (user.profileImageUrl) {
-        const filePath = path.join(__dirname, '..', user.profileImageUrl);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      }
-      
-      // Remove image URL from database
-      return User.update(
-        { profileImageUrl: null },
-        { where: { id: userId } }
-      );
-    })
-    .then(() => {
-      res.status(200).send({
-        success: true,
-        message: "Profile image deleted successfully."
-      });
-    })
-    .catch(err => {
-      console.error("Delete profile image error:", err);
-      res.status(500).send({
-        success: false,
-        message: "Error deleting profile image.",
-        error: err.message
-      });
-    });
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).send({ success: false, message: "User not found." });
+
+    // Delete from Cloudinary if it's a cloudinary URL
+    if (user.profileImageUrl && user.profileImageUrl.includes('cloudinary.com')) {
+      const publicId = user.profileImageUrl.split('/').slice(-2).join('/').replace(/\.[^/.]+$/, '');
+      await cloudinary.uploader.destroy(publicId).catch(() => {});
+    }
+
+    await User.update({ profileImageUrl: null }, { where: { id: userId } });
+    res.status(200).send({ success: true, message: "Profile image deleted successfully." });
+  } catch (err) {
+    console.error("Delete profile image error:", err);
+    res.status(500).send({ success: false, message: "Error deleting profile image.", error: err.message });
+  }
 };
 
 // Validation helper function
