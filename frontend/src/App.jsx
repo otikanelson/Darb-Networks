@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Import pages
 import Home from './pages/Home';
@@ -29,8 +30,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -120,8 +122,9 @@ function App() {
           {/* Catch-all route for 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </AuthProvider>
-    </Router>
+        </AuthProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

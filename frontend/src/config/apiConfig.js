@@ -1,12 +1,6 @@
 const isDevelopment = import.meta.env.MODE === 'development';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
-                     (isDevelopment ? 'http://localhost:5000/api' : 'https://darb-networks-backend.vercel.app/api');
-
-console.log('🌐 API Configuration:', {
-  mode: import.meta.env.MODE,
-  isDevelopment,
-  apiUrl: API_BASE_URL
-});
+                     (isDevelopment ? 'http://localhost:5001/api' : 'https://darb-backend.vercel.app/api');
 
 /**
  * API Endpoints for all backend services

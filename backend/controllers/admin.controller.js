@@ -44,9 +44,6 @@ exports.getAllCampaignsForReview = async (req, res) => {
       }
     );
 
-    console.log('ðŸ” DEBUG: Found campaigns:', campaigns.length);
-    console.log('ðŸ” DEBUG: First campaign:', campaigns[0]);
-
     // Get total count
     const [countResult] = await db.sequelize.query(
       `SELECT COUNT(*) as total FROM campaigns c 
@@ -57,8 +54,6 @@ exports.getAllCampaignsForReview = async (req, res) => {
         type: db.sequelize.QueryTypes.SELECT
       }
     );
-
-    console.log('ðŸ” DEBUG: Total count:', countResult.total);
 
     // Get status counts
     const statusCounts = await db.sequelize.query(
@@ -88,12 +83,9 @@ exports.getAllCampaignsForReview = async (req, res) => {
       }, {})
     };
 
-    console.log('ðŸ” DEBUG: Sending response:', responseData);
-
     res.status(200).send(responseData);
 
   } catch (error) {
-    console.error('ðŸ” DEBUG: Get campaigns for review error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaigns',
@@ -140,7 +132,6 @@ exports.getCampaignForReview = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get campaign for review error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaign',
@@ -213,7 +204,6 @@ exports.approveCampaign = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Approve campaign error:', error);
     res.status(500).send({
       success: false,
       message: 'Error approving campaign',
@@ -291,7 +281,6 @@ exports.rejectCampaign = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Reject campaign error:', error);
     res.status(500).send({
       success: false,
       message: 'Error rejecting campaign',
@@ -345,7 +334,6 @@ exports.toggleFeaturedStatus = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Toggle featured status error:', error);
     res.status(500).send({
       success: false,
       message: 'Error updating featured status',
@@ -435,7 +423,6 @@ exports.getDashboardStats = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get dashboard stats error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching dashboard stats',
@@ -495,7 +482,6 @@ exports.getAllUsers = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get all users error:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching users',

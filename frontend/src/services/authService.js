@@ -49,57 +49,33 @@ class AuthService {
   static async login(credentials) {
     try {
       const response = await ApiService.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
-      console.log("Login API response:", response);
-      
-      // Handle the new response format from updated backend
+
       if (response && response.success && response.token && response.data) {
         this.setToken(response.token);
-        
-        // Convert response to a consistent format for frontend use
         const user = {
-          id: response.data.id,
-          email: response.data.email,
-          fullName: response.data.fullName,
-          userType: response.data.userType,
-          companyName: response.data.companyName,
-          phoneNumber: response.data.phoneNumber,
-          address: response.data.address,
-          profileImageUrl: response.data.profileImageUrl,
-          isActive: response.data.isActive,
-          isVerified: response.data.isVerified,
+          id: response.data.id, email: response.data.email,
+          fullName: response.data.fullName, userType: response.data.userType,
+          companyName: response.data.companyName, phoneNumber: response.data.phoneNumber,
+          address: response.data.address, profileImageUrl: response.data.profileImageUrl,
+          isActive: response.data.isActive, isVerified: response.data.isVerified,
           createdAt: response.data.createdAt
         };
-        
-        console.log("Processed login user data:", user);
-        console.log("Profile image in login:", user.profileImageUrl);
-        
         this.setCurrentUser(user);
         return user;
-      }
-      // Fallback for old response format (if still needed)
-      else if (response && response.token) {
+      } else if (response && response.token) {
         this.setToken(response.token);
-        
         const user = {
-          id: response.id,
-          email: response.email,
-          fullName: response.fullName,
-          userType: response.userType,
-          companyName: response.companyName,
-          phoneNumber: response.phoneNumber,
-          address: response.address,
-          profileImageUrl: response.profileImageUrl,
-          isActive: response.isActive,
+          id: response.id, email: response.email, fullName: response.fullName,
+          userType: response.userType, companyName: response.companyName,
+          phoneNumber: response.phoneNumber, address: response.address,
+          profileImageUrl: response.profileImageUrl, isActive: response.isActive,
           isVerified: response.isVerified
         };
-        
         this.setCurrentUser(user);
         return user;
       }
-      
       throw new Error('Login response missing token or data');
     } catch (error) {
-      console.error('Login failed:', error);
       throw error;
     }
   }
@@ -112,61 +88,35 @@ class AuthService {
    */
   static async register(userData) {
     try {
-      console.log("🚀 FRONTEND: Starting registration with:", userData);
-      
-      // Convert camelCase to backend format if needed
       const backendData = {
-        email: userData.email,
-        password: userData.password,
-        fullName: userData.fullName,
-        userType: userData.userType,
-        companyName: userData.companyName || null,
-        phoneNumber: userData.phoneNumber || null,
-        address: userData.address || null,
-        bvn: userData.bvn || null,
-        cacNumber: userData.cacNumber || null,
-        accountNumber: userData.accountNumber || null,
-        bankName: userData.bankName || null
+        email: userData.email, password: userData.password,
+        fullName: userData.fullName, userType: userData.userType,
+        companyName: userData.companyName || null, phoneNumber: userData.phoneNumber || null,
+        address: userData.address || null, bvn: userData.bvn || null,
+        nin: userData.nin || null, cacNumber: userData.cacNumber || null,
+        accountNumber: userData.accountNumber || null, bankName: userData.bankName || null
       };
-      
-      
+
       const response = await ApiService.post(API_ENDPOINTS.AUTH.REGISTER, backendData);
-      
-      // The backend now returns: { success: true, data: {...}, token: "..." }
+
       if (response && response.success && response.token && response.data) {
-        
         this.setToken(response.token);
-        
-        // Convert response to a consistent format for frontend use
         const user = {
-          id: response.data.id,
-          email: response.data.email,
-          fullName: response.data.fullName,
-          userType: response.data.userType,
-          companyName: response.data.companyName,
-          phoneNumber: response.data.phoneNumber,
-          address: response.data.address,
-          profileImageUrl: response.data.profileImageUrl,
-          isActive: response.data.isActive,
-          isVerified: response.data.isVerified,
+          id: response.data.id, email: response.data.email,
+          fullName: response.data.fullName, userType: response.data.userType,
+          companyName: response.data.companyName, phoneNumber: response.data.phoneNumber,
+          address: response.data.address, profileImageUrl: response.data.profileImageUrl,
+          isActive: response.data.isActive, isVerified: response.data.isVerified,
           createdAt: response.data.createdAt
         };
-        
-        
         this.setCurrentUser(user);
         return user;
       }
-      
-      throw new Error('Registration response missing required fields (success, token, or data)');
-      
+      throw new Error('Registration response missing required fields');
     } catch (error) {
-      console.error('❌ FRONTEND: Registration failed:', error);
-      
-      // If it's an API error with response data, try to extract the message
       if (error.response && error.response.data) {
         throw new Error(error.response.data.message || 'Registration failed');
       }
-      
       throw error;
     }
   }
@@ -177,43 +127,24 @@ class AuthService {
    */
   static async verifyToken() {
     try {
-      if (!this.getToken()) {
-        return false;
-      }
-      
-      console.log("Verifying token and fetching complete profile...");
-      
-      // Use the profile endpoint to verify token and get user data
+      if (!this.getToken()) return false;
+
       const response = await ApiService.get(API_ENDPOINTS.AUTH.PROFILE);
-      console.log("Verify token response:", response);
-      
-      // Handle the new response format
+
       if (response && response.success && response.data) {
         const user = {
-          id: response.data.id,
-          email: response.data.email,
-          fullName: response.data.fullName,
-          userType: response.data.userType,
-          companyName: response.data.companyName,
-          phoneNumber: response.data.phoneNumber,
-          address: response.data.address,
-          profileImageUrl: response.data.profileImageUrl,
-          isActive: response.data.isActive,
-          isVerified: response.data.isVerified,
+          id: response.data.id, email: response.data.email,
+          fullName: response.data.fullName, userType: response.data.userType,
+          companyName: response.data.companyName, phoneNumber: response.data.phoneNumber,
+          address: response.data.address, profileImageUrl: response.data.profileImageUrl,
+          isActive: response.data.isActive, isVerified: response.data.isVerified,
           createdAt: response.data.createdAt
         };
-        
-        console.log("Complete user profile from verify:", user);
-        console.log("Profile image URL from verify:", user.profileImageUrl);
-        
         this.setCurrentUser(user);
         return user;
-      }
-      // Fallback for old response format
-      else if (response && response.id) {
+      } else if (response && response.id) {
         const user = {
-          id: response.id,
-          email: response.email,
+          id: response.id, email: response.email,
           fullName: response.fullName || response.full_name,
           userType: response.userType || response.user_type,
           companyName: response.companyName || response.company_name,
@@ -224,15 +155,11 @@ class AuthService {
           isVerified: response.isVerified || response.is_verified,
           createdAt: response.createdAt || response.created_at
         };
-        
         this.setCurrentUser(user);
         return user;
       }
-      
       return false;
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      // Clear user data on verification failure
+    } catch {
       this.logout();
       return false;
     }

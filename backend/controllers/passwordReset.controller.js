@@ -56,8 +56,6 @@ exports.requestPasswordReset = async (req, res) => {
     const frontendUrl = process.env.CLIENT_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173');
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
     
-    console.log(`Password reset link for ${email}: ${resetUrl}`);
-    
     // TODO: Send actual email
     // await transporter.sendMail({
     //   from: process.env.EMAIL_USER,
@@ -71,7 +69,6 @@ exports.requestPasswordReset = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Password reset request error:', error);
     res.status(500).send({
       message: "Error processing password reset request."
     });
@@ -139,7 +136,6 @@ exports.resetPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Password reset error:', error);
     res.status(500).send({
       message: "Error resetting password."
     });
@@ -153,8 +149,6 @@ exports.cleanupExpiredTokens = async () => {
       'DELETE FROM password_resets WHERE expires_at < NOW()',
       { type: db.sequelize.QueryTypes.DELETE }
     );
-    console.log('Expired password reset tokens cleaned up');
   } catch (error) {
-    console.error('Error cleaning up expired tokens:', error);
   }
 };

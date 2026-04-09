@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { buildApiUrl } from '../../config/apiUrl';
 import {
   X,
   DollarSign,
@@ -84,7 +85,7 @@ const InvestmentModal = ({
         investorMessage: investorMessage.trim() || null
       };
 
-      console.log('🚀 Creating investment:', investmentData);
+      console.log('Creating investment:', investmentData);
 
       const response = await fetch(buildApiUrl(`/investments/create`), {
         method: 'POST',
@@ -96,7 +97,6 @@ const InvestmentModal = ({
       });
 
       const result = await response.json();
-      console.log('💰 Investment creation response:', result);
 
       if (response.ok && result.success) {
         // Redirect to Paystack payment page
@@ -110,7 +110,6 @@ const InvestmentModal = ({
       }
 
     } catch (error) {
-      console.error('❌ Investment error:', error);
       setError(error.message);
       setStep('confirm');
     } finally {

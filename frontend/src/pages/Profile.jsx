@@ -299,7 +299,7 @@ const Profile = () => {
         // *** CRITICAL: Update user context with new data ***
         if (result.data.user) {
           console.log("🔄 Updating user context with:", result.data.user);
-          await updateUserContext(result.data.user);
+          await updateUserContext({ ...result.data.user, profileImageTimestamp: Date.now() });
         }
 
         setProfileUpdateSuccess(true);
@@ -329,9 +329,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (user && user.profileImageUrl && !imagePreview) {
-      const imageUrl = user.profileImageUrl.startsWith("http")
-        ? user.profileImageUrl
-        : buildImageUrl(user.profileImageUrl);
+      const imageUrl = buildImageUrl(user.profileImageUrl);
       console.log("Syncing profile image from context:", imageUrl);
       setImagePreview(imageUrl);
     }
@@ -374,6 +372,7 @@ const Profile = () => {
       if (response.ok && result.success) {
         setImagePreview(null);
         setProfileImage(null);
+        await updateUserContext({ profileImageUrl: null, profileImageTimestamp: Date.now() });
         setProfileUpdateSuccess(true);
         setTimeout(() => setProfileUpdateSuccess(false), 3000);
       } else {

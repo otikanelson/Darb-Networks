@@ -330,22 +330,9 @@ const Navbars = ({
     // Add cache-busting timestamp to profile image URL
     const getProfileImageUrl = () => {
       if (!user?.profileImageUrl) return null;
-      
-      // Use buildImageUrl to get the correct base URL
       const baseUrl = buildImageUrl(user.profileImageUrl);
-      
-      // Use timestamp from user context for cache-busting
-      const cacheBuster = user.profileImageTimestamp ? `?t=${user.profileImageTimestamp}` : `?t=${Date.now()}`;
-      const finalUrl = `${baseUrl}${cacheBuster}`;
-      
-      console.log('≡ƒû╝∩╕Å Navbar: Building profile image URL:', {
-        profileImageUrl: user.profileImageUrl,
-        timestamp: user.profileImageTimestamp,
-        baseUrl,
-        finalUrl
-      });
-      
-      return finalUrl;
+      const cacheBuster = user.profileImageTimestamp ? `?t=${user.profileImageTimestamp}` : '';
+      return cacheBuster ? `${baseUrl}${cacheBuster}` : baseUrl;
     };
 
     const profileImageUrl = getProfileImageUrl();

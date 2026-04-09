@@ -8,7 +8,6 @@ let PaystackService;
 try {
   PaystackService = require("../services/paymentService");
 } catch (error) {
-  console.log('âš ï¸ PaystackService not found, using mock service');
   PaystackService = {
     initializePayment: async (data) => ({ 
       success: true, 
@@ -40,8 +39,6 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
   try {
     const investorId = req.userId;
     const { campaignId, amount, investorMessage } = req.body;
-
-    console.log('ðŸš€ Initiating investment:', { campaignId, amount, investorId });
 
     // Validate input
     if (!campaignId || !amount) {
@@ -176,8 +173,6 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
       });
     }
 
-    console.log('âœ… Investment and payment initialized:', { investmentId, paymentReference });
-
     res.status(201).send({
       success: true,
       message: 'Investment initiated successfully',
@@ -203,7 +198,6 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error initiating investment:', error);
     res.status(500).send({
       success: false,
       message: 'Error initiating investment',
@@ -219,8 +213,6 @@ exports.verifyPayment = async (req, res) => {
   try {
     const { paymentReference } = req.params;
     const userId = req.userId;
-
-    console.log('ðŸ” Verifying payment:', { paymentReference, userId });
 
     // Get investment details
     const [investment] = await db.sequelize.query(
@@ -314,7 +306,6 @@ exports.verifyPayment = async (req, res) => {
         }
       );
     } catch (procError) {
-      console.log('Procedure not available, updating manually');
       await db.sequelize.query(
         'CALL UpdateCampaignInvestmentTotals(?)',
         {
@@ -326,8 +317,6 @@ exports.verifyPayment = async (req, res) => {
 
     // Create notifications
     await this.createInvestmentNotifications(investment);
-
-    console.log('âœ… Payment verified and investment confirmed:', paymentReference);
 
     res.status(200).send({
       success: true,
@@ -343,7 +332,6 @@ exports.verifyPayment = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error verifying payment:', error);
     res.status(500).send({
       success: false,
       message: 'Error verifying payment',
@@ -359,8 +347,6 @@ exports.handlePaystackWebhook = async (req, res) => {
   try {
     const signature = req.headers['x-paystack-signature'];
     const payload = JSON.stringify(req.body);
-
-    console.log('ðŸ“¡ Received Paystack webhook');
 
     if (!signature) {
       return res.status(400).send({
@@ -384,7 +370,6 @@ exports.handlePaystackWebhook = async (req, res) => {
     }
 
   } catch (error) {
-    console.error('âŒ Webhook processing error:', error);
     res.status(500).send({
       success: false,
       message: 'Webhook processing failed'
@@ -432,7 +417,6 @@ exports.getPaymentStatus = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error getting payment status:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching payment status'
@@ -449,8 +433,6 @@ exports.getMyInvestments = async (req, res) => {
   try {
     const userId = req.userId;
     const { status, page = 1, limit = 10 } = req.query;
-
-    console.log('ðŸ“Š Getting investments for user:', userId);
 
     let whereClause = 'WHERE i.investor_id = ?';
     let replacements = [userId];
@@ -530,7 +512,6 @@ exports.getMyInvestments = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error getting user investments:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching investment history',
@@ -546,8 +527,6 @@ exports.getCampaignInvestors = async (req, res) => {
   try {
     const founderId = req.userId;
     const { campaignId } = req.params;
-
-    console.log('ðŸ‘¥ Getting investors for campaign:', { campaignId, founderId });
 
     // Verify campaign ownership
     const [campaign] = await db.sequelize.query(
@@ -628,7 +607,6 @@ exports.getCampaignInvestors = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error getting campaign investors:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching campaign investors',
@@ -704,7 +682,6 @@ exports.getCampaignInvestmentAnalytics = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error getting investment analytics:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching investment analytics',
@@ -723,8 +700,6 @@ exports.createRepaymentBatch = async (req, res) => {
     const founderId = req.userId;
     const { campaignId } = req.params;
     const { repaymentAmount, repaymentType, interestRate, founderMessage } = req.body;
-
-    console.log('ðŸ’° Creating repayment batch:', { campaignId, repaymentAmount, repaymentType });
 
     // Validate input
     if (!repaymentAmount || repaymentAmount <= 0) {
@@ -777,7 +752,6 @@ exports.createRepaymentBatch = async (req, res) => {
       });
 
     } catch (procError) {
-      console.log('Stored procedure not available, manual creation not implemented yet');
       res.status(501).send({
         success: false,
         message: 'Repayment batch creation requires database procedures to be set up'
@@ -785,7 +759,6 @@ exports.createRepaymentBatch = async (req, res) => {
     }
 
   } catch (error) {
-    console.error('âŒ Error creating repayment batch:', error);
     res.status(500).send({
       success: false,
       message: 'Error creating repayment batch',
@@ -830,7 +803,6 @@ exports.getRepaymentHistory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error getting repayment history:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching repayment history',
@@ -875,7 +847,6 @@ exports.getInvestmentNotifications = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('âŒ Error getting notifications:', error);
     res.status(500).send({
       success: false,
       message: 'Error fetching notifications',
@@ -924,7 +895,6 @@ exports.createInvestmentNotifications = async (investment) => {
     );
 
   } catch (error) {
-    console.error('Error creating notifications:', error);
   }
 };
 

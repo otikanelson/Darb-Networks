@@ -77,21 +77,13 @@ const CampaignDisplay = () => {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      console.log(`👀 Loading campaign ${id} with headers:`, headers);
-
-      const response = await fetch(`/api/campaigns/${id}`, { headers });
-
-      console.log("📡 Campaign API Response Status:", response.status);
-      console.log("📡 Campaign API Response Headers:", response.headers);
+      const response = await fetch(buildApiUrl(`/campaigns/${id}`), { headers });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Campaign API Error Response:", errorText);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`Failed to load campaign`);
       }
 
       const result = await response.json();
-      console.log("📦 Full Campaign API Result:", result);
 
       if (!result.success) {
         throw new Error(result.message || "Failed to load campaign");
@@ -177,11 +169,9 @@ const CampaignDisplay = () => {
           campaignData.adminComments || campaignData.admin_comments,
       };
 
-      console.log("✅ Normalized Campaign Data:", normalizedCampaign);
       setCampaign(normalizedCampaign);
       setIsFavorited(normalizedCampaign.isFavorited);
     } catch (error) {
-      console.error("❌ Error loading campaign:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -190,21 +180,16 @@ const CampaignDisplay = () => {
 
   const loadRelatedCampaigns = async () => {
     try {
-      const response = await fetch(`/api/campaigns?limit=3`);
-
+      const response = await fetch(buildApiUrl(`/campaigns?limit=3`));
       if (response.ok) {
         const result = await response.json();
-        console.log("📦 Related Campaigns Result:", result);
-
         if (result.success && result.data) {
-          const filtered = result.data
-            .filter((c) => c.id !== parseInt(id))
-            .slice(0, 3);
+          const filtered = result.data.filter((c) => c.id !== parseInt(id)).slice(0, 3);
           setRelatedCampaigns(filtered);
         }
       }
-    } catch (error) {
-      console.error("❌ Error loading related campaigns:", error);
+    } catch {
+      // fail silently — related campaigns are non-critical
     }
   };
 
@@ -212,55 +197,37 @@ const CampaignDisplay = () => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) return;
-
-      const response = await fetch(`/api/campaigns/${id}/view`, {
+      await fetch(buildApiUrl(`/campaigns/${id}/view`), {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
-
-      if (response.ok) {
-        console.log("✅ View tracked successfully");
-      }
-    } catch (error) {
-      console.error("❌ Error tracking view:", error);
+    } catch {
+      // non-critical
     }
   };
 
   const handleFavoriteToggle = async () => {
     if (!isAuthenticated()) {
-      alert("Please log in to save campaigns");
+      navigate("/login");
       return;
     }
 
     setFavoriteLoading(true);
     try {
       const token = localStorage.getItem("authToken");
-
-      const response = await fetch(`/api/campaigns/${id}/favorite`, {
+      const response = await fetch(buildApiUrl(`/campaigns/${id}/favorite`), {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
-
       if (response.ok) {
         const result = await response.json();
-
         if (result.success) {
           setIsFavorited(result.data.isFavorited);
-
-          setCampaign((prev) => ({
-            ...prev,
-            favorite_count: result.data.favoriteCount || prev.favorite_count,
-          }));
+          setCampaign((prev) => ({ ...prev, favorite_count: result.data.favoriteCount || prev.favorite_count }));
         }
       }
-    } catch (error) {
-      console.error("❌ Error toggling favorite:", error);
+    } catch {
+      // fail silently
     } finally {
       setFavoriteLoading(false);
     }
@@ -268,41 +235,27 @@ const CampaignDisplay = () => {
 
   const handleShare = () => {
     const campaignUrl = `${window.location.origin}/campaign/${id}`;
-
     if (navigator.share) {
-      navigator.share({
-        title: campaign.title,
-        text: campaign.description,
-        url: campaignUrl,
-      });
+      navigator.share({ title: campaign.title, text: campaign.description, url: campaignUrl });
     } else {
       navigator.clipboard.writeText(campaignUrl);
-      alert("Campaign link copied to clipboard!");
     }
   };
 
   // Investment handlers
   const handleInvestClick = () => {
     if (!isAuthenticated()) {
-      alert("Please log in to invest in campaigns");
       navigate("/login");
       return;
     }
-
-    if (
-      user?.userType?.toLowerCase() === "founder" &&
-      user?.id === campaign?.founder_id
-    ) {
-      alert("You cannot invest in your own campaign");
+    if (user?.userType?.toLowerCase() === "founder" && user?.id === campaign?.founder_id) {
       return;
     }
-
     setShowInvestmentModal(true);
   };
 
   const handleInvestmentSuccess = () => {
     loadCampaign();
-    alert("Investment successful! Check your email for confirmation.");
   };
 
   const formatCurrency = (amount) => {
@@ -386,61 +339,18 @@ const CampaignDisplay = () => {
 
   const getImageUrl = () => {
     const imageUrl = campaign?.main_image_url || campaign?.mainImageUrl;
-
-    console.log("🖼️ Campaign image URL:", imageUrl);
-
-    if (!imageUrl) {
-      console.log("🖼️ No image URL found, using placeholder");
-      return "/placeholder-campaign.jpg";
-    }
-
-    // If it's already a full URL, use it as-is
-    if (imageUrl.startsWith("http")) {
-      console.log("🖼️ Using full URL:", imageUrl);
-      return imageUrl;
-    }
-
-    // If it starts with /uploads or similar, prepend the API base
-    if (imageUrl.startsWith("/uploads") || imageUrl.startsWith("/media")) {
-      const fullUrl = buildImageUrl(imageUrl);
-      console.log("🖼️ Constructed API URL:", fullUrl);
-      return fullUrl;
-    }
-
-    // For other relative paths
-    const fullUrl = buildApiUrl(`/api${imageUrl}`);
-    console.log("🖼️ Constructed full URL:", fullUrl);
-    return fullUrl;
+    if (!imageUrl) return "/placeholder-campaign.jpg";
+    if (imageUrl.startsWith("http")) return imageUrl;
+    if (imageUrl.startsWith("/uploads") || imageUrl.startsWith("/media")) return buildImageUrl(imageUrl);
+    return buildImageUrl(imageUrl);
   };
 
   const getCreatorAvatarUrl = () => {
-    const avatarUrl =
-      campaign?.founder_avatar || campaign?.creator?.profileImageUrl;
-
-    console.log("👤 Creator avatar URL:", avatarUrl);
-
-    if (!avatarUrl) {
-      console.log("👤 No avatar URL found");
-      return null;
-    }
-
-    // If it's already a full URL, use it as-is
-    if (avatarUrl.startsWith("http")) {
-      console.log("👤 Using full avatar URL:", avatarUrl);
-      return avatarUrl;
-    }
-
-    // If it starts with /uploads or similar, prepend the API base
-    if (avatarUrl.startsWith("/uploads") || avatarUrl.startsWith("/media")) {
-      const fullUrl = buildImageUrl(avatarUrl);
-      console.log("👤 Constructed avatar API URL:", fullUrl);
-      return fullUrl;
-    }
-
-    // For other relative paths
-    const fullUrl = buildApiUrl(`/api${avatarUrl}`);
-    console.log("👤 Constructed full avatar URL:", fullUrl);
-    return fullUrl;
+    const avatarUrl = campaign?.founder_avatar || campaign?.creator?.profileImageUrl;
+    if (!avatarUrl) return null;
+    if (avatarUrl.startsWith("http")) return avatarUrl;
+    if (avatarUrl.startsWith("/uploads") || avatarUrl.startsWith("/media")) return buildImageUrl(avatarUrl);
+    return buildImageUrl(avatarUrl);
   };
 
   const renderTabContent = () => {
@@ -843,15 +753,12 @@ const CampaignDisplay = () => {
                       src={getCreatorAvatarUrl()}
                       alt={campaign.founder_name}
                       className="h-full w-full object-cover"
-                      onLoad={() =>
-                        console.log("✅ Creator avatar loaded successfully")
-                      }
                       onError={(e) => {
-                        console.error(
-                          "❌ Creator avatar failed to load:",
-                          getCreatorAvatarUrl()
-                        );
                         e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                  ) : null}target.style.display = "none";
                         e.target.nextSibling.style.display = "flex";
                       }}
                     />

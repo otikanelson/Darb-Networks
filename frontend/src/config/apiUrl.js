@@ -30,6 +30,9 @@ export const buildApiUrl = (path) => {
 
 // Helper for image URLs (without /api)
 export const buildImageUrl = (path) => {
+  if (!path) return '';
+  // Already a full URL (e.g. Cloudinary), return as-is
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
   const base = API_BASE;
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   return `${base}${cleanPath}`;
