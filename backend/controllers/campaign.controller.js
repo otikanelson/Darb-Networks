@@ -58,10 +58,18 @@ const createCampaign = async (req, res) => {
       location,
       targetAmount,
       minimumInvestment,
+      maximumInvestment,
       problemStatement,
       solution,
       businessPlan,
+      marketAnalysis,
+      competitiveAdvantage,
+      financialProjections,
+      teamInformation,
+      risksAndChallenges,
       videoUrl,
+      endDate,
+      durationDays,
       isDraft
     } = req.body;
 
@@ -82,12 +90,14 @@ const createCampaign = async (req, res) => {
     const status = isDraft ? 'draft' : 'submitted';
     const submittedAt = isDraft ? null : new Date();
 
-    // Create campaign with EXPLICIT founder_id logging
+    // Create campaign
     const [result] = await db.sequelize.query(
       `INSERT INTO campaigns 
-       (title, description, category, location, target_amount, minimum_investment, 
-        problem_statement, solution, business_plan, video_url, founder_id, status, submitted_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (title, description, category, location, target_amount, minimum_investment, maximum_investment,
+        problem_statement, solution, business_plan, market_analysis, competitive_advantage,
+        financial_projections, team_information, risks_and_challenges,
+        video_url, end_date, duration_days, founder_id, status, submitted_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       {
         replacements: [
           title || '',
@@ -96,16 +106,23 @@ const createCampaign = async (req, res) => {
           location || '',
           parseFloat(targetAmount) || 0,
           parseFloat(minimumInvestment) || 0,
+          maximumInvestment ? parseFloat(maximumInvestment) : null,
           problemStatement || '',
           solution || '',
           businessPlan || '',
+          marketAnalysis || '',
+          competitiveAdvantage || '',
+          financialProjections || '',
+          teamInformation || '',
+          risksAndChallenges || '',
           videoUrl || '',
+          endDate || null,
+          durationDays ? parseInt(durationDays) : 90,
           founderId,
           status,
           submittedAt
         ],
         type: db.sequelize.QueryTypes.INSERT,
-        logging: console.log
       }
     );
 
@@ -403,15 +420,23 @@ const updateCampaign = async (req, res) => {
     // Handle all possible fields
     const fieldMappings = {
       title: 'title',
-      description: 'description', 
+      description: 'description',
       category: 'category',
       location: 'location',
       targetAmount: 'target_amount',
       minimumInvestment: 'minimum_investment',
+      maximumInvestment: 'maximum_investment',
       problemStatement: 'problem_statement',
       solution: 'solution',
       businessPlan: 'business_plan',
-      videoUrl: 'video_url'
+      marketAnalysis: 'market_analysis',
+      competitiveAdvantage: 'competitive_advantage',
+      financialProjections: 'financial_projections',
+      teamInformation: 'team_information',
+      risksAndChallenges: 'risks_and_challenges',
+      videoUrl: 'video_url',
+      endDate: 'end_date',
+      durationDays: 'duration_days',
     };
 
     // Add fields that have been provided
@@ -792,31 +817,58 @@ const getCampaignById = async (req, res) => {
       targetAmount: campaign.target_amount,
       currentAmount: campaign.current_amount,
       minimumInvestment: campaign.minimum_investment,
+      maximumInvestment: campaign.maximum_investment,
+      // Rich content fields
       problemStatement: campaign.problem_statement,
       solution: campaign.solution,
       businessPlan: campaign.business_plan,
+      marketAnalysis: campaign.market_analysis,
+      competitiveAdvantage: campaign.competitive_advantage,
+      financialProjections: campaign.financial_projections,
+      teamInformation: campaign.team_information,
+      risksAndChallenges: campaign.risks_and_challenges,
+      // Media
       videoUrl: campaign.video_url,
       mainImageUrl: campaign.main_image_url,
+      pitchDeckUrl: campaign.pitch_deck_url,
+      // Status
       status: campaign.status,
       isFeatured: campaign.is_featured,
+      isUrgent: campaign.is_urgent,
+      // Stats
       viewCount: campaign.view_count,
       favoriteCount: campaign.favorite_count,
       investorCount: campaign.investor_count,
+      shareCount: campaign.share_count,
+      // Computed
+      progressPercentage: campaign.progress_percentage,
+      daysRemaining: campaign.days_remaining,
+      totalDurationDays: campaign.total_duration_days,
+      // Dates
+      startDate: campaign.start_date,
+      endDate: campaign.end_date,
+      durationDays: campaign.duration_days,
+      // Permissions
       canEdit: canEdit,
-      isFavorited: isFavorited, // Add this for the frontend
+      isFavorited: isFavorited,
       adminComments: campaign.admin_comments,
+      rejectionReason: campaign.rejection_reason,
+      // Creator
       creator: {
         id: campaign.founder_id,
-        name: campaign.founder_name,
+        fullName: campaign.founder_name,
         company: campaign.founder_company,
         email: campaign.founder_email,
-        avatar: campaign.founder_avatar
+        profileImageUrl: campaign.founder_avatar,
+        bio: campaign.founder_bio,
+        website: campaign.founder_website,
+        isVerified: campaign.founder_verified,
       },
-      createdAt: campaign.created_at,
-      updatedAt: campaign.updated_at,
+      createdAt: campaign.createdAt,
+      updatedAt: campaign.updatedAt,
       submittedAt: campaign.submitted_at,
       approvedAt: campaign.approved_at,
-      rejectedAt: campaign.rejected_at
+      rejectedAt: campaign.rejected_at,
     };
 
     res.status(200).send({

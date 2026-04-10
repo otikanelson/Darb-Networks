@@ -180,12 +180,12 @@ const InvestmentModal = ({
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <h3 className="font-semibold text-gray-900 mb-2">{campaign.title}</h3>
             <div className="flex justify-between text-sm text-gray-600">
-              <span>Target: {formatCurrency(campaign.target_amount)}</span>
-              <span>Raised: {formatCurrency(campaign.current_amount)}</span>
+              <span>Target: {formatCurrency(campaign.targetAmount ?? campaign.target_amount)}</span>
+              <span>Raised: {formatCurrency(campaign.currentAmount ?? campaign.current_amount)}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-600 mt-1">
-              <span>Min Investment: {formatCurrency(campaign.minimum_investment)}</span>
-              <span>Progress: {Math.round((campaign.current_amount / campaign.target_amount) * 100)}%</span>
+              <span>Min Investment: {formatCurrency(campaign.minimumInvestment ?? campaign.minimum_investment)}</span>
+              <span>Progress: {Math.round(((campaign.currentAmount ?? campaign.current_amount) / (campaign.targetAmount ?? campaign.target_amount)) * 100)}%</span>
             </div>
           </div>
 
