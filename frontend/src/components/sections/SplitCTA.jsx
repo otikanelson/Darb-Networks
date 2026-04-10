@@ -2,11 +2,20 @@ import React, { useState } from 'react';
 import { Rocket, TrendingUp, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CustomNav } from '../../hooks/CustomNavigation';
+import { useAuth } from '../../context/AuthContext';
 
 const SplitCTA = () => {
   const navigate = CustomNav();
-  // null = neither hovered, 'founder' | 'investor' = one is active
+  const { user } = useAuth();
   const [hovered, setHovered] = useState(null);
+
+  const handleCampaignClick = () => {
+    if (user?.userType?.toLowerCase() === 'founder') {
+      navigate('/pages/CreateCampaign');
+    } else {
+      navigate('/register');
+    }
+  };
 
   // flex-grow values: expanded card gets 1.6, shrunk card gets 0.4
   const founderGrow  = hovered === 'investor' ? 0.6 : hovered === 'founder' ? 1.4 : 1;
@@ -45,7 +54,7 @@ const SplitCTA = () => {
               </motion.p>
             </div>
             <button
-              onClick={() => navigate('/register')}
+              onClick={handleCampaignClick}
               className="mt-8 self-start inline-flex items-center space-x-2 bg-green-500 hover:bg-green-400 text-white font-bold px-7 py-3.5 rounded-full transition-all transform hover:scale-105"
             >
               <span>Launch Your Campaign</span>

@@ -14,7 +14,7 @@ const HeroSection = () => {
   const navigate = CustomNav();
   const { user } = useAuth();
 
-  const handleStartCampaignClick = () => {
+  const handleCampaignClick = () => {
     if (user?.userType?.toLowerCase() === 'founder') {
       navigate('/pages/CreateCampaign');
     } else {
@@ -70,7 +70,7 @@ const HeroSection = () => {
           {/* CTAs */}
           <motion.div {...fadeUp(0.3)} className="flex flex-col sm:flex-row gap-4">
             <button
-              onClick={handleStartCampaignClick}
+              onClick={handleCampaignClick}
               className="bg-green-500 hover:bg-green-400 text-white font-bold px-8 py-4 rounded-full flex items-center justify-center space-x-2 transition-all transform hover:scale-105 shadow-lg shadow-green-500/25"
             >
               <span>Start Your Campaign</span>
