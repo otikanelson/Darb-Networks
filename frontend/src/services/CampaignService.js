@@ -116,35 +116,39 @@ class CampaignService {
    */
   static async getCreatedCampaigns() {
     try {
-      console.log('📋 Fetching created campaigns for founder');
-      
       const response = await ApiService.get(`${API_BASE_URL}/campaigns/user/my-campaigns`);
       
-      // Expected response format: { drafts: [], submitted: [], approved: [], rejected: [], all: [] }
-      if (response && response.data) {
-        return response.data;
-      } else if (response && (response.drafts || response.all)) {
-        return response;
-      } else {
-        // Return empty structure if unexpected format
-        return {
-          drafts: [],
-          submitted: [],
-          approved: [],
-          rejected: [],
-          all: []
-        };
-      }
+      const raw = (response && response.data) ? response.data
+                : (response && (response.drafts || response.all)) ? response
+                : { drafts: [], submitted: [], approved: [], rejected: [], all: [] };
+
+      // Normalize camelCase → snake_case so CampaignCard can read the fields
+      const normalize = (list) => (list || []).map(c => ({
+        ...c,
+        main_image_url:    c.main_image_url    || c.mainImageUrl    || null,
+        target_amount:     c.target_amount     ?? c.targetAmount    ?? 0,
+        current_amount:    c.current_amount    ?? c.currentAmount   ?? 0,
+        minimum_investment:c.minimum_investment?? c.minimumInvestment?? 0,
+        view_count:        c.view_count        ?? c.viewCount       ?? 0,
+        favorite_count:    c.favorite_count    ?? c.favoriteCount   ?? 0,
+        is_featured:       c.is_featured       ?? c.isFeatured      ?? false,
+        founder_name:      c.founder_name      || c.founderName     || '',
+        founder_company:   c.founder_company   || c.founderCompany  || '',
+        founder_avatar:    c.founder_avatar    || c.founderAvatar   || null,
+        created_at:        c.created_at        || c.createdAt       || null,
+        admin_comments:    c.admin_comments    || c.adminComments   || null,
+      }));
+
+      return {
+        drafts:    normalize(raw.drafts),
+        submitted: normalize(raw.submitted),
+        approved:  normalize(raw.approved),
+        rejected:  normalize(raw.rejected),
+        all:       normalize(raw.all),
+      };
     } catch (error) {
       console.error('❌ Error fetching created campaigns:', error);
-      // Return empty structure on error
-      return {
-        drafts: [],
-        submitted: [],
-        approved: [],
-        rejected: [],
-        all: []
-      };
+      return { drafts: [], submitted: [], approved: [], rejected: [], all: [] };
     }
   }
 
