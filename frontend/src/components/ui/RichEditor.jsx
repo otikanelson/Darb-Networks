@@ -32,7 +32,13 @@ const Divider = () => <div className="w-px h-5 bg-gray-200 mx-1" />;
 const RichEditor = ({ value, onChange, placeholder = 'Start writing…', minHeight = 280 }) => {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
+      // Disable StarterKit's built-in link/underline to avoid duplicate extension warnings
+      StarterKit.configure({
+        heading: { levels: [2, 3] },
+        // @ts-ignore — these keys exist at runtime even if types don't expose them
+        link: false,
+        underline: false,
+      }),
       Underline,
       Image.configure({ inline: false, allowBase64: true }),
       Link.configure({ openOnClick: false, autolink: true }),

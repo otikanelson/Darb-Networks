@@ -157,25 +157,24 @@ const createCampaign = async (req, res) => {
 
     // Save milestones if provided
     if (Array.isArray(req.body.milestones) && req.body.milestones.length > 0) {
-      for (let i = 0; i < req.body.milestones.length; i++) {
-        const m = req.body.milestones[i];
-        if (!m.title?.trim()) continue;
-        await db.sequelize.query(
-          `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          {
-            replacements: [
-              campaignId,
-              m.title.trim(),
-              m.description?.trim() || '',
-              parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0,
-              i,
-              m.targetDate || null,
-            ],
-            type: db.sequelize.QueryTypes.INSERT,
-          }
-        );
-      }
+      try {
+        for (let i = 0; i < req.body.milestones.length; i++) {
+          const m = req.body.milestones[i];
+          if (!m.title?.trim()) continue;
+          await db.sequelize.query(
+            `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            {
+              replacements: [
+                campaignId, m.title.trim(), m.description?.trim() || '',
+                parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0,
+                i, m.targetDate || null,
+              ],
+              type: db.sequelize.QueryTypes.INSERT,
+            }
+          );
+        }
+      } catch (_) { /* table may not exist yet */ }
     }
 
     res.status(201).send({
@@ -521,29 +520,28 @@ const updateCampaign = async (req, res) => {
 
     // Replace milestones if provided
     if (Array.isArray(req.body.milestones)) {
-      await db.sequelize.query(
-        'DELETE FROM campaign_milestones WHERE campaign_id = ?',
-        { replacements: [id], type: db.sequelize.QueryTypes.DELETE }
-      );
-      for (let i = 0; i < req.body.milestones.length; i++) {
-        const m = req.body.milestones[i];
-        if (!m.title?.trim()) continue;
+      try {
         await db.sequelize.query(
-          `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          {
-            replacements: [
-              id,
-              m.title.trim(),
-              m.description?.trim() || '',
-              parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0,
-              i,
-              m.targetDate || null,
-            ],
-            type: db.sequelize.QueryTypes.INSERT,
-          }
+          'DELETE FROM campaign_milestones WHERE campaign_id = ?',
+          { replacements: [id], type: db.sequelize.QueryTypes.DELETE }
         );
-      }
+        for (let i = 0; i < req.body.milestones.length; i++) {
+          const m = req.body.milestones[i];
+          if (!m.title?.trim()) continue;
+          await db.sequelize.query(
+            `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            {
+              replacements: [
+                id, m.title.trim(), m.description?.trim() || '',
+                parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0,
+                i, m.targetDate || null,
+              ],
+              type: db.sequelize.QueryTypes.INSERT,
+            }
+          );
+        }
+      } catch (_) { /* table may not exist yet */ }
     }
 
     res.status(200).send({
@@ -922,11 +920,16 @@ const getCampaignById = async (req, res) => {
     };
 
     // Fetch milestones for this campaign
-    const milestones = await db.sequelize.query(
-      `SELECT id, title, description, target_amount, current_amount, status, order_index, target_date, completed_at
-       FROM campaign_milestones WHERE campaign_id = ? ORDER BY order_index ASC`,
-      { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
-    );
+    let milestones = [];
+    try {
+      milestones = await db.sequelize.query(
+        `SELECT id, title, description, target_amount, current_amount, status, order_index, target_date, completed_at
+         FROM campaign_milestones WHERE campaign_id = ? ORDER BY order_index ASC`,
+        { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+      );
+    } catch (_) {
+      // Table may not exist in all environments — degrade gracefully
+    }
     formattedCampaign.milestones = milestones.map(m => ({
       id: m.id,
       title: m.title,

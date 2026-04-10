@@ -1,630 +1,346 @@
-import { Edit, Trash2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
-import { buildApiUrl } from '../config/apiUrl';
+import { buildApiUrl } from "../config/apiUrl";
 import CampaignCard from "../components/ui/CampaignCard";
 import CampaignService from "../services/CampaignService";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import {
-  Eye,
-  Heart,
-  PenLine,
-  DollarSign,
-  Bookmark,
-  Plus,
-  FileText,
-  Clock,
-  AlertTriangle,
-  RefreshCw,
-  Send,
-  CheckCircle,
-  XCircle,
+  Eye, Heart, PenLine, DollarSign, Bookmark, Plus, FileText,
+  Clock, AlertTriangle, RefreshCw, CheckCircle, XCircle,
+  Edit, Trash2, Sparkles, TrendingUp, LayoutGrid,
 } from "lucide-react";
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+const STATUS_STYLES = {
+  draft:     { bg: "bg-gray-100 text-gray-700",    dot: "bg-gray-400",   icon: FileText },
+  submitted: { bg: "bg-amber-100 text-amber-700",  dot: "bg-amber-400",  icon: Clock },
+  approved:  { bg: "bg-green-100 text-green-700",  dot: "bg-green-500",  icon: CheckCircle },
+  rejected:  { bg: "bg-red-100 text-red-700",      dot: "bg-red-500",    icon: XCircle },
+};
+
+const StatusBadge = ({ status }) => {
+  const s = STATUS_STYLES[status] || STATUS_STYLES.draft;
+  const Icon = s.icon;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${s.bg}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+};
+
+// Animated counter
+const AnimCount = ({ value }) => {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (!value) return;
+    let start = 0;
+    const step = Math.ceil(value / 20);
+    const t = setInterval(() => {
+      start = Math.min(start + step, value);
+      setDisplay(start);
+      if (start >= value) clearInterval(t);
+    }, 30);
+    return () => clearInterval(t);
+  }, [value]);
+  return <span>{display}</span>;
+};
 
 const MyCampaigns = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated } = useAuth();
 
-  // Campaign data state
   const [campaignData, setCampaignData] = useState({
-    viewed: [],
-    favorites: [],
+    viewed: [], favorites: [],
     created: { drafts: [], submitted: [], approved: [], rejected: [], all: [] },
     funded: [],
   });
-
-  // UI state
   const [activeTab, setActiveTab] = useState("viewed");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
 
-  // Redirect non-authenticated users to login
+  const isFounder  = user?.userType?.toLowerCase() === "founder";
+  const isInvestor = user?.userType?.toLowerCase() === "investor";
+
   useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate("/login", { state: { from: "/my-campaigns" } });
-    }
+    if (!isAuthenticated()) navigate("/login", { state: { from: "/my-campaigns" } });
   }, [isAuthenticated, navigate]);
 
-  // Set default tab based on user type and location state
   useEffect(() => {
-    if (location.state?.tab) {
-      setActiveTab(location.state.tab);
-      window.history.replaceState({}, document.title);
-    } else if (user?.userType?.toLowerCase() === "founder") {
-      setActiveTab("created");
-    } else if (user?.userType?.toLowerCase() === "investor") {
-      setActiveTab("funded");
-    }
+    if (location.state?.tab) { setActiveTab(location.state.tab); window.history.replaceState({}, document.title); }
+    else if (isFounder)  setActiveTab("created");
+    else if (isInvestor) setActiveTab("funded");
   }, [location, user]);
 
-  // Load all campaign data
   useEffect(() => {
-    if (isAuthenticated() && user) {
-      loadAllCampaignData();
-    }
+    if (isAuthenticated() && user) loadAll();
   }, [user, isAuthenticated]);
 
-  // Handle refresh from location state
   useEffect(() => {
     if (location.state?.refresh && isAuthenticated()) {
       window.history.replaceState({}, document.title);
-      loadAllCampaignData(true);
+      loadAll(true);
     }
-  }, [location.state?.refresh, isAuthenticated]);
+  }, [location.state?.refresh]);
 
-  const handleDeleteCampaign = async (campaignId, campaignTitle) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete "${campaignTitle}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("authToken");
-
-      const response = await fetch(
-        buildApiUrl(`/campaigns/${campaignId}`),
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        loadAllCampaignData(true);
-        toast.success("Campaign deleted successfully");
-      } else {
-        const result = await response.json();
-        toast.error(result.message || "Failed to delete campaign");
-      }
-    } catch (error) {
-      console.error("Error deleting campaign:", error);
-      toast.error("Failed to delete campaign");
-    }
-  };
-
-  const loadAllCampaignData = async (forceRefresh = false) => {
+  const loadAll = async (force = false) => {
     try {
       setLoading(true);
-      setError(null);
-
-      if (forceRefresh) {
-        setRefreshing(true);
-      }
-
-      console.log("📊 Loading all campaign data for user:", user?.id);
-
+      if (force) setRefreshing(true);
       const data = await CampaignService.getAllMyCampaignsData(user);
       setCampaignData(data);
-
-      console.log("✅ Campaign data loaded successfully");
-    } catch (error) {
-      console.error("❌ Error loading campaign data:", error);
-      const msg = "Some campaign data could not be loaded. Please try refreshing.";
-      setError(msg);
-      toast.error(msg);
+    } catch {
+      toast.error("Some data could not be loaded. Please refresh.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+  const handleDelete = async (id, title) => {
+    if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(buildApiUrl(`/campaigns/${id}`), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) { loadAll(true); toast.success("Campaign deleted"); }
+      else { const r = await res.json(); toast.error(r.message || "Delete failed"); }
+    } catch { toast.error("Delete failed"); }
+  };
+
   const handleFavoriteToggle = async (campaignId) => {
     try {
-      const result = await CampaignService.toggleFavoriteCampaign(
-        campaignId,
-        user.id
-      );
-
-      // Refresh favorites data
-      const updatedFavorites = await CampaignService.getFavoriteCampaigns(
-        user.id
-      );
-      setCampaignData((prev) => ({ ...prev, favorites: updatedFavorites }));
-
+      const result = await CampaignService.toggleFavoriteCampaign(campaignId, user.id);
+      const updated = await CampaignService.getFavoriteCampaigns(user.id);
+      setCampaignData(p => ({ ...p, favorites: updated }));
       return result;
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-      return false;
-    }
+    } catch { return false; }
   };
 
-  // Get tabs based on user type
-  const getTabs = () => {
-    const isFounder = user?.userType?.toLowerCase() === "founder";
-    const isInvestor = user?.userType?.toLowerCase() === "investor";
+  // ── tabs ──────────────────────────────────────────────────────────────────
+  const TABS = [
+    { id: "viewed",    label: "Recently Viewed", icon: Eye,          count: campaignData.viewed?.length },
+    { id: "favorites", label: "Favorites",       icon: Heart,        count: campaignData.favorites?.length },
+    ...(isFounder ? [
+      { id: "created",   label: "All Campaigns",  icon: LayoutGrid,   count: campaignData.created?.all?.length },
+      { id: "drafts",    label: "Drafts",          icon: FileText,     count: campaignData.created?.drafts?.length },
+      { id: "submitted", label: "Under Review",    icon: Clock,        count: campaignData.created?.submitted?.length },
+      { id: "approved",  label: "Published",       icon: CheckCircle,  count: campaignData.created?.approved?.length },
+      { id: "rejected",  label: "Rejected",        icon: XCircle,      count: campaignData.created?.rejected?.length },
+    ] : []),
+    ...(isInvestor ? [
+      { id: "funded", label: "Funded", icon: DollarSign, count: campaignData.funded?.length },
+    ] : []),
+  ];
 
-    const tabs = [
-      { id: "viewed", label: "Recently Viewed", icon: Eye },
-      { id: "favorites", label: "Favorites", icon: Heart },
-    ];
-
-    if (isFounder) {
-      tabs.push(
-        { id: "created", label: "My Campaigns", icon: PenLine },
-        { id: "drafts", label: "Drafts", icon: FileText },
-        { id: "submitted", label: "Under Review", icon: Clock },
-        { id: "approved", label: "Published", icon: CheckCircle },
-        { id: "rejected", label: "Rejected", icon: XCircle }
-      );
-    }
-
-    if (isInvestor) {
-      tabs.push({ id: "funded", label: "Funded Campaigns", icon: DollarSign });
-    }
-
-    return tabs;
-  };
-
-  // Get active campaigns based on selected tab
   const getActiveCampaigns = () => {
     switch (activeTab) {
-      case "viewed":
-        return campaignData.viewed;
-      case "favorites":
-        return campaignData.favorites;
-      case "created":
-        return campaignData.created?.all || [];
-      case "drafts":
-        return campaignData.created?.drafts || [];
-      case "submitted":
-        return campaignData.created?.submitted || [];
-      case "approved":
-        return campaignData.created?.approved || [];
-      case "rejected":
-        return campaignData.created?.rejected || [];
-      case "funded":
-        return campaignData.funded;
-      default:
-        return [];
+      case "viewed":    return campaignData.viewed;
+      case "favorites": return campaignData.favorites;
+      case "created":   return campaignData.created?.all || [];
+      case "drafts":    return campaignData.created?.drafts || [];
+      case "submitted": return campaignData.created?.submitted || [];
+      case "approved":  return campaignData.created?.approved || [];
+      case "rejected":  return campaignData.created?.rejected || [];
+      case "funded":    return campaignData.funded;
+      default:          return [];
     }
   };
 
-  // Get placeholder content for empty states
-  const getPlaceholderContent = () => {
-    const isFounder = user?.userType?.toLowerCase() === "founder";
-
-    switch (activeTab) {
-      case "viewed":
-        return {
-          icon: Eye,
-          title: "No viewed campaigns yet",
-          message: "Browse campaigns to keep track of ones you've viewed",
-          action: {
-            text: "Browse Campaigns",
-            onClick: () => navigate("/dashboard"),
-          },
-        };
-      case "favorites":
-        return {
-          icon: Bookmark,
-          title: "No favorite campaigns yet",
-          message: "Save campaigns you're interested in for later",
-          action: {
-            text: "Browse Campaigns",
-            onClick: () => navigate("/dashboard"),
-          },
-        };
-      case "created":
-        return {
-          icon: PenLine,
-          title: "No campaigns created yet",
-          message: "Start creating your first campaign to raise funds",
-          action: {
-            text: "Create a Campaign",
-            onClick: () => navigate("/pages/CreateCampaign"),
-          },
-        };
-      case "drafts":
-        return {
-          icon: FileText,
-          title: "No draft campaigns",
-          message: "Your draft campaigns will appear here",
-          action: {
-            text: "Create a Campaign",
-            onClick: () => navigate("/pages/CreateCampaign"),
-          },
-        };
-      case "submitted":
-        return {
-          icon: Clock,
-          title: "No campaigns under review",
-          message: "Campaigns you've submitted for approval will appear here",
-          action: isFounder
-            ? {
-                text: "Create a Campaign",
-                onClick: () => navigate("/pages/CreateCampaign"),
-              }
-            : null,
-        };
-      case "approved":
-        return {
-          icon: CheckCircle,
-          title: "No published campaigns",
-          message: "Your approved campaigns will appear here",
-          action: isFounder
-            ? {
-                text: "Create a Campaign",
-                onClick: () => navigate("/pages/CreateCampaign"),
-              }
-            : null,
-        };
-      case "rejected":
-        return {
-          icon: XCircle,
-          title: "No rejected campaigns",
-          message:
-            "If any campaigns are rejected, they'll appear here with feedback",
-          action: isFounder
-            ? {
-                text: "Create a Campaign",
-                onClick: () => navigate("/pages/CreateCampaign"),
-              }
-            : null,
-        };
-      case "funded":
-        return {
-          icon: DollarSign,
-          title: "No campaigns funded yet",
-          message: "Invest in campaigns you believe in",
-          action: {
-            text: "Find Campaigns",
-            onClick: () => navigate("/dashboard"),
-          },
-        };
-      default:
-        return {
-          icon: Eye,
-          title: "No campaigns to show",
-          message: "Something went wrong",
-          action: {
-            text: "Go to Dashboard",
-            onClick: () => navigate("/dashboard"),
-          },
-        };
-    }
+  const EMPTY = {
+    viewed:    { icon: Eye,          title: "No viewed campaigns yet",    msg: "Browse campaigns to keep track of ones you've seen.",        cta: "Browse Campaigns",  to: "/dashboard" },
+    favorites: { icon: Bookmark,     title: "No favourites yet",          msg: "Save campaigns you're interested in for later.",             cta: "Browse Campaigns",  to: "/dashboard" },
+    created:   { icon: PenLine,      title: "No campaigns yet",           msg: "Start creating your first campaign to raise funds.",         cta: "Create Campaign",   to: "/pages/CreateCampaign" },
+    drafts:    { icon: FileText,     title: "No drafts",                  msg: "Your saved drafts will appear here.",                        cta: "Create Campaign",   to: "/pages/CreateCampaign" },
+    submitted: { icon: Clock,        title: "Nothing under review",       msg: "Campaigns you've submitted for approval will appear here.",  cta: null },
+    approved:  { icon: CheckCircle,  title: "No published campaigns",     msg: "Your approved campaigns will appear here.",                  cta: null },
+    rejected:  { icon: XCircle,      title: "No rejected campaigns",      msg: "Rejected campaigns with admin feedback will appear here.",   cta: null },
+    funded:    { icon: DollarSign,   title: "No funded campaigns yet",    msg: "Invest in campaigns you believe in.",                        cta: "Find Campaigns",    to: "/dashboard" },
   };
 
-  // Get status color for campaign cards
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "draft":
-        return "bg-gray-100 text-gray-800";
-      case "submitted":
-        return "bg-yellow-100 text-yellow-800";
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const stats = isFounder
+    ? [
+        { label: "Total",       value: campaignData.created?.all?.length || 0,       color: "text-gray-900" },
+        { label: "Under Review",value: campaignData.created?.submitted?.length || 0,  color: "text-amber-600" },
+        { label: "Published",   value: campaignData.created?.approved?.length || 0,   color: "text-green-600" },
+        { label: "Drafts",      value: campaignData.created?.drafts?.length || 0,     color: "text-gray-500" },
+      ]
+    : [
+        { label: "Viewed",    value: campaignData.viewed?.length || 0,    color: "text-blue-600" },
+        { label: "Favourites",value: campaignData.favorites?.length || 0, color: "text-red-500" },
+        { label: "Funded",    value: campaignData.funded?.length || 0,    color: "text-green-600" },
+        { label: "Portfolio", value: "—",                                  color: "text-gray-400" },
+      ];
 
-  // Handle manual refresh
-  const handleRefresh = () => {
-    loadAllCampaignData(true);
-  };
+  const campaigns = getActiveCampaigns();
+  const empty = EMPTY[activeTab] || EMPTY.viewed;
 
-  // Get stats for the header
-  const getStats = () => {
-    const isFounder = user?.userType?.toLowerCase() === "founder";
-
-    if (isFounder) {
-      return {
-        total: campaignData.created?.all?.length || 0,
-        drafts: campaignData.created?.drafts?.length || 0,
-        published: campaignData.created?.approved?.length || 0,
-        pending: campaignData.created?.submitted?.length || 0,
-      };
-    } else {
-      return {
-        viewed: campaignData.viewed?.length || 0,
-        favorites: campaignData.favorites?.length || 0,
-        funded: campaignData.funded?.length || 0,
-      };
-    }
-  };
-
-  const tabs = getTabs();
-  const activeCampaigns = getActiveCampaigns();
-  const placeholder = getPlaceholderContent();
-  const stats = getStats();
-  const isFounder = user?.userType?.toLowerCase() === "founder";
-
-  if (!isAuthenticated()) {
-    return null; // Redirect happens in useEffect
-  }
+  if (!isAuthenticated()) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <UnifiedNavbar variant="dashboard" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header with Stats */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">My Campaigns</h1>
-              <p className="text-gray-600 mt-1">
-                {isFounder
-                  ? "Manage your campaigns and track their progress"
-                  : "Track your investment activity and saved campaigns"}
-              </p>
+      {/* ── Hero banner ── */}
+      <div className="relative overflow-hidden bg-gray-900 h-52">
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/85 to-green-900/60" />
+        <motion.div
+          animate={{ y: [0, -12, 0], opacity: [0.12, 0.22, 0.12] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-6 right-24 w-56 h-56 bg-green-500 rounded-full blur-3xl pointer-events-none"
+        />
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 h-full flex items-center justify-between">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.55 }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-4 w-4 text-green-400" />
+              <span className="text-green-400 text-xs font-semibold uppercase tracking-widest">
+                {isFounder ? "Founder Hub" : "Investor Hub"}
+              </span>
             </div>
-
-            <div className="flex space-x-4">
-              {/* Refresh Button */}
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md flex items-center space-x-2 disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-                />
-                <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
-              </button>
-
-              {/* Create Campaign Button - Only for Founders */}
-              {isFounder && (
-                <button
-                  onClick={() => navigate("/pages/CreateCampaign")}
-                  className="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-green-800 flex items-center space-x-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>New Campaign</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {isFounder ? (
-              <>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-gray-900">
-                    {stats.total}
-                  </div>
-                  <div className="text-sm text-gray-600">Total Campaigns</div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {stats.pending}
-                  </div>
-                  <div className="text-sm text-gray-600">Under Review</div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-green-600">
-                    {stats.published}
-                  </div>
-                  <div className="text-sm text-gray-600">Published</div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-gray-600">
-                    {stats.drafts}
-                  </div>
-                  <div className="text-sm text-gray-600">Drafts</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {stats.viewed}
-                  </div>
-                  <div className="text-sm text-gray-600">Viewed</div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-red-600">
-                    {stats.favorites}
-                  </div>
-                  <div className="text-sm text-gray-600">Favorites</div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-green-600">
-                    {stats.funded}
-                  </div>
-                  <div className="text-sm text-gray-600">Funded</div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-gray-600">-</div>
-                  <div className="text-sm text-gray-600">Portfolio Value</div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="border-b border-gray-200 mb-8">
-          <nav className="flex space-x-8 overflow-x-auto">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const count = getActiveCampaigns().length;
-
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`pb-4 px-1 flex items-center space-x-2 border-b-2 font-medium text-sm whitespace-nowrap
-                    ${
-                      activeTab === tab.id
-                        ? "border-green-600 text-green-700"
-                        : "border-transparent text-gray-500 hover:text-green-700 hover:border-green-300"
-                    }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{tab.label}</span>
-                  {activeTab === tab.id && count > 0 && (
-                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Content */}
-        {loading ? (
-          <div className="flex justify-center items-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-700 border-t-transparent"></div>
-          </div>
-        ) : activeCampaigns.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activeCampaigns.map((campaign) => (
-              <div key={campaign.id} className="relative group">
-                {/* Campaign Card */}
-                <div
-                  onClick={() => navigate(`/campaign/${campaign.id}`)}
-                  className="cursor-pointer"
-                >
-                  <CampaignCard
-                    campaign={campaign}
-                    onFavoriteToggle={handleFavoriteToggle}
-                    showActions={true}
-                  />
-                </div>
-
-                {/* Status Badge for Founder's Campaigns */}
-                {isFounder && campaign.status && (
-                  <div className="absolute top-3 left-3 z-10">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                        campaign.status
-                      )}`}
-                    >
-                      {campaign.status === "draft" && (
-                        <FileText className="h-3 w-3 mr-1" />
-                      )}
-                      {campaign.status === "submitted" && (
-                        <Clock className="h-3 w-3 mr-1" />
-                      )}
-                      {campaign.status === "approved" && (
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                      )}
-                      {campaign.status === "rejected" && (
-                        <XCircle className="h-3 w-3 mr-1" />
-                      )}
-                      {campaign.status.charAt(0).toUpperCase() +
-                        campaign.status.slice(1)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Action Buttons for Editable Campaigns */}
-                {isFounder &&
-                  (campaign.status === "draft" ||
-                    campaign.status === "rejected") && (
-                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <div className="flex space-x-2">
-                        {/* Edit Button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/edit-campaign/${campaign.id}`);
-                          }}
-                          className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-                          title="Edit Campaign"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-
-                        {/* Delete Button (only for drafts) */}
-                        {campaign.status === "draft" && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteCampaign(campaign.id, campaign.title);
-                            }}
-                            className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:bg-red-700 transition-colors"
-                            title="Delete Draft"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                {/* Admin Comments Badge for Rejected Campaigns */}
-                {isFounder &&
-                  campaign.status === "rejected" &&
-                  campaign.adminComments && (
-                    <div className="absolute top-12 left-3 z-10">
-                      <div className="bg-red-100 text-red-800 px-2 py-1 text-xs rounded-md max-w-xs">
-                        <div className="font-medium">Admin Feedback:</div>
-                        <div className="truncate">{campaign.adminComments}</div>
-                      </div>
-                    </div>
-                  )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg p-12 text-center shadow-sm border border-gray-200">
-            <div className="mx-auto h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              {React.createElement(placeholder.icon, {
-                className: "h-8 w-8 text-gray-400",
-              })}
-            </div>
-            <h3 className="text-lg font-medium text-gray-900">
-              {placeholder.title}
-            </h3>
-            <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto">
-              {placeholder.message}
+            <h1 className="text-3xl font-bold text-white">My Campaigns</h1>
+            <p className="text-gray-400 text-sm mt-1">
+              {isFounder ? "Manage your campaigns and track their progress" : "Track your investment activity and saved campaigns"}
             </p>
-            {placeholder.action && (
-              <div className="mt-6">
-                <button
-                  onClick={placeholder.action.onClick}
-                  className="inline-flex items-center px-4 py-2 border border-transparent 
-                           rounded-md shadow-sm text-sm font-medium text-white bg-green-700 
-                           hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 
-                           focus:ring-green-500"
-                >
-                  {isFounder &&
-                    activeTab !== "viewed" &&
-                    activeTab !== "favorites" && (
-                      <Plus className="h-4 w-4 mr-2" />
-                    )}
-                  {placeholder.action.text}
-                </button>
-              </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.55, delay: 0.1 }}
+            className="flex items-center gap-3"
+          >
+            <button onClick={() => loadAll(true)} disabled={refreshing}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-full border border-white/20 transition-all disabled:opacity-50">
+              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              {refreshing ? "Refreshing…" : "Refresh"}
+            </button>
+            {isFounder && (
+              <button onClick={() => navigate("/pages/CreateCampaign")}
+                className="flex items-center gap-2 px-5 py-2.5 bg-green-500 hover:bg-green-400 text-white text-sm font-bold rounded-full transition-all hover:scale-105 shadow-lg shadow-green-900/30">
+                <Plus className="h-4 w-4" /> New Campaign
+              </button>
             )}
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* ── Stat cards ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {stats.map((s, i) => (
+            <motion.div key={s.label}
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm"
+            >
+              <div className={`text-3xl font-extrabold ${s.color} leading-none mb-1`}>
+                {typeof s.value === "number" ? <AnimCount value={s.value} /> : s.value}
+              </div>
+              <div className="text-xs text-gray-500 font-medium">{s.label}</div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* ── Tabs ── */}
+        <div className="flex gap-2 flex-wrap mb-8">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  active
+                    ? "bg-green-600 text-white shadow-md shadow-green-200"
+                    : "bg-white text-gray-600 border border-gray-200 hover:border-green-300 hover:text-green-700"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {tab.label}
+                {tab.count > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${active ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"}`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Content ── */}
+        {loading ? (
+          <div className="flex justify-center py-24">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent" />
           </div>
+        ) : campaigns.length > 0 ? (
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <AnimatePresence mode="popLayout">
+              {campaigns.map((campaign, i) => (
+                <motion.div key={campaign.id} layout
+                  initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3, delay: i * 0.05 }}
+                  className="relative group"
+                >
+                  <CampaignCard campaign={campaign} onFavoriteToggle={handleFavoriteToggle} showActions />
+
+                  {/* Status badge */}
+                  {isFounder && campaign.status && (
+                    <div className="absolute top-3 left-3 z-10">
+                      <StatusBadge status={campaign.status} />
+                    </div>
+                  )}
+
+                  {/* Edit / delete actions */}
+                  {isFounder && ["draft", "rejected"].includes(campaign.status) && (
+                    <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <button onClick={e => { e.stopPropagation(); navigate(`/edit-campaign/${campaign.id}`); }}
+                        className="p-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors" title="Edit">
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      {campaign.status === "draft" && (
+                        <button onClick={e => { e.stopPropagation(); handleDelete(campaign.id, campaign.title); }}
+                          className="p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors" title="Delete">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Admin feedback chip for rejected */}
+                  {isFounder && campaign.status === "rejected" && campaign.adminComments && (
+                    <div className="absolute top-12 left-3 z-10 max-w-[200px]">
+                      <div className="bg-red-50 border border-red-200 text-red-700 px-2.5 py-1.5 text-xs rounded-xl shadow-sm">
+                        <span className="font-semibold block mb-0.5">Admin feedback</span>
+                        <span className="line-clamp-2">{campaign.adminComments}</span>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-16 text-center"
+          >
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              {React.createElement(empty.icon, { className: "h-8 w-8 text-gray-400" })}
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{empty.title}</h3>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">{empty.msg}</p>
+            {empty.cta && (
+              <button onClick={() => navigate(empty.to)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-full transition-all hover:scale-105">
+                {empty.to?.includes("Create") && <Plus className="h-4 w-4" />}
+                {empty.cta}
+              </button>
+            )}
+          </motion.div>
         )}
       </div>
 
