@@ -13,6 +13,7 @@ import {
   Eye, Heart, PenLine, DollarSign, FileText, ArrowUpDown,
   X, SlidersHorizontal, MapPin, Building, Star, Sparkles,
   TrendingUp, Plus, ChevronLeft, ChevronRight,
+  Zap, Palette, Users, Leaf, LayoutGrid,
 } from "lucide-react";
 
 // ── Skeleton ─────────────────────────────────────────────────────────────────
@@ -223,37 +224,97 @@ const Dashboard = () => {
   const handleViewClick = async (id) => { try { await CampaignService.trackView(id); } catch {} };
 
   // ── Sidebar category filter ─────────────────────────────────────────────────
+  const groupIcons = {
+    "Tech & Innovation": <Zap className="h-4 w-4" />,
+    "Creative Works":    <Palette className="h-4 w-4" />,
+    "Community Projects":<Users className="h-4 w-4" />,
+  };
+
   const CategoryFilter = () => (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-      <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">Categories</h3>
-      <div className="space-y-1">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="px-5 pt-5 pb-3 border-b border-gray-50">
+        <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider flex items-center gap-2">
+          <LayoutGrid className="h-4 w-4 text-green-600" /> Categories
+        </h3>
+      </div>
+
+      {/* Scrollable list */}
+      <div className="overflow-y-auto max-h-[calc(100vh-280px)] px-3 py-3 space-y-0.5">
+        {/* All */}
         <button
           onClick={() => { setSelectedCategory("All Categories"); updateURL({ category: null }); }}
-          className={`w-full text-left text-sm px-3 py-2 rounded-xl transition-colors ${selectedCategory === "All Categories" ? "bg-green-50 text-green-700 font-semibold" : "text-gray-600 hover:bg-gray-50"}`}
-        >All Categories</button>
-        {Object.entries(categories).map(([group, subs]) => (
-          <div key={group}>
-            <button
-              onClick={() => { setSelectedCategory(group); updateURL({ category: group }); setCategoryMenuOpen(p => p === group ? null : group); }}
-              className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center justify-between transition-colors ${selectedCategory === group ? "bg-green-50 text-green-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
-            >
-              <span>{group}</span>
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${categoryMenuOpen === group ? "rotate-180" : ""}`} />
-            </button>
-            <AnimatePresence>
-              {categoryMenuOpen === group && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden ml-3">
-                  {subs.map(cat => (
-                    <button key={cat}
-                      onClick={() => { setSelectedCategory(cat); updateURL({ category: cat }); }}
-                      className={`w-full text-left text-xs px-3 py-1.5 rounded-lg transition-colors ${selectedCategory === cat ? "text-green-600 font-semibold" : "text-gray-500 hover:text-gray-800"}`}
-                    >{cat}</button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
+          className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center gap-2.5 transition-all ${
+            selectedCategory === "All Categories"
+              ? "bg-green-600 text-white font-semibold shadow-sm shadow-green-200"
+              : "text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          <LayoutGrid className="h-3.5 w-3.5 flex-shrink-0" />
+          All Categories
+        </button>
+
+        {/* Groups */}
+        {Object.entries(categories).map(([group, subs]) => {
+          const isGroupActive = selectedCategory === group || subs.includes(selectedCategory);
+          const isOpen = categoryMenuOpen === group;
+
+          return (
+            <div key={group}>
+              <button
+                onClick={() => {
+                  setSelectedCategory(group);
+                  updateURL({ category: group });
+                  setCategoryMenuOpen(p => p === group ? null : group);
+                }}
+                className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center justify-between gap-2 transition-all ${
+                  isGroupActive
+                    ? "text-green-700 font-semibold bg-green-50"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <span className="flex items-center gap-2.5">
+                  <span className={`flex-shrink-0 ${isGroupActive ? "text-green-600" : "text-gray-400"}`}>
+                    {groupIcons[group]}
+                  </span>
+                  {group}
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-green-600" : "text-gray-400"}`} />
+              </button>
+
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="ml-4 pl-3 border-l-2 border-gray-100 mt-0.5 mb-1 space-y-0.5">
+                      {subs.map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => { setSelectedCategory(cat); updateURL({ category: cat }); }}
+                          className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-2 ${
+                            selectedCategory === cat
+                              ? "text-green-700 font-semibold bg-green-50"
+                              : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                          }`}
+                        >
+                          {selectedCategory === cat && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                          )}
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -314,13 +375,7 @@ const Dashboard = () => {
             </p>
           </motion.div>
 
-          {isFounder && (
-            <motion.button initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
-              onClick={() => navigate("/create-campaign")}
-              className="hidden md:flex items-center gap-2 bg-green-500 hover:bg-green-400 text-white font-bold px-6 py-3 rounded-full transition-all hover:scale-105 shadow-lg shadow-green-900/40">
-              <Plus className="h-4 w-4" /> New Campaign
-            </motion.button>
-          )}
+
         </div>
       </div>
 
@@ -429,8 +484,9 @@ const Dashboard = () => {
         <div className="flex gap-7">
           {/* Sidebar */}
           <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
-            className="hidden lg:block w-60 flex-shrink-0 space-y-4">
-            <CategoryFilter />
+            className="hidden lg:block w-60 flex-shrink-0">
+            <div className="sticky top-8 space-y-4">
+              <CategoryFilter />
 
             {isAuthenticated() && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
@@ -454,6 +510,7 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
+            </div>{/* end sticky */}
           </motion.div>
 
           {/* Campaign grid / list */}

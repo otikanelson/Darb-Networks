@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CustomNav } from '../../hooks/CustomNavigation';
 import CampaignCard from '../ui/CampaignCard';
@@ -86,10 +86,10 @@ const FeaturedStartups = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Spotlight */}
+            {/* Spotlight + promo panel */}
             {spotlight && (
               <motion.div
-                className="lg:col-span-2"
+                className="lg:col-span-2 flex flex-col gap-6"
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
@@ -101,6 +101,35 @@ const FeaturedStartups = () => {
                   onFavoriteToggle={handleFavoriteToggle}
                   onViewClick={handleViewClick}
                 />
+
+                {/* Filler promo panel */}
+                <div className="flex-1 bg-gray-900 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center gap-6">
+                  <div className="flex-1">
+                    <p className="text-green-400 text-xs font-semibold uppercase tracking-widest mb-2">Why invest on Darb?</p>
+                    <h3 className="text-white font-bold text-lg leading-snug mb-4">
+                      Milestone-based funding keeps your capital protected.
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      {[
+                        { icon: ShieldCheck, text: 'Funds released only on verified milestones' },
+                        { icon: TrendingUp,  text: 'Real-time campaign analytics' },
+                        { icon: Users,       text: '18K+ verified investors on the platform' },
+                      ].map(({ icon: Icon, text }) => (
+                        <div key={text} className="flex items-center gap-2 text-gray-300 text-sm">
+                          <Icon className="h-4 w-4 text-green-400 flex-shrink-0" />
+                          <span>{text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate('/register')}
+                    className="flex-shrink-0 self-start sm:self-center inline-flex items-center gap-2 bg-green-500 hover:bg-green-400 text-white font-semibold text-sm px-5 py-2.5 rounded-full transition-all"
+                  >
+                    Get started
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
               </motion.div>
             )}
 
