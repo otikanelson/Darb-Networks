@@ -105,8 +105,8 @@ const createCampaign = async (req, res) => {
           category || '',
           location || '',
           parseFloat(targetAmount) || 0,
-          parseFloat(minimumInvestment) || 0,
-          maximumInvestment ? parseFloat(maximumInvestment) : null,
+          parseFloat(String(minimumInvestment || '').replace(/,/g, '')) || 0,
+          maximumInvestment ? parseFloat(String(maximumInvestment).replace(/,/g, '')) : null,
           problemStatement || '',
           solution || '',
           businessPlan || '',
@@ -431,9 +431,10 @@ const updateCampaign = async (req, res) => {
       });
     }
 
-    // Determine new status based on isDraft flag
-    const newStatus = updateData.isDraft ? 'draft' : 'submitted';
-    const submittedAt = updateData.isDraft ? null : new Date();
+    // Determine new status based on isDraft flag (handles both boolean and string)
+    const isDraftBool = updateData.isDraft === true || updateData.isDraft === 'true';
+    const newStatus = isDraftBool ? 'draft' : 'submitted';
+    const submittedAt = isDraftBool ? null : new Date();
 
     // Build update query with proper field mapping
     const updates = [];
@@ -462,16 +463,22 @@ const updateCampaign = async (req, res) => {
     };
 
     // Add fields that have been provided
+    const numericFields = ['targetAmount', 'minimumInvestment', 'maximumInvestment', 'durationDays'];
+    const nullableDateFields = ['endDate'];
+
     Object.entries(fieldMappings).forEach(([frontendField, dbField]) => {
-      if (updateData[frontendField] !== undefined) {
-        updates.push(`${dbField} = ?`);
-        
-        // Handle numeric fields
-        if (['targetAmount', 'minimumInvestment'].includes(frontendField)) {
-          values.push(parseFloat(updateData[frontendField]) || 0);
-        } else {
-          values.push(updateData[frontendField] || '');
-        }
+      if (updateData[frontendField] === undefined) return;
+
+      updates.push(`${dbField} = ?`);
+
+      if (numericFields.includes(frontendField)) {
+        const parsed = parseFloat(String(updateData[frontendField] || '').replace(/,/g, ''));
+        values.push(isNaN(parsed) ? null : parsed);
+      } else if (nullableDateFields.includes(frontendField)) {
+        // Push null for empty strings so MySQL doesn't reject the DATETIME column
+        values.push(updateData[frontendField] || null);
+      } else {
+        values.push(updateData[frontendField] ?? '');
       }
     });
 
@@ -500,23 +507,31 @@ const updateCampaign = async (req, res) => {
     // Add campaign ID for WHERE clause
     values.push(id);
 
+    const sql = `UPDATE campaigns SET ${updates.join(', ')} WHERE id = ?`;
+    // Validate placeholder count matches values count
+    const placeholderCount = (sql.match(/\?/g) || []).length;
+    console.log('📝 updateCampaign SQL placeholders:', placeholderCount, '| values:', values.length);
+    if (placeholderCount !== values.length) {
+      throw new Error(`SQL placeholder mismatch: ${placeholderCount} placeholders but ${values.length} values`);
+    }
+
     // Execute update
-    await db.sequelize.query(
-      `UPDATE campaigns SET ${updates.join(', ')} WHERE id = ?`,
-      {
+    await db.sequelize.query(sql, {
         replacements: values,
         type: db.sequelize.QueryTypes.UPDATE
       }
     );
 
-    // Get updated campaign with founder details
-    const [updatedCampaign] = await db.sequelize.query(
-      `SELECT * FROM campaign_details WHERE id = ?`,
-      {
-        replacements: [id],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
+    // Get updated campaign with founder details (non-critical — don't let this crash the response)
+    let updatedCampaign = null;
+    try {
+      [updatedCampaign] = await db.sequelize.query(
+        `SELECT * FROM campaign_details WHERE id = ?`,
+        { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+      );
+    } catch (viewErr) {
+      console.warn('⚠️ campaign_details view query failed:', viewErr.message);
+    }
 
     // Replace milestones if provided
     if (Array.isArray(req.body.milestones)) {
@@ -548,15 +563,16 @@ const updateCampaign = async (req, res) => {
       success: true,
       message: newStatus === 'draft' ? 'Campaign saved as draft' : 'Campaign submitted for approval',
       data: {
-        id: updatedCampaign.id,
-        title: updatedCampaign.title,
-        status: updatedCampaign.status,
-        founderName: updatedCampaign.founder_name,
-        updatedAt: updatedCampaign.updated_at
+        id: updatedCampaign?.id || parseInt(id),
+        title: updatedCampaign?.title,
+        status: updatedCampaign?.status || newStatus,
+        founderName: updatedCampaign?.founder_name,
+        updatedAt: updatedCampaign?.updatedAt || updatedCampaign?.updated_at
       }
     });
 
   } catch (error) {
+    console.error('❌ updateCampaign error:', error.message, error.stack);
     res.status(500).send({
       success: false,
       message: 'Error updating campaign',

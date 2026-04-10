@@ -190,7 +190,6 @@ const Navbars = ({
     if (!isAuthenticated()) {
       // Public navigation for non-authenticated users
       return [
-        { to: '/dashboard', label: 'Browse Startups' },
         { to: '/register', label: 'For Investors' },
         { to: '/about', label: 'Success Stories' },
         { to: '/about', label: 'Resources' }
