@@ -9,8 +9,8 @@ const SplitCTA = () => {
   const [hovered, setHovered] = useState(null);
 
   // flex-grow values: expanded card gets 1.6, shrunk card gets 0.4
-  const founderGrow  = hovered === 'investor' ? 0.4 : hovered === 'founder' ? 1.6 : 1;
-  const investorGrow = hovered === 'founder'  ? 0.4 : hovered === 'investor' ? 1.6 : 1;
+  const founderGrow  = hovered === 'investor' ? 0.6 : hovered === 'founder' ? 1.4 : 1;
+  const investorGrow = hovered === 'founder'  ? 0.6 : hovered === 'investor' ? 1.4 : 1;
 
   return (
     <section className="py-6 px-4">
@@ -27,7 +27,7 @@ const SplitCTA = () => {
             className="bg-gray-900 p-12 flex flex-col justify-between min-h-[320px] cursor-pointer overflow-hidden"
             style={{ flexGrow: founderGrow, flexBasis: 0 }}
             animate={{ flexGrow: founderGrow }}
-            transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
             onMouseEnter={() => setHovered('founder')}
             onMouseLeave={() => setHovered(null)}
           >
@@ -58,7 +58,7 @@ const SplitCTA = () => {
             className="bg-green-700 p-12 flex flex-col justify-between min-h-[320px] cursor-pointer overflow-hidden"
             style={{ flexGrow: investorGrow, flexBasis: 0 }}
             animate={{ flexGrow: investorGrow }}
-            transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
             onMouseEnter={() => setHovered('investor')}
             onMouseLeave={() => setHovered(null)}
           >

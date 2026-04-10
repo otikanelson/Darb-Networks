@@ -1,7 +1,8 @@
 // CampaignDisplay
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useInView } from "react-intersection-observer";
 import { useAuth } from "../context/AuthContext";
 import { buildImageUrl, buildApiUrl } from "../config/apiUrl";
 import DOMPurify from "dompurify";
@@ -10,7 +11,7 @@ import {
   ArrowLeft, Edit, Play, Star, CheckCircle, AlertTriangle,
   TrendingUp, Building, BarChart2, Shield, Lightbulb,
   Target, BookOpen, Award, ExternalLink, Check, ChevronLeft,
-  ChevronRight, X, Zap,
+  ChevronRight, X, Zap, Flag,
 } from "lucide-react";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
@@ -167,6 +168,9 @@ const CampaignDisplay = () => {
   const [showInvestmentModal, setShowInvestmentModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Track when the funding card scrolls out of view
+  const { ref: fundingCardRef, inView: fundingCardInView } = useInView({ threshold: 0.2 });
+
   useEffect(() => { if (id) { loadCampaign(); loadRelated(); } }, [id]);
 
   const loadCampaign = async () => {
@@ -253,10 +257,11 @@ const CampaignDisplay = () => {
 
   // ── tabs ──────────────────────────────────────────────────────────────────
   const TABS = [
-    { id: "overview",  label: "Overview" },
-    { id: "market",    label: "Market & Competition" },
-    { id: "business",  label: "Business & Financials" },
-    { id: "team",      label: "Team & Risks" },
+    { id: "overview",   label: "Overview" },
+    { id: "market",     label: "Market & Competition" },
+    { id: "business",   label: "Business & Financials" },
+    { id: "team",       label: "Team & Risks" },
+    ...(campaign.milestones?.length ? [{ id: "milestones", label: "Milestones" }] : []),
     ...(videoUrls.length || galleryImages.length ? [{ id: "media", label: "Media" }] : []),
   ];
 
@@ -355,6 +360,106 @@ const CampaignDisplay = () => {
               <div className="text-center py-16 text-gray-400">
                 <Users className="mx-auto h-12 w-12 mb-3 opacity-40" />
                 <p>Team details not provided yet.</p>
+              </div>
+            )}
+          </div>
+        );
+
+      case "milestones":
+        return (
+          <div className="space-y-4">
+            {campaign.milestones?.length ? (
+              <>
+                {/* Progress summary */}
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+                  <span>{campaign.milestones.filter(m => m.status === 'completed').length} of {campaign.milestones.length} milestones completed</span>
+                  <span className="font-medium text-green-600">
+                    {Math.round((campaign.milestones.filter(m => m.status === 'completed').length / campaign.milestones.length) * 100)}%
+                  </span>
+                </div>
+
+                {campaign.milestones.map((m, i) => {
+                  const isCompleted = m.status === 'completed';
+                  const isActive = m.status === 'active';
+                  const pctFunded = m.targetAmount > 0
+                    ? Math.min(Math.round((m.currentAmount / m.targetAmount) * 100), 100)
+                    : 0;
+
+                  return (
+                    <div key={m.id}
+                      className={`rounded-2xl border p-5 transition-all ${
+                        isCompleted ? 'bg-green-50 border-green-200' :
+                        isActive    ? 'bg-blue-50 border-blue-200' :
+                                      'bg-white border-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Step indicator */}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5 ${
+                          isCompleted ? 'bg-green-600 text-white' :
+                          isActive    ? 'bg-blue-600 text-white' :
+                                        'bg-gray-100 text-gray-500'
+                        }`}>
+                          {isCompleted ? <CheckCircle className="h-4 w-4" /> : i + 1}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                            <h4 className="font-semibold text-gray-900">{m.title}</h4>
+                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                              isCompleted ? 'bg-green-100 text-green-700' :
+                              isActive    ? 'bg-blue-100 text-blue-700' :
+                                            'bg-gray-100 text-gray-500'
+                            }`}>
+                              {m.status.charAt(0).toUpperCase() + m.status.slice(1)}
+                            </span>
+                          </div>
+
+                          {m.description && (
+                            <p className="text-sm text-gray-600 mb-3 leading-relaxed">{m.description}</p>
+                          )}
+
+                          {/* Funding bar */}
+                          {m.targetAmount > 0 && (
+                            <div className="mb-3">
+                              <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-700 ${isCompleted ? 'bg-green-500' : 'bg-blue-500'}`}
+                                  style={{ width: `${pctFunded}%` }}
+                                />
+                              </div>
+                              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(m.currentAmount || 0)} raised</span>
+                                <span>Target: {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(m.targetAmount)}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Meta */}
+                          <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+                            {m.targetDate && (
+                              <span className="flex items-center gap-1">
+                                <Flag className="h-3 w-3" />
+                                Target: {new Date(m.targetDate).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                            )}
+                            {m.completedAt && (
+                              <span className="flex items-center gap-1 text-green-600">
+                                <CheckCircle className="h-3 w-3" />
+                                Completed: {new Date(m.completedAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="text-center py-16 text-gray-400">
+                <Flag className="mx-auto h-12 w-12 mb-3 opacity-40" />
+                <p>No milestones defined for this campaign.</p>
               </div>
             )}
           </div>
@@ -520,8 +625,8 @@ const CampaignDisplay = () => {
           {/* ── RIGHT: sidebar ── */}
           <div className="space-y-4">
 
-            {/* funding card — sticky */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:sticky lg:top-4">
+            {/* funding card */}
+            <div ref={fundingCardRef} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="mb-1">
                 <span className="text-3xl font-bold text-gray-900">{fmt(campaign.currentAmount)}</span>
               </div>
@@ -649,6 +754,28 @@ const CampaignDisplay = () => {
       </div>
 
       <Footer />
+
+      {/* ── Sticky invest bar — appears when funding card scrolls out of view ── */}
+      {canInvest() && !fundingCardInView && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{campaign.title}</p>
+              <p className="text-xs text-gray-500">
+                <span className="font-semibold text-green-600">{Math.round(progress)}% funded</span>
+                {' · '}{fmt(campaign.currentAmount)} raised
+              </p>
+            </div>
+            <button
+              onClick={() => setShowInvestmentModal(true)}
+              className="flex-shrink-0 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-full transition-all hover:scale-105 shadow-md shadow-green-200"
+            >
+              <DollarSign className="h-4 w-4" />
+              Invest Now
+            </button>
+          </div>
+        </div>
+      )}
 
       {showInvestmentModal && (
         <InvestmentModal

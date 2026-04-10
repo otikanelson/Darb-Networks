@@ -66,6 +66,12 @@ const STEPS = [
     hint: 'A strong cover image is essential — it appears on every campaign card. Add gallery images to show your product, team, or traction. You can also add video URLs (YouTube, Vimeo, etc.).',
   },
   {
+    id: 'milestones',
+    title: 'Milestones',
+    subtitle: 'Break your funding goal into clear, verifiable milestones.',
+    hint: 'Milestones show investors exactly how their money will be used and when. Funds are released as each milestone is verified. Add at least one milestone — be specific about deliverables and amounts.',
+  },
+  {
     id: 'funding',
     title: 'Funding Details',
     subtitle: 'Set your financial targets and campaign timeline.',
@@ -285,6 +291,20 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
       : ['']
   );
 
+  // ── milestone state ─────────────────────────────────────────────────────
+  const emptyMilestone = () => ({ title: '', description: '', amount: '', targetDate: '' });
+  const [milestones, setMilestones] = useState(
+    initialData.milestones?.length
+      ? initialData.milestones
+      : [emptyMilestone()]
+  );
+
+  const setMilestone = (i, field, value) => {
+    setMilestones(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
+  };
+  const addMilestone = () => setMilestones(prev => [...prev, emptyMilestone()]);
+  const removeMilestone = (i) => setMilestones(prev => prev.filter((_, idx) => idx !== i));
+
   // ── field helpers ───────────────────────────────────────────────────────
   const set = (field, value) => {
     setForm(p => ({ ...p, [field]: value }));
@@ -309,7 +329,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
     if (stepIdx === 2) {
       if (!stripHtml(form.solution)) e.solution = 'Solution is required';
     }
-    if (stepIdx === 7) {
+    if (stepIdx === 8) {
       if (!form.targetAmount) e.targetAmount = 'Target amount is required';
       else if (parseFloat(String(form.targetAmount).replace(/,/g, '')) < 100000)
         e.targetAmount = 'Minimum target is ₦100,000';
@@ -349,6 +369,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
       : null,
     videoUrl: videos.filter(Boolean).join(','),
     endDate: form.endDate || null,
+    milestones: milestones.filter(m => m.title.trim()),
     isDraft,
   });
 
@@ -371,7 +392,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
     // Full validation before submit
     if (!isDraft) {
       const allErrors = {};
-      [0, 1, 2, 7].forEach(i => Object.assign(allErrors, validate(i)));
+      [0, 1, 2, 8].forEach(i => Object.assign(allErrors, validate(i)));
       if (Object.keys(allErrors).length) {
         setErrors(allErrors);
         setGlobalError('Some required fields are missing. Please review all steps.');
@@ -618,7 +639,95 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
           </div>
         );
 
-      // ── STEP 7: Funding ─────────────────────────────────────────────────
+      // ── STEP 7: Milestones ──────────────────────────────────────────────
+      case 'milestones':
+        return (
+          <div className="space-y-6">
+            <HintBox text={s.hint} />
+
+            <div className="space-y-4">
+              {milestones.map((m, i) => (
+                <div key={i} className="border border-gray-200 rounded-xl p-5 bg-gray-50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-700">Milestone {i + 1}</span>
+                    {milestones.length > 1 && (
+                      <button type="button" onClick={() => removeMilestone(i)}
+                        className="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div>
+                    <FieldLabel required>Milestone Title</FieldLabel>
+                    <input type="text" value={m.title}
+                      onChange={e => setMilestone(i, 'title', e.target.value)}
+                      className={inputCls(false)}
+                      placeholder="e.g. MVP Launch, First 100 Customers, Market Expansion" />
+                  </div>
+
+                  <div>
+                    <FieldLabel>Description</FieldLabel>
+                    <textarea value={m.description}
+                      onChange={e => setMilestone(i, 'description', e.target.value)}
+                      rows={3}
+                      className={inputCls(false)}
+                      placeholder="What will be delivered at this milestone? How will it be verified?" />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <FieldLabel>Amount Required (₦)</FieldLabel>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                        <input type="text" value={m.amount}
+                          onChange={e => setMilestone(i, 'amount', e.target.value)}
+                          onBlur={e => setMilestone(i, 'amount', fmtNGN(e.target.value))}
+                          className={inputCls(false) + ' pl-10'}
+                          placeholder="e.g. 1,000,000" />
+                      </div>
+                    </div>
+                    <div>
+                      <FieldLabel>Target Date <span className="text-gray-400 font-normal text-xs">optional</span></FieldLabel>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                        <input type="date" value={m.targetDate}
+                          onChange={e => setMilestone(i, 'targetDate', e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className={inputCls(false) + ' pl-10'} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {milestones.length < 8 && (
+              <button type="button" onClick={addMilestone}
+                className="flex items-center gap-2 text-sm text-green-700 font-medium hover:text-green-800 border border-dashed border-green-300 hover:border-green-500 px-4 py-3 rounded-xl w-full justify-center transition">
+                <Plus className="h-4 w-4" /> Add Another Milestone
+              </button>
+            )}
+
+            {/* Running total vs target */}
+            {form.targetAmount && (
+              <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-sm">
+                <div className="flex justify-between text-gray-700">
+                  <span>Total milestone amounts</span>
+                  <span className="font-semibold">
+                    ₦{milestones.reduce((sum, m) => sum + (parseFloat(String(m.amount).replace(/,/g, '')) || 0), 0).toLocaleString('en-NG')}
+                  </span>
+                </div>
+                <div className="flex justify-between text-gray-500 mt-1">
+                  <span>Campaign target</span>
+                  <span>₦{parseFloat(String(form.targetAmount).replace(/,/g, '')).toLocaleString('en-NG')}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      // ── STEP 8: Funding ─────────────────────────────────────────────────
       case 'funding':
         return (
           <div className="space-y-6">

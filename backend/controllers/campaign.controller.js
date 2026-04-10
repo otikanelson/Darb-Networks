@@ -155,6 +155,29 @@ const createCampaign = async (req, res) => {
       }
     );
 
+    // Save milestones if provided
+    if (Array.isArray(req.body.milestones) && req.body.milestones.length > 0) {
+      for (let i = 0; i < req.body.milestones.length; i++) {
+        const m = req.body.milestones[i];
+        if (!m.title?.trim()) continue;
+        await db.sequelize.query(
+          `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          {
+            replacements: [
+              campaignId,
+              m.title.trim(),
+              m.description?.trim() || '',
+              parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0,
+              i,
+              m.targetDate || null,
+            ],
+            type: db.sequelize.QueryTypes.INSERT,
+          }
+        );
+      }
+    }
+
     res.status(201).send({
       success: true,
       message: isDraft ? 'Campaign saved as draft' : 'Campaign submitted for approval',
@@ -495,6 +518,33 @@ const updateCampaign = async (req, res) => {
         type: db.sequelize.QueryTypes.SELECT
       }
     );
+
+    // Replace milestones if provided
+    if (Array.isArray(req.body.milestones)) {
+      await db.sequelize.query(
+        'DELETE FROM campaign_milestones WHERE campaign_id = ?',
+        { replacements: [id], type: db.sequelize.QueryTypes.DELETE }
+      );
+      for (let i = 0; i < req.body.milestones.length; i++) {
+        const m = req.body.milestones[i];
+        if (!m.title?.trim()) continue;
+        await db.sequelize.query(
+          `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          {
+            replacements: [
+              id,
+              m.title.trim(),
+              m.description?.trim() || '',
+              parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0,
+              i,
+              m.targetDate || null,
+            ],
+            type: db.sequelize.QueryTypes.INSERT,
+          }
+        );
+      }
+    }
 
     res.status(200).send({
       success: true,
@@ -870,6 +920,24 @@ const getCampaignById = async (req, res) => {
       approvedAt: campaign.approved_at,
       rejectedAt: campaign.rejected_at,
     };
+
+    // Fetch milestones for this campaign
+    const milestones = await db.sequelize.query(
+      `SELECT id, title, description, target_amount, current_amount, status, order_index, target_date, completed_at
+       FROM campaign_milestones WHERE campaign_id = ? ORDER BY order_index ASC`,
+      { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+    );
+    formattedCampaign.milestones = milestones.map(m => ({
+      id: m.id,
+      title: m.title,
+      description: m.description,
+      targetAmount: m.target_amount,
+      currentAmount: m.current_amount,
+      status: m.status,
+      orderIndex: m.order_index,
+      targetDate: m.target_date,
+      completedAt: m.completed_at,
+    }));
 
     res.status(200).send({
       success: true,

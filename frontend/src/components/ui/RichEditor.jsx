@@ -49,6 +49,17 @@ const RichEditor = ({ value, onChange, placeholder = 'Start writing…', minHeig
     },
   });
 
+  // Sync external value changes (e.g. when switching steps loads different field)
+  // Only update when editor is not focused to avoid cursor jumping
+  React.useEffect(() => {
+    if (!editor) return;
+    if (editor.isFocused) return;
+    const current = editor.getHTML();
+    if (current !== value) {
+      editor.commands.setContent(value || '', false);
+    }
+  }, [value, editor]);
+
   const addLink = useCallback(() => {
     if (!editor) return;
     const prev = editor.getAttributes('link').href || '';

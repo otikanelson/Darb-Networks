@@ -389,14 +389,14 @@ const Profile = () => {
       setErrors({});
 
       const token = localStorage.getItem("authToken");
-      buildApiUrl('/users/profile-image'), {
+      const response = await fetch(buildApiUrl('/users/profile'), {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(profileData),
-      };
+      });
 
       const result = await response.json();
 
