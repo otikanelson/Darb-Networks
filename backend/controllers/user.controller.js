@@ -4,12 +4,22 @@ const bcrypt = require("bcryptjs");
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Configure Cloudinary (only if credentials are available)
+const cloudinaryConfigured = !!(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (cloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+} else {
+  console.warn('⚠️ Cloudinary credentials not configured — image uploads will fail');
+}
 
 // Use memory storage — no disk writes (required for Vercel)
 const upload = multer({
@@ -296,6 +306,10 @@ exports.uploadProfileImage = [
         return res.status(400).send({ success: false, message: "No image file provided." });
       }
 
+      if (!cloudinaryConfigured) {
+        return res.status(500).send({ success: false, message: "Image upload service not configured." });
+      }
+
       // Upload buffer directly to Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -346,8 +360,8 @@ exports.deleteProfileImage = async (req, res) => {
     const user = await User.findByPk(userId);
     if (!user) return res.status(404).send({ success: false, message: "User not found." });
 
-    // Delete from Cloudinary if it's a cloudinary URL
-    if (user.profileImageUrl && user.profileImageUrl.includes('cloudinary.com')) {
+    // Delete from Cloudinary if configured and it's a cloudinary URL
+    if (cloudinaryConfigured && user.profileImageUrl && user.profileImageUrl.includes('cloudinary.com')) {
       const publicId = user.profileImageUrl.split('/').slice(-2).join('/').replace(/\.[^/.]+$/, '');
       await cloudinary.uploader.destroy(publicId).catch(() => {});
     }
