@@ -263,7 +263,7 @@ const UserCampaignsSection = () => {
                   >
                     <CampaignCard
                       campaign={campaign}
-                      size="default"
+                      size="preview"
                       onFavoriteToggle={handleFavoriteToggle}
                       onViewClick={handleViewClick}
                     />

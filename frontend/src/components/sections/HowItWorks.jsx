@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Handshake, Rocket, ArrowRight } from 'lucide-react';
+import { FileText, Users2, Rocket, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CustomNav } from '../../hooks/CustomNavigation';
 
@@ -12,7 +12,7 @@ const steps = [
     color: 'bg-blue-50 text-blue-600',
   },
   {
-    icon: Handshake,
+    icon: Users2,
     step: '02',
     title: 'Get Matched with Investors',
     description: 'Our platform surfaces your campaign to verified investors who align with your industry and funding stage.',

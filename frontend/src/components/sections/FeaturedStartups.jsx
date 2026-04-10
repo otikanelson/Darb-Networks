@@ -97,7 +97,7 @@ const FeaturedStartups = () => {
               >
                 <CampaignCard
                   campaign={spotlight}
-                  size="featured"
+                  size="preview"
                   onFavoriteToggle={handleFavoriteToggle}
                   onViewClick={handleViewClick}
                 />
@@ -116,7 +116,7 @@ const FeaturedStartups = () => {
                 >
                   <CampaignCard
                     campaign={campaign}
-                    size="compact"
+                    size="preview"
                     onFavoriteToggle={handleFavoriteToggle}
                     onViewClick={handleViewClick}
                   />

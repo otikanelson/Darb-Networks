@@ -19,7 +19,7 @@ import { buildImageUrl } from '../../config/apiUrl';
 const CampaignCard = ({ 
   campaign, 
   showActions = true, 
-  size = 'default', // 'default', 'compact', 'featured'
+  size = 'default', // 'default', 'compact', 'featured', 'preview'
   showStatus = true,
   onFavoriteToggle,
   onViewClick 
@@ -182,6 +182,8 @@ const CampaignCard = ({
         return `${baseClasses} max-w-sm`;
       case 'featured':
         return `${baseClasses} max-w-md transform hover:scale-[1.02]`;
+      case 'preview':
+        return `${baseClasses}`;
       default:
         return baseClasses;
     }
@@ -192,10 +194,81 @@ const CampaignCard = ({
     switch (size) {
       case 'compact': return 'h-40';
       case 'featured': return 'h-56';
+      case 'preview': return 'h-44';
       default: return 'h-48';
     }
   };
 
+  // ── Preview layout (home page) ──────────────────────────────────────────────
+  if (size === 'preview') {
+    return (
+      <div className={getCardClasses()} onClick={handleCardClick}>
+        {/* Image */}
+        <div className={`relative ${getImageHeight()} overflow-hidden`}>
+          <img
+            src={getImageUrl()}
+            alt={campaign.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => { e.target.src = '/placeholder-campaign.jpg'; }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          {getStatusBadge()}
+
+          {/* Action buttons */}
+          {showActions && (
+            <div className="absolute top-3 left-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={handleFavoriteClick} disabled={isLoading} className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md">
+                <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+              </button>
+              <button onClick={handleShare} className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md">
+                <Share2 className="h-4 w-4 text-gray-600" />
+              </button>
+            </div>
+          )}
+
+          {/* Category pill overlaid on image */}
+          <div className="absolute bottom-3 left-3">
+            <span className="text-xs font-semibold text-white bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full">
+              {campaign.category}
+            </span>
+          </div>
+        </div>
+
+        {/* Minimal content */}
+        <div className="p-4">
+          <h3 className="text-base font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-green-700 transition-colors">
+            {campaign.title}
+          </h3>
+
+          {/* Progress bar */}
+          <div className="w-full bg-gray-100 rounded-full h-1.5 mb-2 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500"
+              style={{ width: `${fundingPercentage()}%` }}
+            />
+          </div>
+
+          {/* Raised + % */}
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-gray-800">{formatCurrency(campaign.current_amount || 0)} raised</span>
+            <span className="font-bold text-green-600">{fundingPercentage()}%</span>
+          </div>
+
+          {/* Founder */}
+          <div className="flex items-center mt-3 pt-3 border-t border-gray-100 space-x-2">
+            <div className="h-6 w-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-xs overflow-hidden flex-shrink-0">
+              {(campaign.founder_name || campaign.founderName || 'A').charAt(0).toUpperCase()}
+            </div>
+            <span className="text-xs text-gray-500 truncate">
+              {campaign.founder_name || campaign.founderName || 'Anonymous'}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Full layout ──────────────────────────────────────────────────────────────
   return (
     <div className={getCardClasses()} onClick={handleCardClick}>
       {/* Campaign Image */}
