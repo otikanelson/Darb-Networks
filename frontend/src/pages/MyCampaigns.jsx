@@ -7,6 +7,7 @@ import Footer from "../components/layout/Footer";
 import { buildApiUrl } from '../config/apiUrl';
 import CampaignCard from "../components/ui/CampaignCard";
 import CampaignService from "../services/CampaignService";
+import toast from 'react-hot-toast';
 import {
   Eye,
   Heart,
@@ -99,16 +100,15 @@ const MyCampaigns = () => {
       );
 
       if (response.ok) {
-        // Refresh the campaigns data
         loadAllCampaignData(true);
-        alert("Campaign deleted successfully");
+        toast.success("Campaign deleted successfully");
       } else {
         const result = await response.json();
-        alert(result.message || "Failed to delete campaign");
+        toast.error(result.message || "Failed to delete campaign");
       }
     } catch (error) {
       console.error("Error deleting campaign:", error);
-      alert("Failed to delete campaign");
+      toast.error("Failed to delete campaign");
     }
   };
 
@@ -129,9 +129,9 @@ const MyCampaigns = () => {
       console.log("✅ Campaign data loaded successfully");
     } catch (error) {
       console.error("❌ Error loading campaign data:", error);
-      setError(
-        "Some campaign data could not be loaded. Please try refreshing."
-      );
+      const msg = "Some campaign data could not be loaded. Please try refreshing.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -465,22 +465,6 @@ const MyCampaigns = () => {
             )}
           </div>
         </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start">
-            <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
-            <div>
-              <p className="text-red-800 font-medium">{error}</p>
-              <button
-                onClick={handleRefresh}
-                className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium flex items-center"
-              >
-                <RefreshCw className="h-3 w-3 mr-1" /> Retry
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-8">

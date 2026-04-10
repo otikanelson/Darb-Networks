@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { buildApiUrl } from '../config/apiUrl';
+import toast from 'react-hot-toast';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -15,12 +16,11 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     if (!token) {
-      setError('Invalid reset link');
+      toast.error('Invalid reset link');
     }
   }, [token]);
 
@@ -29,24 +29,22 @@ const ResetPassword = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
     
     if (formData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long');
       return;
     }
 
     setIsLoading(true);
-    setError('');
 
     try {
       const response = await fetch(buildApiUrl('/auth/reset-password'), {
@@ -68,10 +66,10 @@ const ResetPassword = () => {
           navigate('/login');
         }, 3000);
       } else {
-        setError(data.message || 'Failed to reset password');
+        toast.error(data.message || 'Failed to reset password');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      toast.error('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -106,12 +104,6 @@ const ResetPassword = () => {
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-              {error}
-            </div>
-          )}
-          
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
               New Password

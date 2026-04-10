@@ -1,330 +1,287 @@
-// src/components/sections/UserCampaignsSection.jsx - FIXED with horizontal scrolling
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Star, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
+import { CustomNav } from '../../hooks/CustomNavigation';
+import CampaignService from '../../services/CampaignService';
+import { buildImageUrl } from '../../config/apiUrl';
 
-import React, { useState, useEffect } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
-import CampaignCard from "../ui/CampaignCard";
-import { CustomNav } from "../../hooks/CustomNavigation";
-import CampaignService from "../../services/CampaignService";
+// ── Compact horizontal card used in the 2×2 grid ────────────────────────────
+const CompactCard = ({ campaign, onClick }) => {
+  const imageUrl = campaign.main_image_url
+    ? campaign.main_image_url.startsWith('http')
+      ? campaign.main_image_url
+      : buildImageUrl(campaign.main_image_url)
+    : '/assets/placeholder-campaign.jpg';
 
+  const pct = Math.min(
+    Math.round(((campaign.current_amount || 0) / (campaign.target_amount || 1)) * 100),
+    100
+  );
+
+  const fmt = (n) =>
+    new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n || 0);
+
+  return (
+    <motion.div
+      onClick={onClick}
+      whileHover={{ x: 4 }}
+      transition={{ duration: 0.2 }}
+      className="flex gap-4 bg-white/8 hover:bg-white/14 backdrop-blur-sm rounded-2xl p-3 cursor-pointer group transition-colors"
+    >
+      {/* Thumbnail */}
+      <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+        <img src={imageUrl} alt={campaign.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => { e.target.src = '/assets/placeholder-campaign.jpg'; }} />
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <span className="text-xs font-medium text-green-400 uppercase tracking-wide">{campaign.category}</span>
+        <h4 className="text-sm font-semibold text-white leading-snug line-clamp-2 mt-0.5 group-hover:text-green-300 transition-colors">
+          {campaign.title}
+        </h4>
+        {/* Mini progress */}
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+            <div className="h-full bg-green-400 rounded-full" style={{ width: `${pct}%` }} />
+          </div>
+          <span className="text-xs text-green-300 font-medium flex-shrink-0">{pct}%</span>
+        </div>
+        <p className="text-xs text-gray-400 mt-1">{fmt(campaign.current_amount)} raised</p>
+      </div>
+    </motion.div>
+  );
+};
+
+// ── Hero tall card ────────────────────────────────────────────────────────────
+const HeroCard = ({ campaign, onClick }) => {
+  const imageUrl = campaign.main_image_url
+    ? campaign.main_image_url.startsWith('http')
+      ? campaign.main_image_url
+      : buildImageUrl(campaign.main_image_url)
+    : '/assets/placeholder-campaign.jpg';
+
+  const pct = Math.min(
+    Math.round(((campaign.current_amount || 0) / (campaign.target_amount || 1)) * 100),
+    100
+  );
+
+  const fmt = (n) =>
+    new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n || 0);
+
+  return (
+    <motion.div
+      onClick={onClick}
+      whileHover={{ scale: 1.015 }}
+      transition={{ duration: 0.3 }}
+      className="relative h-full min-h-[420px] rounded-3xl overflow-hidden cursor-pointer group"
+    >
+      <img src={imageUrl} alt={campaign.title}
+        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        onError={(e) => { e.target.src = '/assets/placeholder-campaign.jpg'; }} />
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+
+      {/* Featured badge */}
+      <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-yellow-400/90 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">
+        <Star className="h-3 w-3 fill-current" /> FEATURED
+      </div>
+
+      {/* Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-6">
+        <span className="text-xs font-semibold text-green-400 uppercase tracking-widest">{campaign.category}</span>
+        <h3 className="text-2xl font-bold text-white mt-1 mb-2 leading-tight group-hover:text-green-300 transition-colors">
+          {campaign.title}
+        </h3>
+        <p className="text-gray-300 text-sm line-clamp-2 mb-4">{campaign.description}</p>
+
+        {/* Progress */}
+        <div className="mb-3">
+          <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <span>{fmt(campaign.current_amount)} raised</span>
+            <span className="text-green-400 font-semibold">{pct}%</span>
+          </div>
+          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-green-400 to-green-300 rounded-full" style={{ width: `${pct}%` }} />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-green-500/30 flex items-center justify-center text-white text-xs font-bold">
+              {(campaign.founder_name || 'A').charAt(0).toUpperCase()}
+            </div>
+            <span className="text-sm text-gray-300">{campaign.founder_name || 'Anonymous'}</span>
+          </div>
+          <div className="flex items-center gap-1 text-green-400 text-sm font-semibold group-hover:gap-2 transition-all">
+            <span>View</span><ArrowRight className="h-4 w-4" />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ── Main section ──────────────────────────────────────────────────────────────
 const UserCampaignsSection = () => {
-  const { user, isAuthenticated } = useAuth();
-  const [viewedCampaigns, setViewedCampaigns] = useState([]);
-  const [favoriteCampaigns, setFavoriteCampaigns] = useState([]);
-  const [userCampaigns, setUserCampaigns] = useState([]);
-  const [activeTab, setActiveTab] = useState("viewed");
+  const { isAuthenticated } = useAuth();
+  const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
   const navigate = CustomNav();
 
   useEffect(() => {
-    loadCampaigns();
-  }, [user, isAuthenticated]);
-
-  // Handle scroll functionality
-  useEffect(() => {
-    const container = document.getElementById('user-campaigns-container');
-    if (container) {
-      const updateScrollButtons = () => {
-        setCanScrollLeft(container.scrollLeft > 0);
-        setCanScrollRight(
-          container.scrollLeft < container.scrollWidth - container.clientWidth
-        );
-      };
-
-      container.addEventListener('scroll', updateScrollButtons);
-      updateScrollButtons(); // Initial check
-
-      return () => container.removeEventListener('scroll', updateScrollButtons);
-    }
-  }, [activeTab]);
-
-  const loadCampaigns = async () => {
-    try {
-      setLoading(true);
-      console.log('Loading campaigns for UserCampaignsSection');
-      
-      // Load more campaigns for better scrolling experience (6-9 campaigns)
-      const viewed = await CampaignService.getAllCampaigns({ limit: 9 });
-      setViewedCampaigns(viewed.slice(0, 9)); // Show up to 9 for scrolling
-
-      // Load other data based on authentication
-      if (isAuthenticated() && user) {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const data = await CampaignService.getFeaturedCampaigns(5);
+        // fallback to all campaigns if not enough featured
+        if (data.length < 3) {
+          const all = await CampaignService.getAllCampaigns({ limit: 5 });
+          setCampaigns(all.slice(0, 5));
+        } else {
+          setCampaigns(data.slice(0, 5));
+        }
+      } catch {
         try {
-          // Load favorites
-          const favorites = await CampaignService.getFavoriteCampaigns();
-          setFavoriteCampaigns(favorites.slice(0, 9));
-        } catch (error) {
-          console.error('Error loading favorites:', error);
-        }
-
-        // Load user-specific campaigns based on type
-        if (user.userType === "founder") {
-          try {
-            const created = await CampaignService.getCreatedCampaigns();
-            setUserCampaigns(created.all?.slice(0, 9) || []);
-          } catch (error) {
-            console.error('Error loading created campaigns:', error);
-          }
-        } else if (user.userType === "investor") {
-          try {
-            const funded = await CampaignService.getFundedCampaigns();
-            setUserCampaigns(funded.slice(0, 9) || []);
-          } catch (error) {
-            console.error('Error loading funded campaigns:', error);
-          }
-        }
+          const all = await CampaignService.getAllCampaigns({ limit: 5 });
+          setCampaigns(all.slice(0, 5));
+        } catch { /* silent */ }
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading campaigns for UserCampaignsSection:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    load();
+  }, []);
 
-  // Scroll functions
-  const scrollLeft = () => {
-    const container = document.getElementById('user-campaigns-container');
-    if (container) {
-      container.scrollBy({ left: -400, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    const container = document.getElementById('user-campaigns-container');
-    if (container) {
-      container.scrollBy({ left: 400, behavior: 'smooth' });
-    }
-  };
-
-  // Dynamically determine which tabs to show based on user state
-  const getTabs = () => {
-    // Start with viewed tab that works for all users
-    const tabs = [{ id: "viewed", label: "Recently Viewed" }];
-
-    // Add favorites tab for authenticated users
-    if (isAuthenticated()) {
-      tabs.push({ id: "favorites", label: "Favorites" });
-
-      // Add user type specific tab
-      if (user?.userType === "founder") {
-        tabs.push({ id: "created", label: "Your Campaigns" });
-      } else if (user?.userType === "investor") {
-        tabs.push({ id: "funded", label: "Funded Campaigns" });
-      }
-    }
-
-    return tabs;
-  };
-
-  const getActiveCampaigns = () => {
-    switch (activeTab) {
-      case "viewed":
-        return viewedCampaigns;
-      case "favorites":
-        return favoriteCampaigns;
-      case "created":
-      case "funded":
-        return userCampaigns;
-      default:
-        return [];
-    }
-  };
-
-  const handleFavoriteToggle = async (campaignId) => {
-    if (!isAuthenticated()) {
-      alert('Please log in to save campaigns');
-      return false;
-    }
-    
-    try {
-      return await CampaignService.toggleFavorite(campaignId);
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-      return false;
-    }
-  };
-
-  const handleViewClick = async (campaignId) => {
-    try {
-      await CampaignService.trackView(campaignId);
-    } catch (error) {
-      console.error('Error tracking view:', error);
-    }
-  };
-
-  const tabs = getTabs();
-  const activeCampaigns = getActiveCampaigns();
+  const [hero, ...rest] = campaigns;
 
   return (
-    <section className="relative py-24">
-      {/* Background Image Container */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-900/95 via-gray-900/90 to-green-800/90" />
-        <img
-          src="/src/assets/featured-bg.png"
-          alt="Background Pattern"
-          className="w-full h-full object-cover opacity-10"
-        />
-      </div>
+    <section className="relative py-24 overflow-hidden">
+      {/* Dark gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-900 to-green-950" />
+      <img src="/assets/featured-bg.png" alt=""
+        className="absolute inset-0 w-full h-full object-cover opacity-5 pointer-events-none" />
 
-      {/* Content Container */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            {isAuthenticated()
-              ? "Your Campaign Journey"
-              : "Recently Viewed Campaigns"}
-          </h2>
-          <p className="text-green-100 text-lg max-w-2xl mx-auto">
-            {isAuthenticated()
-              ? `Track your interactions, favorites, and ${
-                  user?.userType === "founder" ? "created" : "funded"
-                } campaigns all in one place.`
-              : "Campaigns you've viewed recently will appear here. Sign in to save your favorites."}
-          </p>
-
-          {/* Login prompt for unauthenticated users */}
-          {!isAuthenticated() && (
-            <button
-              onClick={() => navigate("/login")}
-              className="mt-4 px-6 py-2 bg-white text-purple-600 rounded-full hover:bg-purple-50 transition-colors"
-            >
-              Sign in to track favorites
-            </button>
-          )}
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 mb-8 inline-flex items-center justify-center space-x-1 mx-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                py-2 px-6 rounded-lg font-medium text-sm transition-all duration-200
-                ${
-                  activeTab === tab.id
-                    ? "bg-white text-purple-600 shadow-sm"
-                    : "text-white hover:bg-white/10"
-                }
-              `}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Campaign Grid */}
-        <div className="mt-8">
-          {loading ? (
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 flex justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+        {/* Header */}
+        <motion.div
+          className="flex items-end justify-between mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-5 w-5 text-green-400" />
+              <span className="text-green-400 font-semibold text-sm uppercase tracking-widest">Top Picks</span>
             </div>
-          ) : activeCampaigns.length > 0 ? (
-            // FIXED: Horizontal scrollable container
-            <div className="relative">
-              {/* Scroll buttons */}
-              {canScrollLeft && (
-                <button
-                  onClick={scrollLeft}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-3 rounded-full shadow-lg transition-all"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-              )}
-              
-              {canScrollRight && (
-                <button
-                  onClick={scrollRight}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-3 rounded-full shadow-lg transition-all"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              )}
-
-              {/* FIXED: Scrollable campaigns container */}
-              <div
-                id="user-campaigns-container"
-                className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-12"
-                style={{
-                  scrollbarWidth: 'none', /* Firefox */
-                  msOverflowStyle: 'none',  /* Internet Explorer 10+ */
-                }}
-              >
-                {activeCampaigns.map((campaign) => (
-                  <div
-                    key={campaign.id}
-                    className="flex-none w-80" // Fixed width for consistent sizing
-                  >
-                    <CampaignCard
-                      campaign={campaign}
-                      size="preview"
-                      onFavoriteToggle={handleFavoriteToggle}
-                      onViewClick={handleViewClick}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 text-center">
-              <p className="text-white text-lg">
-                {activeTab === "viewed" && "No campaigns viewed yet"}
-                {activeTab === "favorites" && "No favorite campaigns yet"}
-                {activeTab === "created" &&
-                  "You haven't created any campaigns yet"}
-                {activeTab === "funded" &&
-                  "You haven't funded any campaigns yet"}
-              </p>
-              <p className="text-green-100 mt-2">
-                {activeTab === "viewed" &&
-                  "Explore our campaigns to get started!"}
-                {activeTab === "favorites" &&
-                  "Save campaigns you like to find them here"}
-                {activeTab === "created" && (
-                  <button
-                    onClick={() => navigate("/pages/CreateCampaign")}
-                    className="mt-4 px-6 py-2 bg-white text-purple-600 rounded-full hover:bg-purple-50 transition-colors"
-                  >
-                    Create your first campaign
-                  </button>
-                )}
-                {activeTab === "funded" && "Invest in campaigns you believe in"}
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="text-center mt-12">
+            <h2 className="text-4xl font-bold text-white">Campaigns to Watch</h2>
+            <p className="text-gray-400 mt-2">Hand-picked opportunities from across Africa</p>
+          </div>
           <button
-            onClick={() => navigate("/my-campaigns")}
-            className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border border-white/20 
-                     px-8 py-3 rounded-full transition-colors flex items-center space-x-2 mx-auto"
+            onClick={() => navigate('/dashboard')}
+            className="hidden md:flex items-center gap-2 text-green-400 hover:text-green-300 font-semibold transition-colors"
           >
-            <span>View Campaigns</span>
-            <ArrowRight className="h-5 w-5 ml-2" />
+            <span>Browse all</span><ArrowRight className="h-5 w-5" />
+          </button>
+        </motion.div>
+
+        {/* Content */}
+        {loading ? (
+          <div className="flex justify-center py-24">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-400 border-t-transparent" />
+          </div>
+        ) : campaigns.length === 0 ? (
+          <div className="text-center py-24">
+            <p className="text-gray-400 text-lg mb-6">No featured campaigns yet.</p>
+            <button onClick={() => navigate('/dashboard')}
+              className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full inline-flex items-center gap-2">
+              <span>Browse All Startups</span><ArrowRight className="h-5 w-5" />
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+            {/* Hero card — spans 2 cols */}
+            {hero && (
+              <motion.div
+                className="lg:col-span-2"
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, ease: 'easeOut' }}
+              >
+                <HeroCard campaign={hero} onClick={() => navigate(`/campaign/${hero.id}`)} />
+              </motion.div>
+            )}
+
+            {/* 2×2 compact grid — spans 3 cols */}
+            <motion.div
+              className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 content-start"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, ease: 'easeOut', delay: 0.1 }}
+            >
+              {rest.slice(0, 4).map((c, i) => (
+                <motion.div key={c.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.15 + i * 0.08 }}
+                >
+                  <CompactCard campaign={c} onClick={() => navigate(`/campaign/${c.id}`)} />
+                </motion.div>
+              ))}
+
+              {/* CTA tile if fewer than 4 side campaigns */}
+              {rest.length < 4 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                  onClick={() => navigate('/dashboard')}
+                  className="flex flex-col items-center justify-center gap-3 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 rounded-2xl p-6 cursor-pointer transition-colors group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <ArrowRight className="h-5 w-5 text-green-400 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <p className="text-green-300 font-semibold text-sm text-center">Explore more startups</p>
+                </motion.div>
+              )}
+            </motion.div>
+          </div>
+        )}
+
+        {/* Mobile CTA */}
+        <div className="text-center mt-10 md:hidden">
+          <button onClick={() => navigate('/dashboard')}
+            className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full inline-flex items-center gap-2">
+            <span>View All Campaigns</span><ArrowRight className="h-5 w-5" />
           </button>
         </div>
-      </div>
 
-      {/* Hide scrollbar styles */}
-      <style jsx global>{`
-        .scrollbar-hide {
-          -webkit-overflow-scrolling: touch;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+        {/* Sign-in nudge for guests */}
+        {!isAuthenticated() && campaigns.length > 0 && (
+          <motion.div
+            className="mt-10 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <p className="text-gray-400 text-sm">
+              Want to save campaigns and track your investments?{' '}
+              <button onClick={() => navigate('/register')}
+                className="text-green-400 hover:text-green-300 font-semibold underline underline-offset-2">
+                Create a free account
+              </button>
+            </p>
+          </motion.div>
+        )}
+      </div>
     </section>
   );
 };

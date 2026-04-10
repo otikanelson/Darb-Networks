@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -24,7 +24,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
     
     console.log('Submitting login form with:', { email, password: '******' });
@@ -42,9 +41,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      
-      setError('Invalid email or password. Please try again.');
-      
+      toast.error('Invalid email or password. Please try again.');
       setIsLoading(false);
     }
   };
@@ -104,13 +101,6 @@ const Login = () => {
               </Link>
             </p>
           </div>
-          
-          {error && (
-            <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md flex items-center" role="alert">
-              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>

@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildApiUrl, buildImageUrl } from '../../config/apiUrl';
 import RichEditor from './RichEditor';
+import toast from 'react-hot-toast';
 import {
   ChevronLeft, ChevronRight, Check, AlertCircle, Save,
   Send, X, Upload, Plus, Trash2, Image as ImageIcon,
@@ -319,8 +320,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
 
   const next = () => {
     const e = validate(step);
-    if (Object.keys(e).length) { setErrors(e); setGlobalError('Please fix the errors above before continuing.'); return; }
-    setErrors({});
+    if (Object.keys(e).length) { setErrors(e); setGlobalError('Please fix the errors above before continuing.'); return; }    setErrors({});
     setGlobalError('');
     setStep(s => Math.min(s + 1, STEPS.length - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -375,6 +375,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
       if (Object.keys(allErrors).length) {
         setErrors(allErrors);
         setGlobalError('Some required fields are missing. Please review all steps.');
+        toast.error('Some required fields are missing. Please review all steps.');
         return;
       }
     }
@@ -420,7 +421,9 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
 
       navigate(isDraft ? '/my-campaigns' : `/campaign/${cId}`);
     } catch (err) {
-      setGlobalError(err.message || 'Something went wrong. Please try again.');
+      const msg = err.message || 'Something went wrong. Please try again.';
+      setGlobalError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
       setSubmitting(false);

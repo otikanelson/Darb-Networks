@@ -1,1030 +1,522 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
-import { buildApiUrl, buildImageUrl } from '../config/apiUrl';
+import { buildApiUrl, buildImageUrl } from "../config/apiUrl";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
-import MobileFilters from "../components/MobileFilters";
 import CampaignCard from "../components/ui/CampaignCard";
 import CampaignService from "../services/CampaignService";
-
-import {
-  Search,
-  Grid,
-  List,
-  ChevronDown,
-  Plus,
-  Clock,
-  CheckCircle,
-  Filter,
-  Calendar,
-  Eye,
-  Heart,
-  PenLine,
-  DollarSign,
-  FileText,
-  Edit,
-  ArrowUpDown,
-  Loader,
-  X,
-  SlidersHorizontal,
-  MapPin,
-  Building,
-  User
-} from "lucide-react";
 import { CustomNav } from "../hooks/CustomNavigation";
+import {
+  Search, Grid, List, ChevronDown, CheckCircle, Filter,
+  Eye, Heart, PenLine, DollarSign, FileText, ArrowUpDown,
+  X, SlidersHorizontal, MapPin, Building, Star, Sparkles,
+  TrendingUp, Plus, ChevronLeft, ChevronRight,
+} from "lucide-react";
 
-// Campaign Skeleton Loader Component
+// ── Skeleton ─────────────────────────────────────────────────────────────────
 const CampaignSkeleton = () => (
-  <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 animate-pulse">
-    <div className="h-48 bg-gray-200 w-full"></div>
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-2">
-        <div className="h-6 bg-gray-200 rounded-full w-1/4"></div>
-        <div className="h-4 bg-gray-200 rounded-full w-1/5"></div>
+  <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 animate-pulse">
+    <div className="h-48 bg-gradient-to-r from-gray-100 to-gray-200 w-full" />
+    <div className="p-5 space-y-3">
+      <div className="flex justify-between">
+        <div className="h-5 bg-gray-100 rounded-full w-1/4" />
+        <div className="h-4 bg-gray-100 rounded-full w-1/5" />
       </div>
-      <div className="h-7 bg-gray-200 rounded w-3/4 mb-3"></div>
-      <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-      <div className="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
-      <div className="h-2 bg-gray-200 rounded-full mb-3"></div>
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <div className="h-6 bg-gray-200 rounded mb-1"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        </div>
-        <div>
-          <div className="h-6 bg-gray-200 rounded mb-1"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        </div>
-        <div>
-          <div className="h-6 bg-gray-200 rounded mb-1"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        </div>
+      <div className="h-6 bg-gray-100 rounded w-3/4" />
+      <div className="h-4 bg-gray-100 rounded w-full" />
+      <div className="h-2 bg-gray-100 rounded-full" />
+      <div className="grid grid-cols-3 gap-3 pt-1">
+        {[0,1,2].map(i => <div key={i} className="h-8 bg-gray-100 rounded" />)}
       </div>
     </div>
   </div>
 );
 
+// ── List-view card ────────────────────────────────────────────────────────────
+const ListCard = ({ campaign, navigate, buildImageUrl, formatCurrency, calcPct }) => {
+  const pct = calcPct(campaign.current_amount, campaign.target_amount);
+  const imgSrc = campaign.main_image_url
+    ? campaign.main_image_url.startsWith("http")
+      ? campaign.main_image_url
+      : buildImageUrl(campaign.main_image_url)
+    : "/assets/placeholder-campaign.jpg";
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.25 }}
+      onClick={() => navigate(`/campaign/${campaign.id}`)}
+      className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-green-200 hover:shadow-lg shadow-sm cursor-pointer flex transition-all duration-200"
+    >
+      <div className="w-52 h-44 flex-shrink-0 relative overflow-hidden">
+        <img src={imgSrc} alt={campaign.title}
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          onError={e => { e.target.src = "/assets/placeholder-campaign.jpg"; }} />
+        {campaign.is_featured && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full">
+            <Star className="h-3 w-3 fill-current" /> Featured
+          </div>
+        )}
+      </div>
+      <div className="flex-1 p-5">
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div>
+            <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{campaign.category}</span>
+            <h3 className="text-lg font-bold text-gray-900 mt-1.5 line-clamp-1">{campaign.title}</h3>
+            <div className="flex items-center text-xs text-gray-400 mt-0.5 gap-1">
+              <MapPin className="h-3 w-3" />{campaign.location}
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <div className="text-lg font-bold text-green-600">{pct}%</div>
+            <div className="text-xs text-gray-400">funded</div>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{campaign.description}</p>
+        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
+          <motion.div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
+            initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: "easeOut" }} />
+        </div>
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <span className="font-semibold text-gray-800">{formatCurrency(campaign.current_amount || 0)}</span>
+          <span>of {formatCurrency(campaign.target_amount)}</span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{campaign.view_count || 0}</span>
+            <span className="flex items-center gap-1"><Heart className="h-3 w-3" />{campaign.favorite_count || 0}</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ── Main Dashboard ────────────────────────────────────────────────────────────
 const Dashboard = () => {
-  // URL search params for handling search and filters
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  // Basic state variables
   const [campaigns, setCampaigns] = useState([]);
   const [filteredCampaigns, setFilteredCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFilter, setSelectedFilter] = useState("All Campaigns");
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("Date Posted");
   const [searchTerm, setSearchTerm] = useState("");
-  const { user, isAuthenticated } = useAuth();
-  const navigate = CustomNav();
-
-  // Enhanced filter state
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalCampaigns, setTotalCampaigns] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
-  const [limit, setLimit] = useState(12);
-  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
-  const [selectedStage, setSelectedStage] = useState("");
-  const [error, setError] = useState(null);
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(null);
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef(null);
+  const limit = 12;
 
-  // Define user types
-  const isFounder = user && user.userType && user.userType.toLowerCase() === "founder";
-  const isInvestor = user && user.userType && user.userType.toLowerCase() === "investor";
+  const { user, isAuthenticated } = useAuth();
+  const navigate = CustomNav();
+  const isFounder = user?.userType?.toLowerCase() === "founder";
+  const isInvestor = user?.userType?.toLowerCase() === "investor";
 
-  // Enhanced categories with proper mapping
   const categories = {
-    "Tech & Innovation": [
-      "Audio",
-      "Tools",
-      "Education", 
-      "Energy & Green Tech",
-      "Fashion & Wearables",
-      "Food & Beverages",
-      "Health & Fitness",
-      "Home",
-      "Phones & Accessories",
-      "Productivity",
-      "Transportation",
-      "Travel & Outdoors",
-    ],
-    "Creative Works": [
-      "Art",
-      "Comics", 
-      "Dance & Theater",
-      "Film",
-      "Music",
-      "Photography",
-      "Podcasts, Blogs & Vlogs",
-      "Tabletop Games",
-      "Video Games", 
-      "TV series & Shows",
-      "Writing & Publishing",
-    ],
-    "Community Projects": [
-      "Culture",
-      "Environment",
-      "Human Rights",
-      "Local Businesses",
-      "Wellness",
-    ],
+    "Tech & Innovation": ["Audio","Tools","Education","Energy & Green Tech","Fashion & Wearables","Food & Beverages","Health & Fitness","Home","Phones & Accessories","Productivity","Transportation","Travel & Outdoors"],
+    "Creative Works": ["Art","Comics","Dance & Theater","Film","Music","Photography","Podcasts, Blogs & Vlogs","Tabletop Games","Video Games","TV series & Shows","Writing & Publishing"],
+    "Community Projects": ["Culture","Environment","Human Rights","Local Businesses","Wellness"],
   };
 
-  // Flatten all categories for search
-  const allCategories = Object.values(categories).flat();
-
-  // Filter options
   const filterOptions = [
-    { id: "all", label: "All Campaigns" },
-    { id: "goal-reached", label: "Goal Reached" },
-    { id: "goal-unreached", label: "Goal Unreached" },
-    { id: "active", label: "Active" },
-    { id: "featured", label: "Featured" },
+    { id: "all",           label: "All Campaigns", icon: null },
+    { id: "featured",      label: "Featured",      icon: <Star className="h-3.5 w-3.5" /> },
+    { id: "goal-reached",  label: "Goal Reached",  icon: <CheckCircle className="h-3.5 w-3.5" /> },
+    { id: "active",        label: "Active",        icon: <TrendingUp className="h-3.5 w-3.5" /> },
   ];
 
-  const stageFilterOptions = [
-    { label: "All Stages", value: "" },
-    { label: "Concept", value: "concept" },
-    { label: "Prototype", value: "prototype" },
-    { label: "MVP", value: "mvp" },
-    { label: "Market", value: "market" },
-    { label: "Scaling", value: "scaling" },
-  ];
-
-  // Initialize from URL params
+  // Close sort dropdown on outside click
   useEffect(() => {
-    const searchFromUrl = searchParams.get('search') || '';
-    const categoryFromUrl = searchParams.get('category') || 'All Categories';
-    const filterFromUrl = searchParams.get('filter') || 'All Campaigns';
-    
-    setSearchTerm(searchFromUrl);
-    setSelectedCategory(categoryFromUrl);
-    setSelectedFilter(filterFromUrl);
-  }, [searchParams]);
-
-  // Load campaigns
-  useEffect(() => {
-    loadCampaigns();
+    const handler = (e) => { if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Apply filters and search whenever data or filters change
   useEffect(() => {
-    applyFiltersAndSearch();
-  }, [campaigns, selectedCategory, selectedFilter, searchTerm, sortBy]);
+    setSearchTerm(searchParams.get("search") || "");
+    setSelectedCategory(searchParams.get("category") || "All Categories");
+    setSelectedFilter(searchParams.get("filter") || "All Campaigns");
+  }, [searchParams]);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedCategory, selectedFilter, searchTerm, sortBy]);
+  useEffect(() => { loadCampaigns(); }, []);
 
-  const loadCampaigns = async (forceRefresh = false) => {
+  useEffect(() => { applyFilters(); }, [campaigns, selectedCategory, selectedFilter, searchTerm, sortBy]);
+
+  useEffect(() => { setCurrentPage(1); }, [selectedCategory, selectedFilter, searchTerm, sortBy]);
+
+  const loadCampaigns = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      console.log('🔍 Loading campaigns...');
-      
-      const response = await fetch(buildApiUrl('/campaigns'));
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
+      setLoading(true); setError(null);
+      const response = await fetch(buildApiUrl("/campaigns"));
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const result = await response.json();
-      console.log('📦 Campaigns loaded:', result);
-      
-      const campaignData = result.success ? result.data : result;
-      setCampaigns(campaignData || []);
-      setTotalCampaigns(campaignData?.length || 0);
-      
-    } catch (error) {
-      console.error('❌ Load campaigns error:', error);
-      setError('Failed to load campaigns: ' + error.message);
+      const data = result.success ? result.data : result;
+      setCampaigns(data || []);
+      setTotalCampaigns(data?.length || 0);
+    } catch (err) {
+      setError("Failed to load campaigns. Please try again.");
       setCampaigns([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const applyFiltersAndSearch = () => {
-    let filtered = [...campaigns];
-
-    console.log('🔧 Applying filters:', { 
-      searchTerm, 
-      selectedCategory, 
-      selectedFilter, 
-      totalCampaigns: campaigns.length 
-    });
-
-    // Apply search filter
+  const applyFilters = () => {
+    let f = [...campaigns];
     if (searchTerm.trim()) {
-      const query = searchTerm.toLowerCase();
-      filtered = filtered.filter(campaign => 
-        campaign.title?.toLowerCase().includes(query) ||
-        campaign.description?.toLowerCase().includes(query) ||
-        campaign.category?.toLowerCase().includes(query) ||
-        campaign.founder_name?.toLowerCase().includes(query) ||
-        campaign.location?.toLowerCase().includes(query)
-      );
+      const q = searchTerm.toLowerCase();
+      f = f.filter(c => [c.title, c.description, c.category, c.founder_name, c.location].some(v => v?.toLowerCase().includes(q)));
     }
-
-    // Apply category filter
-    if (selectedCategory && selectedCategory !== "All Categories") {
-      // Check if it's a main category or subcategory
+    if (selectedCategory !== "All Categories") {
       if (Object.keys(categories).includes(selectedCategory)) {
-        // Main category - include all subcategories
-        const subcategories = categories[selectedCategory];
-        filtered = filtered.filter(campaign => 
-          subcategories.includes(campaign.category)
-        );
+        const subs = categories[selectedCategory];
+        f = f.filter(c => subs.includes(c.category));
       } else {
-        // Specific subcategory
-        filtered = filtered.filter(campaign => 
-          campaign.category === selectedCategory
-        );
+        f = f.filter(c => c.category === selectedCategory);
       }
     }
-
-    // Apply status filter
-    if (selectedFilter && selectedFilter !== "All Campaigns") {
-      switch (selectedFilter) {
-        case "Goal Reached":
-          filtered = filtered.filter(campaign => 
-            (campaign.current_amount || 0) >= (campaign.target_amount || 1)
-          );
-          break;
-        case "Goal Unreached":
-          filtered = filtered.filter(campaign => 
-            (campaign.current_amount || 0) < (campaign.target_amount || 1)
-          );
-          break;
-        case "Active":
-          filtered = filtered.filter(campaign => 
-            campaign.status === 'approved' && 
-            (campaign.current_amount || 0) < (campaign.target_amount || 1)
-          );
-          break;
-        case "Featured":
-          filtered = filtered.filter(campaign => {
-            // Handle different possible field names for featured status
-            return campaign.is_featured === true || 
-                   campaign.is_featured === 1 || 
-                   campaign.isFeatured === true ||
-                   campaign.featured === true;
-          });
-          break;
-      }
+    switch (selectedFilter) {
+      case "Goal Reached": f = f.filter(c => (c.current_amount||0) >= (c.target_amount||1)); break;
+      case "Active":       f = f.filter(c => c.status === "approved" && (c.current_amount||0) < (c.target_amount||1)); break;
+      case "Featured":     f = f.filter(c => c.is_featured || c.isFeatured); break;
     }
-
-    // Apply sorting
     switch (sortBy) {
-      case "Most Funded":
-        filtered.sort((a, b) => (b.current_amount || 0) - (a.current_amount || 0));
-        break;
-      case "End Date":
-        filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        break;
-      case "Date Posted":
-      default:
-        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        break;
+      case "Most Funded": f.sort((a,b) => (b.current_amount||0) - (a.current_amount||0)); break;
+      case "End Date":    f.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)); break;
+      default:            f.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
     }
+    setFilteredCampaigns(f);
+    setFilteredCount(f.length);
+  };
 
-    setFilteredCampaigns(filtered);
-    setFilteredCount(filtered.length);
-    setTotalPages(Math.ceil(filtered.length / limit));
-
-    console.log('✅ Filters applied:', {
-      original: campaigns.length,
-      filtered: filtered.length,
-      pages: Math.ceil(filtered.length / limit)
+  const updateURL = (updates) => {
+    const p = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([k, v]) => {
+      if (!v || v === "All Categories" || v === "All Campaigns") p.delete(k);
+      else p.set(k, v);
     });
+    setSearchParams(p);
   };
 
-  const handleFavoriteToggle = async (campaignId) => {
-    try {
-      return await CampaignService.toggleFavorite(campaignId);
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-      return false;
-    }
+  const clearAll = () => {
+    setSearchTerm(""); setSelectedCategory("All Categories"); setSelectedFilter("All Campaigns");
+    updateURL({ search: null, category: null, filter: null });
   };
 
-  const handleViewClick = async (campaignId) => {
-    try {
-      await CampaignService.trackView(campaignId);
-    } catch (error) {
-      console.error("Error tracking view:", error);
-    }
-  };
+  const fmt = (n) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n || 0);
+  const calcPct = (cur, tgt) => !tgt ? 0 : Math.min(Math.round((cur / tgt) * 100), 100);
 
-  // Handle search
-  const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    updateURLParams({ search: value });
-  };
+  const paginated = filteredCampaigns.slice((currentPage - 1) * limit, currentPage * limit);
+  const totalPages = Math.ceil(filteredCount / limit);
+  const hasFilters = searchTerm || selectedCategory !== "All Categories" || selectedFilter !== "All Campaigns";
 
-  const clearSearch = () => {
-    setSearchTerm("");
-    updateURLParams({ search: null });
-  };
+  const handleFavoriteToggle = async (id) => { try { return await CampaignService.toggleFavorite(id); } catch { return false; } };
+  const handleViewClick = async (id) => { try { await CampaignService.trackView(id); } catch {} };
 
-  // Update URL parameters
-  const updateURLParams = (updates) => {
-    const newParams = new URLSearchParams(searchParams);
-    
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === '' || value === 'All Categories' || value === 'All Campaigns') {
-        newParams.delete(key);
-      } else {
-        newParams.set(key, value);
-      }
-    });
-    
-    setSearchParams(newParams);
-  };
-
-  // Handle filter changes
-  const handleFilterChange = (filter) => {
-    setSelectedFilter(filter);
-    updateURLParams({ filter: filter });
-  };
-
-  const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
-    updateURLParams({ category: category });
-  };
-
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // Calculate progress percentage
-  const calculateProgress = (current, target) => {
-    if (!target || target === 0) return 0;
-    const percentage = (current / target) * 100;
-    return Math.min(percentage, 100);
-  };
-
-  // Get current page campaigns
-  const getCurrentPageCampaigns = () => {
-    const startIndex = (currentPage - 1) * limit;
-    const endIndex = startIndex + limit;
-    return filteredCampaigns.slice(startIndex, endIndex);
-  };
-
-  // Pagination component
-  const PaginationControls = () => {
-    if (totalPages <= 1) return null;
-
-    return (
-      <div className="flex justify-center my-8">
-        <nav className="flex items-center">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-2 rounded-md mr-2 border border-gray-300 
-                   bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-
-          <div className="flex space-x-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else {
-                const startPage = Math.max(1, currentPage - 2);
-                const endPage = Math.min(totalPages, startPage + 4);
-                pageNum = startPage + i;
-                if (pageNum > endPage) return null;
-              }
-
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-md 
-                          ${
-                            currentPage === pageNum
-                              ? "bg-green-600 text-white font-medium"
-                              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                          }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-
-            {totalPages > 5 && currentPage < totalPages - 2 && (
-              <span className="w-10 h-10 flex items-center justify-center">
-                ...
-              </span>
-            )}
-
-            {totalPages > 5 && currentPage < totalPages - 1 && (
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                className="w-10 h-10 flex items-center justify-center rounded-md bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-              >
-                {totalPages}
-              </button>
-            )}
-          </div>
-
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-2 rounded-md ml-2 border border-gray-300 
-                   bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </nav>
-      </div>
-    );
-  };
-
-  // Enhanced Category Filter component
+  // ── Sidebar category filter ─────────────────────────────────────────────────
   const CategoryFilter = () => (
-    <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-      <h3 className="font-bold text-gray-900 mb-4">Categories</h3>
-
-      <div className="space-y-3">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">Categories</h3>
+      <div className="space-y-1">
         <button
-          className={`text-sm w-full text-left ${
-            selectedCategory === "All Categories"
-              ? "text-green-600 font-medium"
-              : "text-gray-700"
-          }`}
-          onClick={() => handleCategoryChange("All Categories")}
-        >
-          All Categories
-        </button>
-
-        {Object.entries(categories).map(([group, subcategories]) => (
-          <div key={group} className="space-y-2">
+          onClick={() => { setSelectedCategory("All Categories"); updateURL({ category: null }); }}
+          className={`w-full text-left text-sm px-3 py-2 rounded-xl transition-colors ${selectedCategory === "All Categories" ? "bg-green-50 text-green-700 font-semibold" : "text-gray-600 hover:bg-gray-50"}`}
+        >All Categories</button>
+        {Object.entries(categories).map(([group, subs]) => (
+          <div key={group}>
             <button
-              className={`text-sm font-medium w-full text-left flex items-center justify-between ${
-                selectedCategory === group ? "text-green-600" : "text-gray-900"
-              }`}
-              onClick={() => {
-                handleCategoryChange(group);
-                setCategoryMenuOpen((prev) => (prev === group ? null : group));
-              }}
+              onClick={() => { setSelectedCategory(group); updateURL({ category: group }); setCategoryMenuOpen(p => p === group ? null : group); }}
+              className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center justify-between transition-colors ${selectedCategory === group ? "bg-green-50 text-green-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
             >
               <span>{group}</span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${
-                  categoryMenuOpen === group ? "rotate-180" : ""
-                }`}
-              />
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${categoryMenuOpen === group ? "rotate-180" : ""}`} />
             </button>
-
-            {categoryMenuOpen === group && (
-              <div className="ml-4 space-y-2">
-                {subcategories.map((category) => (
-                  <button
-                    key={category}
-                    className={`text-sm block w-full text-left ${
-                      selectedCategory === category
-                        ? "text-green-600 font-medium"
-                        : "text-gray-700"
-                    }`}
-                    onClick={() => handleCategoryChange(category)}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-            )}
+            <AnimatePresence>
+              {categoryMenuOpen === group && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden ml-3">
+                  {subs.map(cat => (
+                    <button key={cat}
+                      onClick={() => { setSelectedCategory(cat); updateURL({ category: cat }); }}
+                      className={`w-full text-left text-xs px-3 py-1.5 rounded-lg transition-colors ${selectedCategory === cat ? "text-green-600 font-semibold" : "text-gray-500 hover:text-gray-800"}`}
+                    >{cat}</button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ))}
       </div>
     </div>
   );
 
-  // Enhanced ListView Component
-  const EnhancedListView = ({ campaigns }) => (
-    <div className="space-y-4">
-      {campaigns.map((campaign) => (
-        <div
-          key={campaign.id}
-          className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer"
-          onClick={() => navigate(`/campaign/${campaign.id}`)}
-        >
-          <div className="flex">
-            {/* Campaign Image */}
-            <div className="w-64 h-48 flex-shrink-0 relative">
-              <img
-                src={campaign.main_image_url 
-                  ? buildImageUrl(campaign.main_image_url)
-                  : '/placeholder-campaign.jpg'
-                }
-                alt={campaign.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = "/placeholder-campaign.jpg";
-                }}
-              />
-              
-              {/* Status Badges */}
-              <div className="absolute top-3 left-3 flex flex-col space-y-1">
-                <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
-                  {campaign.category}
-                </span>
-                {campaign.is_featured && (
-                  <span className="bg-yellow-500 text-white px-2 pb-4 text-xs font-medium rounded-full">
-                    FEATURED
-                  </span>
-                )}
-                {calculateProgress(campaign.current_amount, campaign.target_amount) >= 100 && (
-                  <span className="bg-green-500 text-white px-2 py-1 text-xs font-medium rounded-full">
-                    FUNDED
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Campaign Content */}
-            <div className="flex-1 p-6">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-                    {campaign.title}
-                  </h3>
-                  <div className="flex items-center text-sm text-gray-500 mb-2">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {campaign.location}
-                  </div>
-                </div>
-                
-                {/* View Count */}
-                <div className="text-sm text-gray-500 flex items-center ml-4">
-                  <Eye className="h-4 w-4 mr-1" />
-                  {campaign.view_count || 0}
-                </div>
-              </div>
-
-              <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                {campaign.description}
-              </p>
-
-              {/* Progress Section */}
-              <div className="mb-4">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Progress</span>
-                  <span>{Math.round(calculateProgress(campaign.current_amount, campaign.target_amount))}%</span>
-                </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${calculateProgress(campaign.current_amount, campaign.target_amount)}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between mt-2 text-sm">
-                  <span className="font-semibold text-gray-900">
-                    {formatCurrency(campaign.current_amount || 0)}
-                  </span>
-                  <span className="text-gray-500">
-                    of {formatCurrency(campaign.target_amount)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Footer with Creator Info */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div className="flex items-center">
-                  {/* Creator Avatar */}
-                  <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-medium overflow-hidden mr-3">
-                    {campaign.founder_avatar ? (
-                      <img
-                        src={campaign.founder_avatar.startsWith('http') 
-                          ? campaign.founder_avatar 
-                          : buildImageUrl(campaign.founder_avatar)
-                        }
-                        alt={campaign.founder_name}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.parentNode.querySelector('.founder-initials').style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <span 
-                      className={`founder-initials text-gray-600 font-medium text-sm ${
-                        campaign.founder_avatar ? 'hidden' : 'flex'
-                      } items-center justify-center h-full w-full`}
-                    >
-                      {(campaign.founder_name || 'Anonymous').charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {campaign.founder_name || "Anonymous"}
-                    </div>
-                    {campaign.founder_company && (
-                      <div className="text-xs text-gray-500 flex items-center">
-                        <Building className="h-3 w-3 mr-1" />
-                        {campaign.founder_company}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Metrics */}
-                <div className="flex items-center space-x-4 text-xs text-gray-500">
-                  <div className="flex items-center">
-                    <Heart className="h-3 w-3 mr-1" />
-                    {campaign.favorite_count || 0}
-                  </div>
-                  <div className="flex items-center">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {new Date(campaign.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderCampaigns = () => {
-    const currentCampaigns = getCurrentPageCampaigns();
-
-    if (loading) {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, index) => (
-            <CampaignSkeleton key={index} />
-          ))}
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
-          <div className="mx-auto h-16 w-16 text-red-400">
-            <SlidersHorizontal className="h-10 w-10 mx-auto" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Error Loading Campaigns
-          </h3>
-          <p className="text-sm text-gray-500 mb-4">{error}</p>
-          <button
-            onClick={() => loadCampaigns(true)}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-          >
-            Try Again
-          </button>
-        </div>
-      );
-    }
-
-    if (currentCampaigns.length === 0) {
-      return (
-        <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
-          <div className="mx-auto h-16 w-16 text-gray-400">
-            <Filter className="h-10 w-10 mx-auto" />
-          </div>
-          <h3 className="mt-4 text-lg font-medium text-gray-900">
-            No campaigns found
-          </h3>
-          <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto">
-            {searchTerm || selectedCategory !== "All Categories" || selectedFilter !== "All Campaigns"
-              ? "No campaigns match your current filters. Try adjusting your search or filters."
-              : "No campaigns available at the moment. Check back later."}
-          </p>
-          
-          {(searchTerm || selectedCategory !== "All Categories" || selectedFilter !== "All Campaigns") && (
-            <button
-              onClick={() => {
-                setSearchTerm("");
-                setSelectedCategory("All Categories");
-                setSelectedFilter("All Campaigns");
-                updateURLParams({ search: null, category: null, filter: null });
-              }}
-              className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              Clear Filters
+  // ── Pagination ──────────────────────────────────────────────────────────────
+  const Pagination = () => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="flex justify-center items-center gap-2 mt-10">
+        <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage === 1}
+          className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-40 hover:border-green-400 hover:text-green-600 transition-colors">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+          const pg = start + i;
+          if (pg > totalPages) return null;
+          return (
+            <button key={pg} onClick={() => setCurrentPage(pg)}
+              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${currentPage === pg ? "bg-green-600 text-white shadow-md shadow-green-200" : "bg-white border border-gray-200 text-gray-600 hover:border-green-400"}`}>
+              {pg}
             </button>
-          )}
-        </div>
-      );
-    }
-
-    if (viewMode === "grid") {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {currentCampaigns.map((campaign) => (
-            <CampaignCard
-              key={campaign.id}
-              campaign={campaign}
-              onFavoriteToggle={handleFavoriteToggle}
-              onViewClick={handleViewClick}
-            />
-          ))}
-        </div>
-      );
-    } else {
-      return <EnhancedListView campaigns={currentCampaigns} />;
-    }
+          );
+        })}
+        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage === totalPages}
+          className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-40 hover:border-green-400 hover:text-green-600 transition-colors">
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    );
   };
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50">
       <UnifiedNavbar variant="dashboard" />
 
-      {/* Hero Section */}
-      <div className="relative h-72 bg-gradient-to-r from-green-700 to-green-900 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-20"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-green-700 via-purple-600 to-green-500">
-          <img
-            src="/assets/featured-bg.png"
-            alt="Background Pattern"
-            className="w-full h-full object-cover opacity-10"
-          />
-        </div>
-        <div className="relative max-w-7xl mx-4 px-4 sm:px-6 lg:px-8 h-full flex items-center">
-          <div className="max-w-md">
-            <h1 className="text-5xl font-bold text-white mb-4">
-              Discover Promising Startups
-            </h1>
-            <p className="text-lg text-green-100">
-              Invest in the next generation of entrepreneurs.
+      {/* ── Hero banner ── */}
+      <div className="relative overflow-hidden bg-gray-900 h-64">
+        <img src="/assets/featured-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-green-900/60" />
+
+        {/* Floating orbs */}
+        <motion.div animate={{ y: [0, -14, 0], opacity: [0.15, 0.25, 0.15] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-8 right-32 w-48 h-48 bg-green-500 rounded-full blur-3xl pointer-events-none" />
+        <motion.div animate={{ y: [0, 12, 0], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-0 right-64 w-32 h-32 bg-emerald-400 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 h-full flex items-center justify-between">
+          <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-4 w-4 text-green-400" />
+              <span className="text-green-400 text-sm font-semibold uppercase tracking-widest">Explore</span>
+            </div>
+            <h1 className="text-4xl font-bold text-white mb-2">Discover Startups</h1>
+            <p className="text-gray-400 text-base">
+              {!loading && `${totalCampaigns} campaign${totalCampaigns !== 1 ? "s" : ""} live right now`}
             </p>
-          </div>
+          </motion.div>
+
+          {isFounder && (
+            <motion.button initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
+              onClick={() => navigate("/create-campaign")}
+              className="hidden md:flex items-center gap-2 bg-green-500 hover:bg-green-400 text-white font-bold px-6 py-3 rounded-full transition-all hover:scale-105 shadow-lg shadow-green-900/40">
+              <Plus className="h-4 w-4" /> New Campaign
+            </motion.button>
+          )}
         </div>
       </div>
-      
-      <div className="max-w-8xl mx-8 sm:px-2 lg:px-1 py-8">
-        {/* Dashboard Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">
-              Explore Campaigns
-            </h2>
-            {/* Results Count */}
-            {!loading && (
-              <p className="text-gray-600 mt-1">
-                {filteredCount > 0 ? (
-                  <>
-                    Showing {Math.min(currentPage * limit, filteredCount)} / {totalCampaigns} campaigns
-                    {(searchTerm || selectedCategory !== "All Categories" || selectedFilter !== "All Campaigns") && (
-                      <span className="text-green-600 font-medium"> (filtered from {totalCampaigns} total)</span>
-                    )}
-                  </>
-                ) : (
-                  `No campaigns found${totalCampaigns > 0 ? ` (${totalCampaigns} total available)` : ''}`
-                )}
-              </p>
-            )}
-          </div>
-        </div>
 
-        {/* Enhanced Filter Bar */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-wrap gap-4 items-center">
-            {/* Search Input */}
-            <div className="relative flex-1 min-w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="search"
-                placeholder="Search campaigns, categories, or keywords..."
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* ── Search + filter bar ── */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Search */}
+            <div className="relative flex-1 min-w-56">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input type="search" placeholder="Search campaigns, founders, categories…"
                 value={searchTerm}
-                onChange={handleSearch}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 rounded-md"
-              />
+                onChange={e => { setSearchTerm(e.target.value); updateURL({ search: e.target.value }); }}
+                className="w-full pl-10 pr-9 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all" />
               {searchTerm && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                >
+                <button onClick={() => { setSearchTerm(""); updateURL({ search: null }); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap space-x-2">
-              {filterOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleFilterChange(option.label)}
-                  className={`px-3 py-2 text-sm rounded-md flex items-center transition-colors ${
-                    selectedFilter === option.label
-                      ? "bg-green-700 text-white font-medium"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  {option.id === "goal-reached" && (
-                    <CheckCircle className="h-4 w-4 mr-1 " />
-                  )}
-                  {option.id === "featured" && (
-                    <span className="h-4 w-4 mr-1 mb-1 ">⭐</span>
-                  )}
-                  {option.label}
-                  {selectedFilter === option.label && filteredCount > 0 && (
-                    <span className="ml-2 bg-green-600 text-white text-xs px-2 py-0.5 rounded-full">
-                      {filteredCount}
-                    </span>
+            {/* Filter pills */}
+            <div className="flex flex-wrap gap-2">
+              {filterOptions.map(opt => (
+                <button key={opt.id}
+                  onClick={() => { setSelectedFilter(opt.label); updateURL({ filter: opt.label }); }}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedFilter === opt.label
+                      ? "bg-green-600 text-white shadow-md shadow-green-200"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}>
+                  {opt.icon}{opt.label}
+                  {selectedFilter === opt.label && filteredCount > 0 && (
+                    <span className="bg-white/25 text-white text-xs px-1.5 py-0.5 rounded-full">{filteredCount}</span>
                   )}
                 </button>
               ))}
             </div>
 
-            {/* View Mode and Sort */}
-            <div className="flex space-x-3 ml-auto">
-              {/* View Mode Toggle */}
-              <div className="inline-flex rounded-md shadow-sm">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`px-3 py-2 rounded-l-md border ${
-                    viewMode === "grid"
-                      ? "bg-gray-100 text-gray-800 border-gray-300"
-                      : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <Grid className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`px-3 py-2 rounded-r-md border-t border-r border-b ${
-                    viewMode === "list"
-                      ? "bg-gray-100 text-gray-800 border-gray-300"
-                      : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <List className="h-4 w-4" />
-                </button>
+            {/* Right controls */}
+            <div className="flex items-center gap-2 ml-auto">
+              {/* View toggle */}
+              <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+                {[["grid", <Grid className="h-4 w-4" />], ["list", <List className="h-4 w-4" />]].map(([mode, icon]) => (
+                  <button key={mode} onClick={() => setViewMode(mode)}
+                    className={`p-1.5 rounded-lg transition-all ${viewMode === mode ? "bg-white shadow text-green-600" : "text-gray-500 hover:text-gray-700"}`}>
+                    {icon}
+                  </button>
+                ))}
               </div>
 
-              {/* Sort Dropdown */}
-              <div className="relative">
-                <button
-                  className="px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 flex items-center text-sm"
-                  onClick={() =>
-                    document
-                      .getElementById("sortDropdown")
-                      .classList.toggle("hidden")
-                  }
-                >
-                  <ArrowUpDown className="h-4 w-4 mr-2" />
-                  {sortBy}
-                  <ChevronDown className="h-4 w-4 ml-2" />
+              {/* Sort */}
+              <div className="relative" ref={sortRef}>
+                <button onClick={() => setSortOpen(v => !v)}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm text-gray-700 transition-colors">
+                  <ArrowUpDown className="h-3.5 w-3.5" />{sortBy}<ChevronDown className="h-3.5 w-3.5" />
                 </button>
-                <div
-                  id="sortDropdown"
-                  className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden"
-                >
-                  {["Date Posted", "Most Funded", "End Date"].map((option) => (
-                    <button
-                      key={option}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => {
-                        setSortBy(option);
-                        document
-                          .getElementById("sortDropdown")
-                          .classList.add("hidden");
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
+                <AnimatePresence>
+                  {sortOpen && (
+                    <motion.div initial={{ opacity: 0, y: 6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 4, scale: 0.97 }} transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20">
+                      {["Date Posted", "Most Funded", "End Date"].map(opt => (
+                        <button key={opt} onClick={() => { setSortBy(opt); setSortOpen(false); }}
+                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${sortBy === opt ? "text-green-600 font-semibold bg-green-50" : "text-gray-700 hover:bg-gray-50"}`}>
+                          {opt}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Active Filters Display */}
-        {(searchTerm || selectedCategory !== "All Categories" || selectedFilter !== "All Campaigns") && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-gray-600">Active filters:</span>
-            
-            {searchTerm && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Search: "{searchTerm}"
-                <button
-                  onClick={clearSearch}
-                  className="ml-2 text-blue-600 hover:text-blue-800"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-            
-            {selectedCategory !== "All Categories" && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                Category: {selectedCategory}
-                <button
-                  onClick={() => handleCategoryChange("All Categories")}
-                  className="ml-2 text-purple-600 hover:text-purple-800"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-            
-            {selectedFilter !== "All Campaigns" && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Filter: {selectedFilter}
-                <button
-                  onClick={() => handleFilterChange("All Campaigns")}
-                  className="ml-2 text-green-600 hover:text-green-800"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-            
-            <button
-              onClick={() => {
-                setSearchTerm("");
-                setSelectedCategory("All Categories");
-                setSelectedFilter("All Campaigns");
-                updateURLParams({ search: null, category: null, filter: null });
-              }}
-              className="text-xs text-gray-500 hover:text-gray-700 underline"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
+        {/* ── Active filter chips ── */}
+        <AnimatePresence>
+          {hasFilters && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+              className="flex flex-wrap items-center gap-2 mb-5 overflow-hidden">
+              <span className="text-xs text-gray-500 font-medium">Filters:</span>
+              {searchTerm && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                  "{searchTerm}" <button onClick={() => { setSearchTerm(""); updateURL({ search: null }); }}><X className="h-3 w-3" /></button>
+                </span>
+              )}
+              {selectedCategory !== "All Categories" && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                  {selectedCategory} <button onClick={() => { setSelectedCategory("All Categories"); updateURL({ category: null }); }}><X className="h-3 w-3" /></button>
+                </span>
+              )}
+              {selectedFilter !== "All Campaigns" && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                  {selectedFilter} <button onClick={() => { setSelectedFilter("All Campaigns"); updateURL({ filter: null }); }}><X className="h-3 w-3" /></button>
+                </span>
+              )}
+              <button onClick={clearAll} className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2">Clear all</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Main Content Area */}
-        <div className="flex gap-8">
-          {/* Left Sidebar - Categories */}
-          <div className="hidden md:block w-64 flex-shrink-0">
+        {/* ── Main layout ── */}
+        <div className="flex gap-7">
+          {/* Sidebar */}
+          <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
+            className="hidden lg:block w-60 flex-shrink-0 space-y-4">
             <CategoryFilter />
 
             {isAuthenticated() && (
-              <div className="bg-white rounded-lg shadow-sm my-4 p-4 mt-4">
-                <h3 className="font-bold text-gray-900 mb-4">Quick Links</h3>
-                <div className="space-y-2">
-                  <Link
-                    to="/my-campaigns?tab=viewed"
-                    className="flex items-center text-sm text-gray-700 py-2 hover:text-green-600"
-                  >
-                    <Eye className="h-4 w-4 mr-2" /> Recently Viewed
-                  </Link>
-                  <Link
-                    to="/my-campaigns?tab=favorites"
-                    className="flex items-center text-sm text-gray-700 py-2 hover:text-green-600"
-                  >
-                    <Heart className="h-4 w-4 mr-2" /> Favorites
-                  </Link>
-                  {isFounder && (
-                    <>
-                      <Link
-                        to="/my-campaigns?tab=created"
-                        className="flex items-center text-sm text-gray-700 py-2 hover:text-green-600"
-                      >
-                        <PenLine className="h-4 w-4 mr-2" /> My Campaigns
-                      </Link>
-                      <Link
-                        to="/my-campaigns?tab=drafts"
-                        className="flex items-center text-sm text-gray-700 py-2 hover:text-green-600"
-                      >
-                        <FileText className="h-4 w-4 mr-2" /> My Drafts
-                      </Link>
-                    </>
-                  )}
-                  {isInvestor && (
-                    <Link
-                      to="/my-campaigns?tab=funded"
-                      className="flex items-center text-sm text-gray-700 py-2 hover:text-green-600"
-                    >
-                      <DollarSign className="h-4 w-4 mr-2" /> Funded Projects
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wider">Quick Links</h3>
+                <div className="space-y-1">
+                  {[
+                    { to: "/my-campaigns?tab=favorites", icon: <Heart className="h-4 w-4" />, label: "Favorites" },
+                    ...(isFounder ? [
+                      { to: "/my-campaigns?tab=created", icon: <PenLine className="h-4 w-4" />, label: "My Campaigns" },
+                      { to: "/my-campaigns?tab=drafts",  icon: <FileText className="h-4 w-4" />, label: "Drafts" },
+                    ] : []),
+                    ...(isInvestor ? [
+                      { to: "/my-campaigns?tab=funded", icon: <DollarSign className="h-4 w-4" />, label: "Funded Projects" },
+                    ] : []),
+                  ].map(({ to, icon, label }) => (
+                    <Link key={to} to={to}
+                      className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 px-3 py-2 rounded-xl transition-colors">
+                      {icon}{label}
                     </Link>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
 
-          {/* Campaign Content */}
-          <div className="flex-1">
-            {renderCampaigns()}
+          {/* Campaign grid / list */}
+          <div className="flex-1 min-w-0">
+            {/* Result count */}
+            {!loading && (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-gray-500 mb-4">
+                {filteredCount > 0
+                  ? `Showing ${Math.min(currentPage * limit, filteredCount)} of ${filteredCount} campaign${filteredCount !== 1 ? "s" : ""}${hasFilters ? ` (${totalCampaigns} total)` : ""}`
+                  : `No campaigns found${totalCampaigns > 0 ? ` — ${totalCampaigns} total available` : ""}`}
+              </motion.p>
+            )}
 
-            {/* Pagination */}
-            <PaginationControls />
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {[...Array(6)].map((_, i) => <CampaignSkeleton key={i} />)}
+              </div>
+            ) : error ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+                <SlidersHorizontal className="h-10 w-10 text-red-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">Couldn't load campaigns</h3>
+                <p className="text-sm text-gray-500 mb-5">{error}</p>
+                <button onClick={loadCampaigns} className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors">
+                  Try Again
+                </button>
+              </motion.div>
+            ) : paginated.length === 0 ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+                <Filter className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">No campaigns match</h3>
+                <p className="text-sm text-gray-500 mb-5">Try adjusting your search or filters.</p>
+                {hasFilters && (
+                  <button onClick={clearAll} className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors">
+                    Clear Filters
+                  </button>
+                )}
+              </motion.div>
+            ) : viewMode === "grid" ? (
+              <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <AnimatePresence mode="popLayout">
+                  {paginated.map((campaign, i) => (
+                    <motion.div key={campaign.id} layout
+                      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.3, delay: i * 0.04 }}>
+                      <CampaignCard campaign={campaign} onFavoriteToggle={handleFavoriteToggle} onViewClick={handleViewClick} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            ) : (
+              <div className="space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {paginated.map((campaign, i) => (
+                    <ListCard key={campaign.id} campaign={campaign} navigate={navigate}
+                      buildImageUrl={buildImageUrl} formatCurrency={fmt} calcPct={calcPct} />
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+
+            <Pagination />
           </div>
         </div>
       </div>

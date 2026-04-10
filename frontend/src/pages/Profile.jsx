@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
 import { buildApiUrl, buildImageUrl } from '../config/apiUrl';
+import toast from 'react-hot-toast';
 
 import {
   User,
@@ -14,9 +15,7 @@ import {
   Shield,
   Lock,
   Save,
-  AlertCircle,
   Upload,
-  Check,
   Eye,
   EyeOff,
   Camera,
@@ -94,9 +93,6 @@ const Profile = () => {
 
   // Status states
   const [loading, setLoading] = useState(false);
-  const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false);
-  const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false);
-  const [emailUpdateSuccess, setEmailUpdateSuccess] = useState(false);
   const [errors, setErrors] = useState({});
 
   // Editing state
@@ -302,8 +298,7 @@ const Profile = () => {
           await updateUserContext({ ...result.data.user, profileImageTimestamp: Date.now() });
         }
 
-        setProfileUpdateSuccess(true);
-        setTimeout(() => setProfileUpdateSuccess(false), 3000);
+        toast.success("Profile image updated!");
 
         // *** FORCE REFRESH TO VERIFY PERSISTENCE ***
         console.log("🔄 Refreshing profile data to verify save...");
@@ -312,10 +307,8 @@ const Profile = () => {
         }, 1000);
       } else {
         console.error("❌ Upload failed:", result);
-        setErrors((prev) => ({
-          ...prev,
-          image: result.message || "Upload failed",
-        }));
+        toast.error(result.message || "Upload failed");
+        setErrors((prev) => ({ ...prev, image: result.message || "Upload failed" }));
       }
     } catch (error) {
       console.error("❌ Upload error:", error);
@@ -373,9 +366,9 @@ const Profile = () => {
         setImagePreview(null);
         setProfileImage(null);
         await updateUserContext({ profileImageUrl: null, profileImageTimestamp: Date.now() });
-        setProfileUpdateSuccess(true);
-        setTimeout(() => setProfileUpdateSuccess(false), 3000);
+        toast.success("Profile image removed.");
       } else {
+        toast.error(result.message || "Failed to delete image");
         setErrors((prev) => ({
           ...prev,
           image: result.message || "Failed to delete image",
@@ -409,9 +402,8 @@ const Profile = () => {
 
       if (response.ok) {
         await updateUserContext(result.data);
-        setProfileUpdateSuccess(true);
+        toast.success("Profile updated successfully!");
         setIsEditing(false);
-        setTimeout(() => setProfileUpdateSuccess(false), 3000);
       } else {
         if (result.errors) {
           const errorObj = {};
@@ -419,12 +411,15 @@ const Profile = () => {
             errorObj.general = error;
           });
           setErrors(errorObj);
+          toast.error(result.errors[0] || "Failed to update profile");
         } else {
           setErrors({ general: result.message });
+          toast.error(result.message || "Failed to update profile");
         }
       }
     } catch (error) {
       setErrors({ general: "Failed to update profile" });
+      toast.error("Failed to update profile");
     } finally {
       setLoading(false);
     }
@@ -437,11 +432,13 @@ const Profile = () => {
     const { score } = passwordStrength(passwordData.newPassword);
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Passwords do not match");
       setErrors({ confirmPassword: "Passwords do not match" });
       return;
     }
 
     if (score < 4) {
+      toast.error("New password is too weak. Please meet all requirements.");
       setErrors({ password: "New password is too weak. Please meet all requirements." });
       return;
     }
@@ -466,18 +463,19 @@ const Profile = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setPasswordUpdateSuccess(true);
+        toast.success("Password updated successfully!");
         setPasswordData({
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
         });
-        setTimeout(() => setPasswordUpdateSuccess(false), 3000);
       } else {
         setErrors({ password: result.message });
+        toast.error(result.message || "Failed to update password");
       }
     } catch (error) {
       setErrors({ password: "Failed to update password" });
+      toast.error("Failed to update password");
     } finally {
       setLoading(false);
     }
@@ -504,16 +502,17 @@ const Profile = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setEmailUpdateSuccess(true);
+        toast.success("Email updated successfully! Please verify your new email address.");
         setEmailData({ newEmail: "", currentPassword: "" });
-        setTimeout(() => setEmailUpdateSuccess(false), 3000);
         // Refresh profile data
         await fetchUserProfile();
       } else {
         setErrors({ email: result.message });
+        toast.error(result.message || "Failed to update email");
       }
     } catch (error) {
       setErrors({ email: "Failed to update email" });
+      toast.error("Failed to update email");
     } finally {
       setLoading(false);
     }
@@ -718,31 +717,6 @@ const Profile = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Success Messages */}
-            {profileUpdateSuccess && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center text-green-700">
-                <Check className="h-5 w-5 mr-2 flex-shrink-0" />
-                <p className="text-sm">Profile updated successfully!</p>
-              </div>
-            )}
-
-            {passwordUpdateSuccess && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center text-green-700">
-                <Check className="h-5 w-5 mr-2 flex-shrink-0" />
-                <p className="text-sm">Password updated successfully!</p>
-              </div>
-            )}
-
-            {emailUpdateSuccess && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center text-green-700">
-                <Check className="h-5 w-5 mr-2 flex-shrink-0" />
-                <p className="text-sm">
-                  Email updated successfully! Please verify your new email
-                  address.
-                </p>
-              </div>
-            )}
-
             {/* Profile Tab */}
             {activeTab === "profile" && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -766,13 +740,6 @@ const Profile = () => {
                     </button>
                   )}
                 </div>
-
-                {errors.general && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
-                    <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-                    <p className="text-sm">{errors.general}</p>
-                  </div>
-                )}
 
                 <form onSubmit={handleProfileUpdate}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -973,13 +940,6 @@ const Profile = () => {
                   Security & Password
                 </h2>
 
-                {errors.password && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
-                    <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-                    <p className="text-sm">{errors.password}</p>
-                  </div>
-                )}
-
                 <form onSubmit={handlePasswordUpdate}>
                   <div className="space-y-4 mb-6">
                     <div>
@@ -1120,13 +1080,6 @@ const Profile = () => {
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   Account & Email Settings
                 </h2>
-
-                {errors.email && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
-                    <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-                    <p className="text-sm">{errors.email}</p>
-                  </div>
-                )}
 
                 <div className="mb-8">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">

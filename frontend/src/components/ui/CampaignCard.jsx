@@ -257,7 +257,22 @@ const CampaignCard = ({
           {/* Founder */}
           <div className="flex items-center mt-3 pt-3 border-t border-gray-100 space-x-2">
             <div className="h-6 w-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-xs overflow-hidden flex-shrink-0">
-              {(campaign.founder_name || campaign.founderName || 'A').charAt(0).toUpperCase()}
+              {(() => {
+                const avatarUrl = campaign.founder_avatar || campaign.founderAvatar;
+                if (!avatarUrl) return (campaign.founder_name || campaign.founderName || 'A').charAt(0).toUpperCase();
+                const src = avatarUrl.startsWith('http') ? avatarUrl : buildImageUrl(avatarUrl.startsWith('/') ? avatarUrl : `/uploads/profiles/${avatarUrl}`);
+                return (
+                  <img
+                    src={src}
+                    alt={campaign.founder_name || campaign.founderName || 'Founder'}
+                    className="h-full w-full object-cover rounded-full"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentNode.insertAdjacentText('beforeend', (campaign.founder_name || campaign.founderName || 'A').charAt(0).toUpperCase());
+                    }}
+                  />
+                );
+              })()}
             </div>
             <span className="text-xs text-gray-500 truncate">
               {campaign.founder_name || campaign.founderName || 'Anonymous'}

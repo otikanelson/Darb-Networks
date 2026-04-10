@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 // ── Validation helpers ──────────────────────────────────────────────────────
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -200,7 +201,7 @@ const RegisterForm = () => {
       await register({ ...formData, captchaToken });
       navigate('/dashboard');
     } catch (err) {
-      setFieldErrors(prev => ({ ...prev, submit: err.message || 'Registration failed. Please try again.' }));
+      toast.error(err.message || 'Registration failed. Please try again.');
       recaptchaRef.current?.reset();
       setCaptchaToken(null);
     } finally {
@@ -509,13 +510,6 @@ const RegisterForm = () => {
               <span>Security</span>
             </div>
           </div>
-
-          {/* Global submit error */}
-          {fieldErrors.submit && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-md">
-              <p className="text-red-700 text-sm">{fieldErrors.submit}</p>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} noValidate>
             {step === 1 && renderStep1()}

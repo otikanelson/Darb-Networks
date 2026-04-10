@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { buildApiUrl } from '../config/apiUrl';
+import toast from 'react-hot-toast';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
 
     try {
       const response = await fetch(buildApiUrl('/auth/forgot-password'), {
@@ -28,10 +27,10 @@ const ForgotPassword = () => {
       if (response.ok) {
         setIsSubmitted(true);
       } else {
-        setError(data.message || 'Something went wrong');
+        toast.error(data.message || 'Something went wrong');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      toast.error('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -74,12 +73,6 @@ const ForgotPassword = () => {
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-              {error}
-            </div>
-          )}
-          
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email address
