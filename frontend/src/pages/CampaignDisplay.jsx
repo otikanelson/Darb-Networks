@@ -170,6 +170,8 @@ const CampaignDisplay = () => {
 
   // Track when the funding card scrolls out of view
   const { ref: fundingCardRef, inView: fundingCardInView } = useInView({ threshold: 0.2 });
+  // Hide the bar when the footer comes into view
+  const { ref: footerRef, inView: footerInView } = useInView({ threshold: 0.1 });
 
   useEffect(() => { if (id) { loadCampaign(); loadRelated(); } }, [id]);
 
@@ -512,8 +514,10 @@ const CampaignDisplay = () => {
   );
 
   // ── render ─────────────────────────────────────────────────────────────────
+  const showInvestBar = canInvest() && !fundingCardInView && !footerInView;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen bg-gray-50${showInvestBar ? ' pb-20' : ''}`}>
       <UnifiedNavbar variant="display" />
 
       {/* ── Hero ── */}
@@ -753,10 +757,12 @@ const CampaignDisplay = () => {
         </div>
       </div>
 
-      <Footer />
+      <div ref={footerRef}>
+        <Footer />
+      </div>
 
       {/* ── Sticky invest bar — appears when funding card scrolls out of view ── */}
-      {canInvest() && !fundingCardInView && (
+      {showInvestBar && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
             <div className="min-w-0">
