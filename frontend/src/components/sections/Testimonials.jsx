@@ -1,26 +1,24 @@
 import React from 'react';
 import { Quote } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const testimonials = [
   {
-    quote:
-      'We raised ₦45M in 6 weeks. The platform connected us with investors who actually understood our market. It changed everything for AgroSmart.',
+    quote: 'We raised ₦45M in 6 weeks. The platform connected us with investors who actually understood our market. It changed everything for AgroSmart.',
     name: 'Chidi Okafor',
     role: 'Founder, AgroSmart Nigeria',
     avatar: 'CO',
     avatarBg: 'bg-green-100 text-green-700',
   },
   {
-    quote:
-      "I've invested in 12 startups through Darb. The milestone-based disbursement gives me confidence that my capital is being used responsibly.",
+    quote: "I've invested in 12 startups through Darb. The milestone-based disbursement gives me confidence that my capital is being used responsibly.",
     name: 'Amina Bello',
     role: 'Angel Investor, Lagos',
     avatar: 'AB',
     avatarBg: 'bg-blue-100 text-blue-700',
   },
   {
-    quote:
-      'The campaign editor is intuitive and the team was incredibly supportive. We hit our funding goal 3 weeks ahead of schedule.',
+    quote: 'The campaign editor is intuitive and the team was incredibly supportive. We hit our funding goal 3 weeks ahead of schedule.',
     name: 'Tunde Adeyemi',
     role: 'Co-founder, EcoVehicle',
     avatar: 'TA',
@@ -31,23 +29,30 @@ const testimonials = [
 const Testimonials = () => (
   <section className="py-24 bg-white">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="text-center mb-16">
+      <motion.div
+        className="text-center mb-16"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+      >
         <span className="text-green-600 font-semibold text-sm uppercase tracking-widest">Success stories</span>
-        <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">
-          Founders and investors love Darb
-        </h2>
+        <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">Founders and investors love Darb</h2>
         <p className="text-lg text-gray-500 max-w-xl mx-auto">
           Real people, real results. Here's what our community has to say.
         </p>
-      </div>
+      </motion.div>
 
-      {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {testimonials.map(({ quote, name, role, avatar, avatarBg }) => (
-          <div
+        {testimonials.map(({ quote, name, role, avatar, avatarBg }, i) => (
+          <motion.div
             key={name}
-            className="bg-gray-50 rounded-2xl p-8 flex flex-col justify-between hover:shadow-md transition-shadow"
+            className="bg-gray-50 rounded-2xl p-8 flex flex-col justify-between"
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: i * 0.12 }}
+            whileHover={{ y: -4, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
           >
             <div>
               <Quote className="h-8 w-8 text-green-400 mb-4" />
@@ -62,7 +67,7 @@ const Testimonials = () => (
                 <div className="text-gray-500 text-xs">{role}</div>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>

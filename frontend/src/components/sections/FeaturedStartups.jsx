@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { CustomNav } from '../../hooks/CustomNavigation';
 import CampaignCard from '../ui/CampaignCard';
 import CampaignService from '../../services/CampaignService';
@@ -43,7 +44,13 @@ const FeaturedStartups = () => {
     <section className="py-24 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-end justify-between mb-12">
+        <motion.div
+          className="flex items-end justify-between mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
           <div>
             <div className="flex items-center space-x-2 mb-2">
               <Sparkles className="h-5 w-5 text-green-600" />
@@ -59,7 +66,7 @@ const FeaturedStartups = () => {
             <span>View all</span>
             <ArrowRight className="h-5 w-5" />
           </button>
-        </div>
+        </motion.div>
 
         {/* Content */}
         {loading ? (
@@ -79,28 +86,41 @@ const FeaturedStartups = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Spotlight — takes up 2 columns */}
+            {/* Spotlight */}
             {spotlight && (
-              <div className="lg:col-span-2">
+              <motion.div
+                className="lg:col-span-2"
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, ease: 'easeOut' }}
+              >
                 <CampaignCard
                   campaign={spotlight}
                   size="featured"
                   onFavoriteToggle={handleFavoriteToggle}
                   onViewClick={handleViewClick}
                 />
-              </div>
+              </motion.div>
             )}
 
             {/* Side stack */}
             <div className="flex flex-col gap-6">
-              {rest.slice(0, 2).map((campaign) => (
-                <CampaignCard
+              {rest.slice(0, 2).map((campaign, i) => (
+                <motion.div
                   key={campaign.id}
-                  campaign={campaign}
-                  size="compact"
-                  onFavoriteToggle={handleFavoriteToggle}
-                  onViewClick={handleViewClick}
-                />
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.55, ease: 'easeOut', delay: i * 0.12 }}
+                >
+                  <CampaignCard
+                    campaign={campaign}
+                    size="compact"
+                    onFavoriteToggle={handleFavoriteToggle}
+                    onViewClick={handleViewClick}
+                  />
+                </motion.div>
               ))}
             </div>
           </div>
