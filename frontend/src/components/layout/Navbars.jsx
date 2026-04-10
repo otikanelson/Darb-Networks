@@ -211,8 +211,7 @@ const Navbars = ({
 
       case 'dashboard':
         baseLinks.push({ to: '/', label: 'Home' });
-        baseLinks.push({ to: '/dashboard', label: 'Dashboard' });
-        
+        // no self-link to /dashboard
         if (isFounder) {
           baseLinks.push({ to: '/my-campaigns', label: 'My Campaigns' });
         } else if (isInvestor) {
@@ -225,7 +224,6 @@ const Navbars = ({
       case 'profile':
         baseLinks.push({ to: '/', label: 'Home' });
         baseLinks.push({ to: '/dashboard', label: 'Dashboard' });
-        
         if (isFounder) {
           baseLinks.push({ to: '/my-campaigns', label: 'My Campaigns' });
         } else if (isInvestor) {
