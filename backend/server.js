@@ -11,10 +11,15 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
 
 // Serverless function export for Vercel
 if (process.env.VERCEL) {
-  console.log('🔷 Running on Vercel serverless');
+  console.log('🔷 Running on Vercel serverless - Build timestamp:', new Date().toISOString());
   console.log('🔧 Environment check:', {
     nodeEnv: process.env.NODE_ENV,
-    hasCloudinary: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+    hasCloudinary: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET),
+    cloudinaryVars: {
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
+      apiKey: process.env.CLOUDINARY_API_KEY ? 'SET' : 'NOT SET',
+      apiSecret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'NOT SET'
+    }
   });
 }
 
