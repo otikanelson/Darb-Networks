@@ -43,7 +43,7 @@ const Navbars = ({
 
   // Debug: Log when user context changes
   useEffect(() => {
-    console.log('≡ƒöä Navbar: User context updated:', {
+    console.log('Navbar: User context updated:', {
       profileImageUrl: user?.profileImageUrl,
       profileImageTimestamp: user?.profileImageTimestamp,
       fullName: user?.fullName
@@ -62,7 +62,7 @@ const Navbars = ({
       "Health & Fitness",
       "Home",
       "Phones & Accessories",
-      "Productivity",
+      "Business & Finance",
       "Transportation",
       "Travel & Outdoors",
     ],

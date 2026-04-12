@@ -11,8 +11,8 @@
   width: 600px;
   height: 360px;
   transform-style: preserve-3d;
-  animation: wave-subtle 2s ease-in-out infinite;
-  transform-origin: left center;
+  animation: wave-realistic 3s ease-in-out infinite;
+  transform-origin: 0% center;
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3));
 }
 
@@ -22,6 +22,9 @@
   object-fit: cover;
   border-radius: 3px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  /* Create realistic wave distortion */
+  animation: cloth-wave 2s ease-in-out infinite;
+  transform-origin: 0% center;
 }
 
 .flag-stripe {
@@ -54,13 +57,49 @@
   display: none;
 }
 
-/* Subtle wave animation - more elegant */
-@keyframes wave-subtle {
+/* Realistic wave animation - smooth back and forth */
+@keyframes wave-realistic {
   0%, 100% {
-    transform: rotateY(0deg) rotateX(0deg);
+    transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg);
   }
   50% {
-    transform: rotateY(-5deg) rotateX(1deg);
+    transform: rotateY(-6deg) rotateX(1deg) rotateZ(-0.5deg);
+  }
+}
+
+/* Cloth wave effect - smooth ripple from left to right */
+@keyframes cloth-wave {
+  0%, 100% {
+    clip-path: polygon(
+      0% 0%, 
+      20% 0%, 
+      40% 0%, 
+      60% 0.5%, 
+      80% 1%, 
+      100% 2%,
+      100% 98%,
+      80% 99%,
+      60% 99.5%,
+      40% 100%,
+      20% 100%,
+      0% 100%
+    );
+  }
+  50% {
+    clip-path: polygon(
+      0% 0%, 
+      20% 0%, 
+      40% 1%, 
+      60% 2%, 
+      80% 2.5%, 
+      100% 0%,
+      100% 100%,
+      80% 97.5%,
+      60% 98%,
+      40% 99%,
+      20% 100%,
+      0% 100%
+    );
   }
 }
 
@@ -89,28 +128,57 @@
     width: 200px;
     height: 133px;
   }
-  
-  .flagpole {
-    width: 8px;
-    left: -8px;
-  }
-  
-  .flagpole::before {
-    width: 16px;
-    height: 16px;
-  }
 }
 
 /* Hover effect - slightly more movement */
 .waving-flag-container:hover .waving-flag {
-  animation: wave-hover 3s ease-in-out infinite;
+  animation: wave-hover 2.5s ease-in-out infinite;
+}
+
+.waving-flag-container:hover .flag-image {
+  animation: cloth-wave-intense 1.8s ease-in-out infinite;
 }
 
 @keyframes wave-hover {
   0%, 100% {
-    transform: rotateY(0deg) rotateX(0deg);
+    transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg);
   }
   50% {
-    transform: rotateY(-8deg) rotateX(2deg);
+    transform: rotateY(-10deg) rotateX(2deg) rotateZ(-1deg);
+  }
+}
+
+@keyframes cloth-wave-intense {
+  0%, 100% {
+    clip-path: polygon(
+      0% 0%, 
+      20% 0%, 
+      40% 0%, 
+      60% 1%, 
+      80% 2%, 
+      100% 4%,
+      100% 96%,
+      80% 98%,
+      60% 99%,
+      40% 100%,
+      20% 100%,
+      0% 100%
+    );
+  }
+  50% {
+    clip-path: polygon(
+      0% 0%, 
+      20% 0%, 
+      40% 2%, 
+      60% 3%, 
+      80% 4%, 
+      100% 1%,
+      100% 99%,
+      80% 96%,
+      60% 97%,
+      40% 98%,
+      20% 100%,
+      0% 100%
+    );
   }
 }

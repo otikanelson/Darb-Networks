@@ -16,7 +16,7 @@ import {
 const CATEGORIES = [
   'Audio','Tools','Education','Energy & Green Tech','Fashion & Wearables',
   'Food & Beverages','Health & Fitness','Home','Phones & Accessories',
-  'Productivity','Transportation','Travel & Outdoors','Art','Comics',
+  'Business & Finance','Transportation','Travel & Outdoors','Art','Comics',
   'Dance & Theater','Film','Music','Photography','Podcasts, Blogs & Vlogs',
   'Tabletop Games','Video Games','TV series & Shows','Writing & Publishing',
   'Culture','Environment','Human Rights','Local Businesses','Wellness',

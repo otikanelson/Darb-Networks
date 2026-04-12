@@ -123,7 +123,7 @@ const Dashboard = () => {
   const isInvestor = user?.userType?.toLowerCase() === "investor";
 
   const categories = {
-    "Tech & Innovation": ["Audio","Tools","Education","Energy & Green Tech","Fashion & Wearables","Food & Beverages","Health & Fitness","Home","Phones & Accessories","Productivity","Transportation","Travel & Outdoors"],
+    "Tech & Innovation": ["Audio","Tools","Education","Energy & Green Tech","Fashion & Wearables","Food & Beverages","Health & Fitness","Home","Phones & Accessories","Business & Finance","Transportation","Travel & Outdoors"],
     "Creative Works": ["Art","Comics","Dance & Theater","Film","Music","Photography","Podcasts, Blogs & Vlogs","Tabletop Games","Video Games","TV series & Shows","Writing & Publishing"],
     "Community Projects": ["Culture","Environment","Human Rights","Local Businesses","Wellness"],
   };
