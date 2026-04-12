@@ -289,14 +289,24 @@ class CampaignService {
    */
   static async updateCampaign(campaignId, campaignData) {
     try {
-      console.log(`📝 Updating campaign ${campaignId} with data:`, campaignData);
+      console.log('🔄 ===== FRONTEND UPDATE CAMPAIGN START =====');
+      console.log('📝 Campaign ID:', campaignId);
+      console.log('📦 Campaign Data:', JSON.stringify(campaignData, null, 2));
       
       const response = await ApiService.put(`${API_BASE_URL}/campaigns/${campaignId}`, campaignData);
       
-      console.log('✅ Campaign updated successfully:', response);
+      console.log('✅ Campaign updated successfully!');
+      console.log('📤 Response:', JSON.stringify(response, null, 2));
+      console.log('🔄 ===== FRONTEND UPDATE CAMPAIGN END =====');
+      
       return response;
     } catch (error) {
-      console.error('❌ Error updating campaign:', error);
+      console.error('❌ ===== FRONTEND UPDATE CAMPAIGN ERROR =====');
+      console.error('❌ Error object:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error response data:', error.response?.data);
+      console.error('❌ =========================================');
       throw error;
     }
   }

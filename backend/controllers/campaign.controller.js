@@ -3,6 +3,16 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const CampaignStatsService = require('../services/campaignStatsService');
 
+// Helper to build image URLs
+const buildImageUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  // If it's a Cloudinary URL path, return as is
+  if (url.includes('cloudinary')) return url;
+  // Otherwise, assume it's a local path
+  return url.startsWith('/') ? url : `/${url}`;
+};
+
 // Cloudinary config (same as user controller)
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -25,8 +35,10 @@ const upload = multer({
 // Create new campaign
 const createCampaign = async (req, res) => {
   try {
+    console.log('🆕 ===== CREATE CAMPAIGN START =====');
     const founderId = req.userId;
-    
+    console.log('👤 Founder ID:', founderId);
+    console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
     
     // Verify the user from the database
     const [userCheck] = await db.sequelize.query(
@@ -37,7 +49,14 @@ const createCampaign = async (req, res) => {
       }
     );
     
+    console.log('🔍 User check:', userCheck ? 'FOUND' : 'NOT FOUND');
+    if (userCheck) {
+      console.log('  - User type:', userCheck.userType);
+      console.log('  - User name:', userCheck.fullName);
+    }
+    
     if (!userCheck) {
+      console.log('❌ User not found');
       return res.status(404).send({
         success: false,
         message: 'User not found'
@@ -45,6 +64,7 @@ const createCampaign = async (req, res) => {
     }
     
     if (userCheck.userType !== 'founder') {
+      console.log('❌ User is not a founder');
       return res.status(403).send({
         success: false,
         message: 'Only founders can create campaigns'
@@ -73,24 +93,62 @@ const createCampaign = async (req, res) => {
       isDraft
     } = req.body;
 
+    console.log('🎯 isDraft:', isDraft, '(type:', typeof isDraft, ')');
+
     // Validation for required fields (skip for drafts)
     if (!isDraft) {
+      console.log('✅ Validating required fields (not a draft)');
       const requiredFields = ['title', 'description', 'category', 'location', 'targetAmount', 'minimumInvestment'];
       for (const field of requiredFields) {
         if (!req.body[field]) {
+          console.log(`❌ Missing required field: ${field}`);
           return res.status(400).send({
             success: false,
             message: `${field} is required`
           });
         }
       }
+    } else {
+      console.log('⏭️ Skipping validation (draft mode)');
     }
 
     // Determine status
-    const status = isDraft ? 'draft' : 'submitted';
-    const submittedAt = isDraft ? null : new Date();
+    const isDraftBool = isDraft === true || isDraft === 'true';
+    const status = isDraftBool ? 'draft' : 'submitted';
+    const submittedAt = isDraftBool ? null : new Date();
+    
+    console.log('📊 Campaign status:', status);
+    console.log('📅 Submitted at:', submittedAt);
+
+    // Prepare values for insertion
+    const values = [
+      title || '',
+      description || '',
+      category || '',
+      location || '',
+      parseFloat(targetAmount) || 0,
+      parseFloat(String(minimumInvestment || '').replace(/,/g, '')) || 0,
+      maximumInvestment ? parseFloat(String(maximumInvestment).replace(/,/g, '')) : null,
+      problemStatement || '',
+      solution || '',
+      businessPlan || '',
+      marketAnalysis || '',
+      competitiveAdvantage || '',
+      financialProjections || '',
+      teamInformation || '',
+      risksAndChallenges || '',
+      videoUrl || '',
+      endDate || null,
+      durationDays ? parseInt(durationDays) : 90,
+      founderId,
+      status,
+      submittedAt
+    ];
+
+    console.log('📝 SQL Values:', JSON.stringify(values, null, 2));
 
     // Create campaign
+    console.log('⚙️ Executing INSERT query...');
     const [result] = await db.sequelize.query(
       `INSERT INTO campaigns 
        (title, description, category, location, target_amount, minimum_investment, maximum_investment,
@@ -99,36 +157,16 @@ const createCampaign = async (req, res) => {
         video_url, end_date, duration_days, founder_id, status, submitted_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       {
-        replacements: [
-          title || '',
-          description || '',
-          category || '',
-          location || '',
-          parseFloat(targetAmount) || 0,
-          parseFloat(String(minimumInvestment || '').replace(/,/g, '')) || 0,
-          maximumInvestment ? parseFloat(String(maximumInvestment).replace(/,/g, '')) : null,
-          problemStatement || '',
-          solution || '',
-          businessPlan || '',
-          marketAnalysis || '',
-          competitiveAdvantage || '',
-          financialProjections || '',
-          teamInformation || '',
-          risksAndChallenges || '',
-          videoUrl || '',
-          endDate || null,
-          durationDays ? parseInt(durationDays) : 90,
-          founderId,
-          status,
-          submittedAt
-        ],
+        replacements: values,
         type: db.sequelize.QueryTypes.INSERT,
       }
     );
 
     const campaignId = result;
+    console.log('✅ Campaign created with ID:', campaignId);
     
     // Immediately verify the campaign was created correctly
+    console.log('🔍 Verifying campaign creation...');
     const [verifyCreation] = await db.sequelize.query(
       `SELECT c.id, c.title, c.founder_id, c.status, u.fullName as founder_name, u.email as founder_email
        FROM campaigns c 
@@ -140,10 +178,14 @@ const createCampaign = async (req, res) => {
       }
     );
     
-    if (verifyCreation.founder_id !== founderId) {
+    console.log('✅ Campaign verified:', verifyCreation ? 'YES' : 'NO');
+    
+    if (verifyCreation && verifyCreation.founder_id !== founderId) {
+      console.log('⚠️ Warning: Founder ID mismatch!');
     }
 
     // Get the created campaign with founder details
+    console.log('📊 Fetching campaign details...');
     const [campaign] = await db.sequelize.query(
       `SELECT c.*, u.fullName as founder_name, u.email as founder_email
        FROM campaigns c 
@@ -157,6 +199,7 @@ const createCampaign = async (req, res) => {
 
     // Save milestones if provided
     if (Array.isArray(req.body.milestones) && req.body.milestones.length > 0) {
+      console.log('🎯 Processing milestones:', req.body.milestones.length, 'items');
       try {
         for (let i = 0; i < req.body.milestones.length; i++) {
           const m = req.body.milestones[i];
@@ -174,12 +217,18 @@ const createCampaign = async (req, res) => {
             }
           );
         }
-      } catch (_) { /* table may not exist yet */ }
+        console.log('✅ Milestones saved');
+      } catch (err) { 
+        console.log('⚠️ Milestone save failed:', err.message);
+      }
     }
 
+    console.log('✅ Campaign creation successful!');
+    console.log('📤 Sending response...');
+    
     res.status(201).send({
       success: true,
-      message: isDraft ? 'Campaign saved as draft' : 'Campaign submitted for approval',
+      message: isDraftBool ? 'Campaign saved as draft' : 'Campaign submitted for approval',
       data: {
         id: campaign.id,
         title: campaign.title,
@@ -195,7 +244,15 @@ const createCampaign = async (req, res) => {
       }
     });
 
+    console.log('🆕 ===== CREATE CAMPAIGN END =====');
+
   } catch (error) {
+    console.error('❌ ===== CREATE CAMPAIGN ERROR =====');
+    console.error('❌ Error:', error);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ ===================================');
+    
     res.status(500).send({
       success: false,
       message: 'Error creating campaign',
@@ -211,6 +268,7 @@ const uploadCampaignImage = [
     try {
       const { campaignId } = req.params;
       const founderId = req.userId;
+      const { isGallery } = req.query; // Check if this is a gallery image
       
       if (!req.file) {
         return res.status(400).send({
@@ -261,21 +319,50 @@ const uploadCampaignImage = [
       });
       const imageUrl = uploadResult.secure_url;
 
-      // Update campaign with image URL
-      await db.sequelize.query(
-        'UPDATE campaigns SET main_image_url = ? WHERE id = ?',
-        {
-          replacements: [imageUrl, campaignId],
-          type: db.sequelize.QueryTypes.UPDATE
+      if (isGallery === 'true') {
+        // Save to campaign_images table for gallery
+        try {
+          // Get the current max order_index
+          const [maxOrder] = await db.sequelize.query(
+            'SELECT COALESCE(MAX(order_index), -1) as max_order FROM campaign_images WHERE campaign_id = ?',
+            {
+              replacements: [campaignId],
+              type: db.sequelize.QueryTypes.SELECT
+            }
+          );
+          
+          const orderIndex = (maxOrder?.max_order ?? -1) + 1;
+          
+          await db.sequelize.query(
+            `INSERT INTO campaign_images (campaign_id, image_url, image_type, filename, order_index)
+             VALUES (?, ?, 'gallery', ?, ?)`,
+            {
+              replacements: [campaignId, imageUrl, req.file.originalname, orderIndex],
+              type: db.sequelize.QueryTypes.INSERT
+            }
+          );
+        } catch (err) {
+          console.error('Error saving to campaign_images:', err);
+          // Continue anyway - image is uploaded to Cloudinary
         }
-      );
+      } else {
+        // Update main campaign image
+        await db.sequelize.query(
+          'UPDATE campaigns SET main_image_url = ? WHERE id = ?',
+          {
+            replacements: [imageUrl, campaignId],
+            type: db.sequelize.QueryTypes.UPDATE
+          }
+        );
+      }
 
       res.status(200).send({
         success: true,
         message: 'Image uploaded successfully',
         data: { 
           imageUrl,
-          campaignId: campaignId
+          campaignId: campaignId,
+          isGallery: isGallery === 'true'
         }
       });
 
@@ -403,9 +490,14 @@ const createCampaignWithImage = async (req, res) => {
 // Update campaign (founder only, draft campaigns only)
 const updateCampaign = async (req, res) => {
   try {
+    console.log('🔄 ===== UPDATE CAMPAIGN START =====');
     const { id } = req.params;
     const founderId = req.userId;
     const updateData = req.body;
+
+    console.log('📝 Campaign ID:', id);
+    console.log('👤 Founder ID:', founderId);
+    console.log('📦 Update Data:', JSON.stringify(updateData, null, 2));
 
     // Verify campaign belongs to this founder
     const [campaign] = await db.sequelize.query(
@@ -416,7 +508,14 @@ const updateCampaign = async (req, res) => {
       }
     );
 
+    console.log('🔍 Campaign found:', campaign ? 'YES' : 'NO');
+    if (campaign) {
+      console.log('📊 Campaign status:', campaign.status);
+      console.log('👥 Campaign founder_id:', campaign.founder_id);
+    }
+
     if (!campaign) {
+      console.log('❌ Campaign not found or unauthorized');
       return res.status(404).send({
         success: false,
         message: 'Campaign not found or unauthorized'
@@ -425,6 +524,7 @@ const updateCampaign = async (req, res) => {
 
     // Only allow updates to draft and rejected campaigns
     if (!['draft', 'rejected'].includes(campaign.status)) {
+      console.log('❌ Invalid status for update:', campaign.status);
       return res.status(400).send({
         success: false,
         message: 'Only draft and rejected campaigns can be updated'
@@ -435,6 +535,11 @@ const updateCampaign = async (req, res) => {
     const isDraftBool = updateData.isDraft === true || updateData.isDraft === 'true';
     const newStatus = isDraftBool ? 'draft' : 'submitted';
     const submittedAt = isDraftBool ? null : new Date();
+
+    console.log('🎯 isDraft value:', updateData.isDraft, '(type:', typeof updateData.isDraft, ')');
+    console.log('🎯 isDraftBool:', isDraftBool);
+    console.log('🎯 New status:', newStatus);
+    console.log('🎯 Submitted at:', submittedAt);
 
     // Build update query with proper field mapping
     const updates = [];
@@ -469,13 +574,51 @@ const updateCampaign = async (req, res) => {
     Object.entries(fieldMappings).forEach(([frontendField, dbField]) => {
       if (updateData[frontendField] === undefined) return;
 
+      let shouldSkip = false;
+      let skipReason = '';
+
+      // For drafts, skip empty or zero values to avoid database constraints
+      if (isDraftBool) {
+        const value = updateData[frontendField];
+        
+        // Skip numeric fields that are 0, null, or empty
+        if (numericFields.includes(frontendField)) {
+          const parsed = parseFloat(String(value || '').replace(/,/g, ''));
+          if (!parsed || parsed === 0 || isNaN(parsed)) {
+            shouldSkip = true;
+            skipReason = `numeric value: ${parsed}`;
+          }
+        }
+        
+        // Skip text fields that are empty strings
+        if (!shouldSkip && !numericFields.includes(frontendField) && !nullableDateFields.includes(frontendField)) {
+          if (value === '' || value === null) {
+            shouldSkip = true;
+            skipReason = 'empty text';
+          }
+        }
+        
+        // Skip date fields that are null or empty
+        if (!shouldSkip && nullableDateFields.includes(frontendField)) {
+          if (!value || value === '') {
+            shouldSkip = true;
+            skipReason = 'no date';
+          }
+        }
+      }
+
+      if (shouldSkip) {
+        console.log(`⏭️ Skipping ${frontendField} for draft (${skipReason})`);
+        return;
+      }
+
+      // Add to updates and values
       updates.push(`${dbField} = ?`);
 
       if (numericFields.includes(frontendField)) {
         const parsed = parseFloat(String(updateData[frontendField] || '').replace(/,/g, ''));
         values.push(isNaN(parsed) ? null : parsed);
       } else if (nullableDateFields.includes(frontendField)) {
-        // Push null for empty strings so MySQL doesn't reject the DATETIME column
         values.push(updateData[frontendField] || null);
       } else {
         values.push(updateData[frontendField] ?? '');
@@ -501,8 +644,8 @@ const updateCampaign = async (req, res) => {
       updates.push('rejected_at = NULL');
     }
 
-    // Add updated_at timestamp
-    updates.push('updated_at = NOW()');
+    // Add updatedAt timestamp (using camelCase as per schema)
+    updates.push('updatedAt = NOW()');
 
     // Add campaign ID for WHERE clause
     values.push(id);
@@ -510,31 +653,40 @@ const updateCampaign = async (req, res) => {
     const sql = `UPDATE campaigns SET ${updates.join(', ')} WHERE id = ?`;
     // Validate placeholder count matches values count
     const placeholderCount = (sql.match(/\?/g) || []).length;
-    console.log('📝 updateCampaign SQL placeholders:', placeholderCount, '| values:', values.length);
+    console.log('📝 SQL Query:', sql);
+    console.log('📝 SQL placeholders:', placeholderCount, '| values:', values.length);
+    console.log('📝 Values:', JSON.stringify(values, null, 2));
+    
     if (placeholderCount !== values.length) {
+      console.log('❌ SQL placeholder mismatch!');
       throw new Error(`SQL placeholder mismatch: ${placeholderCount} placeholders but ${values.length} values`);
     }
 
+    console.log('⚙️ Executing SQL update...');
     // Execute update
     await db.sequelize.query(sql, {
         replacements: values,
         type: db.sequelize.QueryTypes.UPDATE
       }
     );
+    console.log('✅ SQL update executed successfully');
 
     // Get updated campaign with founder details (non-critical — don't let this crash the response)
     let updatedCampaign = null;
     try {
+      console.log('📊 Fetching updated campaign details...');
       [updatedCampaign] = await db.sequelize.query(
         `SELECT * FROM campaign_details WHERE id = ?`,
         { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
       );
+      console.log('✅ Updated campaign fetched:', updatedCampaign ? 'YES' : 'NO');
     } catch (viewErr) {
       console.warn('⚠️ campaign_details view query failed:', viewErr.message);
     }
 
     // Replace milestones if provided
     if (Array.isArray(req.body.milestones)) {
+      console.log('🎯 Processing milestones:', req.body.milestones.length, 'items');
       try {
         await db.sequelize.query(
           'DELETE FROM campaign_milestones WHERE campaign_id = ?',
@@ -559,6 +711,9 @@ const updateCampaign = async (req, res) => {
       } catch (_) { /* table may not exist yet */ }
     }
 
+    console.log('✅ Campaign update successful!');
+    console.log('📤 Sending response...');
+    
     res.status(200).send({
       success: true,
       message: newStatus === 'draft' ? 'Campaign saved as draft' : 'Campaign submitted for approval',
@@ -571,8 +726,14 @@ const updateCampaign = async (req, res) => {
       }
     });
 
+    console.log('🔄 ===== UPDATE CAMPAIGN END =====');
+
   } catch (error) {
-    console.error('❌ updateCampaign error:', error.message, error.stack);
+    console.error('❌ ===== UPDATE CAMPAIGN ERROR =====');
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ ===================================');
+    
     res.status(500).send({
       success: false,
       message: 'Error updating campaign',
@@ -957,6 +1118,28 @@ const getCampaignById = async (req, res) => {
       targetDate: m.target_date,
       completedAt: m.completed_at,
     }));
+
+    // Fetch gallery images for this campaign
+    let galleryImages = [];
+    try {
+      const images = await db.sequelize.query(
+        `SELECT image_url, caption, order_index 
+         FROM campaign_images 
+         WHERE campaign_id = ? AND image_type = 'gallery'
+         ORDER BY order_index ASC`,
+        { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+      );
+      galleryImages = images.map(img => buildImageUrl(img.image_url));
+    } catch (_) {
+      // Table may not exist or no images — degrade gracefully
+    }
+    
+    // If no gallery images, use main image as fallback
+    if (galleryImages.length === 0 && campaign.main_image_url) {
+      galleryImages = [buildImageUrl(campaign.main_image_url)];
+    }
+    
+    formattedCampaign.galleryImages = galleryImages;
 
     res.status(200).send({
       success: true,

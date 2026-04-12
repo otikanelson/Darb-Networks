@@ -61,7 +61,7 @@ const STEPS = [
     id: 'team',
     label: 'Team',
     title: 'Who is building this?',
-    description: 'Investors back people as much as ideas. Introduce your team and be honest about the risks you face.',
+    description: 'Investors back people as much as ideas. Introduce your team, and be honest about the risks you face. You can include contact details, images and references',
     fields: ['teamInformation','risksAndChallenges'],
   },
   {
@@ -274,9 +274,12 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
     isDraft,
   });
 
-  const uploadImg = async (file, cId) => {
+  const uploadImg = async (file, cId, isGallery = false) => {
     const fd = new FormData(); fd.append('campaignImage', file);
-    const r = await fetch(buildApiUrl(`/campaigns/${cId}/image`), {
+    const url = isGallery 
+      ? buildApiUrl(`/campaigns/${cId}/image?isGallery=true`)
+      : buildApiUrl(`/campaigns/${cId}/image`);
+    const r = await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
       body: fd,
@@ -285,39 +288,92 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
   };
 
   const save = async (isDraft) => {
+    console.log('💾 ===== CAMPAIGN EDITOR SAVE START =====');
+    console.log('📝 Mode:', mode);
+    console.log('📝 Campaign ID:', campaignId);
+    console.log('📝 Is Draft:', isDraft);
+    
     if (!isDraft) {
       const all = {};
       [0, 1, 2, 7].forEach(i => Object.assign(all, validate(i)));
       if (Object.keys(all).length) {
+        console.log('❌ Validation errors:', all);
         setErrors(all);
         setGlobalError('Some required fields are missing. Please review all steps before submitting.');
         toast.error('Please fill in all required fields.');
         return;
       }
     }
+    
     isDraft ? setSaving(true) : setSubmitting(true);
     setGlobalError('');
+    
     try {
       const token = localStorage.getItem('authToken');
       const p = payload(isDraft);
+      
+      console.log('📦 Payload:', JSON.stringify(p, null, 2));
+      
       const url = mode === 'create' ? buildApiUrl('/campaigns') : buildApiUrl(`/campaigns/${campaignId}`);
+      console.log('🌐 Request URL:', url);
+      console.log('🌐 Request Method:', mode === 'create' ? 'POST' : 'PUT');
+      
       const res = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(p),
       });
+      
+      console.log('📡 Response status:', res.status);
+      console.log('📡 Response ok:', res.ok);
+      
       const result = await res.json();
-      if (!res.ok || !result.success) throw new Error(result.message || result.error || 'Save failed');
+      console.log('📡 Response data:', JSON.stringify(result, null, 2));
+      
+      if (!res.ok || !result.success) {
+        console.log('❌ Request failed!');
+        throw new Error(result.message || result.error || 'Save failed');
+      }
+      
       const cId = result.data?.id || campaignId;
-      if (mainImageFile && cId) await uploadImg(mainImageFile, cId);
-      for (const f of galleryFiles) if (cId) await uploadImg(f, cId);
+      console.log('✅ Campaign ID:', cId);
+      console.log('📸 Gallery files to upload:', galleryFiles.length);
+      
+      if (mainImageFile && cId) {
+        console.log('📸 Uploading main image...');
+        await uploadImg(mainImageFile, cId, false);
+      }
+      
+      for (let i = 0; i < galleryFiles.length; i++) {
+        const f = galleryFiles[i];
+        if (cId) {
+          console.log(`📸 Uploading gallery image ${i + 1}/${galleryFiles.length}...`);
+          await uploadImg(f, cId, true); // Pass true for gallery images
+        }
+      }
+      
+      console.log('✅ Save successful!');
       toast.success(isDraft ? 'Draft saved!' : 'Campaign submitted for review!');
-      navigate(isDraft ? '/my-campaigns' : `/campaign/${cId}`);
+      
+      const navUrl = isDraft ? '/my-campaigns' : `/campaign/${cId}`;
+      console.log('🧭 Navigating to:', navUrl);
+      navigate(navUrl);
+      
+      console.log('💾 ===== CAMPAIGN EDITOR SAVE END =====');
     } catch (err) {
+      console.error('❌ ===== CAMPAIGN EDITOR SAVE ERROR =====');
+      console.error('❌ Error:', err);
+      console.error('❌ Error message:', err.message);
+      console.error('❌ Error stack:', err.stack);
+      console.error('❌ ======================================');
+      
       const msg = err.message || 'Something went wrong.';
       setGlobalError(msg);
       toast.error(msg);
-    } finally { setSaving(false); setSubmitting(false); }
+    } finally { 
+      setSaving(false); 
+      setSubmitting(false); 
+    }
   };
 
   const s = STEPS[step];
@@ -449,8 +505,16 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
               multiple
               compact
               value={[...galleryImages, ...galleryFiles]}
-              onChange={files => setGalleryFiles(p => [...p, ...files].slice(0, 8))}
+              onChange={files => {
+                console.log('📸 Gallery files selected:', files);
+                setGalleryFiles(p => {
+                  const newFiles = [...p, ...files].slice(0, 8);
+                  console.log('📸 Updated gallery files:', newFiles.length);
+                  return newFiles;
+                });
+              }}
               onRemove={i => {
+                console.log('🗑️ Removing gallery image at index:', i);
                 if (i < galleryImages.length) return;
                 setGalleryFiles(p => p.filter((_, idx) => idx !== i - galleryImages.length));
               }}

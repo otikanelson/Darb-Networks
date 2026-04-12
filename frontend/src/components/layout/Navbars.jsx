@@ -110,19 +110,23 @@ const Navbars = ({
 
   const handleLogout = async () => {
     try {
+      console.log('🚪 Navbar: Logging out...');
       await logout();
+      console.log('✅ Navbar: Logout successful, navigating to home');
       navigate('/');
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error('❌ Navbar: Error logging out:', error);
     }
   };
 
   // Handle search
   const handleSearch = (e) => {
     e.preventDefault();
+    console.log('🔍 Navbar: Search submitted:', searchQuery);
     if (searchQuery.trim()) {
-      // Navigate to dashboard with search query
-      navigate(`/dashboard?search=${encodeURIComponent(searchQuery.trim())}`);
+      const searchUrl = `/dashboard?search=${encodeURIComponent(searchQuery.trim())}`;
+      console.log('  - Navigating to:', searchUrl);
+      navigate(searchUrl);
       setSearchQuery('');
       setShowSearchSuggestions(false);
     }
@@ -135,9 +139,12 @@ const Navbars = ({
   };
 
   const handleSuggestionClick = (suggestion) => {
+    console.log('💡 Navbar: Suggestion clicked:', suggestion);
     setSearchQuery(suggestion);
     setShowSearchSuggestions(false);
-    navigate(`/dashboard?search=${encodeURIComponent(suggestion)}`);
+    const searchUrl = `/dashboard?search=${encodeURIComponent(suggestion)}`;
+    console.log('  - Navigating to:', searchUrl);
+    navigate(searchUrl);
   };
 
   const clearSearch = () => {
@@ -326,10 +333,25 @@ const Navbars = ({
   const ProfileDropdown = () => {
     // Add cache-busting timestamp to profile image URL
     const getProfileImageUrl = () => {
-      if (!user?.profileImageUrl) return null;
+      console.log('🖼️ ProfileDropdown: Building profile image URL');
+      console.log('  - user.profileImageUrl:', user?.profileImageUrl);
+      console.log('  - user.profileImageTimestamp:', user?.profileImageTimestamp);
+      
+      if (!user?.profileImageUrl) {
+        console.log('  ❌ No profile image URL found');
+        return null;
+      }
+      
       const baseUrl = buildImageUrl(user.profileImageUrl);
+      console.log('  - baseUrl:', baseUrl);
+      
       const cacheBuster = user.profileImageTimestamp ? `?t=${user.profileImageTimestamp}` : '';
-      return cacheBuster ? `${baseUrl}${cacheBuster}` : baseUrl;
+      console.log('  - cacheBuster:', cacheBuster);
+      
+      const finalUrl = cacheBuster ? `${baseUrl}${cacheBuster}` : baseUrl;
+      console.log('  ✅ Final URL:', finalUrl);
+      
+      return finalUrl;
     };
 
     const profileImageUrl = getProfileImageUrl();

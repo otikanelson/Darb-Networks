@@ -11,7 +11,8 @@ import {
   CheckCircle,
   AlertCircle,
   TrendingUp,
-  Calendar
+  Calendar,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { buildImageUrl } from '../../config/apiUrl';
@@ -106,7 +107,8 @@ const CampaignCard = ({
     if (campaign.main_image_url) {
       return buildImageUrl(campaign.main_image_url);
     }
-    return '/placeholder-campaign.jpg'; // Add a placeholder image to your public folder
+    // Return null to show icon placeholder instead
+    return null;
   };
 
   // Get status badge
@@ -205,12 +207,26 @@ const CampaignCard = ({
       <div className={getCardClasses()} onClick={handleCardClick}>
         {/* Image */}
         <div className={`relative ${getImageHeight()} overflow-hidden`}>
-          <img
-            src={getImageUrl()}
-            alt={campaign.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => { e.target.src = '/placeholder-campaign.jpg'; }}
-          />
+          {getImageUrl() ? (
+            <>
+              <img
+                src={getImageUrl()}
+                alt={campaign.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => { 
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+              <div className="hidden w-full h-full bg-gradient-to-br from-green-50 to-green-100 items-center justify-center">
+                <BookOpen className="h-20 w-20 text-green-600" strokeWidth={1.5} />
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+              <BookOpen className="h-20 w-20 text-green-600" strokeWidth={1.5} />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           {getStatusBadge()}
 
@@ -288,14 +304,26 @@ const CampaignCard = ({
     <div className={getCardClasses()} onClick={handleCardClick}>
       {/* Campaign Image */}
       <div className={`relative ${getImageHeight()} overflow-hidden`}>
-        <img 
-          src={getImageUrl()}
-          alt={campaign.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            e.target.src = '/placeholder-campaign.jpg';
-          }}
-        />
+        {getImageUrl() ? (
+          <>
+            <img 
+              src={getImageUrl()}
+              alt={campaign.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+            <div className="hidden w-full h-full bg-gradient-to-br from-green-50 to-green-100 items-center justify-center">
+              <BookOpen className="h-24 w-24 text-green-600" strokeWidth={1.5} />
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+            <BookOpen className="h-24 w-24 text-green-600" strokeWidth={1.5} />
+          </div>
+        )}
         
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />

@@ -167,6 +167,7 @@ const CampaignDisplay = () => {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [showInvestmentModal, setShowInvestmentModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Track when the funding card scrolls out of view
   const { ref: fundingCardRef, inView: fundingCardInView } = useInView({ threshold: 0.2 });
@@ -254,8 +255,41 @@ const CampaignDisplay = () => {
     ? campaign.videoUrl.split(",").map(v => v.trim()).filter(Boolean)
     : [];
 
-  // Gallery images (future: from campaign_images table; for now use mainImageUrl as fallback)
+  // Gallery images (from campaign_images table or fallback to main image)
   const galleryImages = campaign.galleryImages || [];
+  
+  console.log('🖼️ Campaign Display - Images:', {
+    mainImageUrl: campaign.mainImageUrl,
+    galleryImages: galleryImages,
+    galleryCount: galleryImages.length
+  });
+  
+  // Carousel images: combine main image with gallery images
+  const carouselImages = [];
+  if (campaign.mainImageUrl) {
+    const mainUrl = campaign.mainImageUrl.startsWith('http') 
+      ? campaign.mainImageUrl 
+      : buildImageUrl(campaign.mainImageUrl);
+    carouselImages.push(mainUrl);
+  }
+  // Add gallery images (they're already processed URLs from backend)
+  carouselImages.push(...galleryImages.filter(img => img !== carouselImages[0]));
+  
+  // If no images at all, use placeholder
+  if (carouselImages.length === 0) {
+    carouselImages.push("/assets/placeholder-campaign.jpg");
+  }
+  
+  console.log('🎠 Carousel images:', carouselImages.length, carouselImages);
+
+  // Carousel navigation functions
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % carouselImages.length);
+  };
+  
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+  };
 
   // ── tabs ──────────────────────────────────────────────────────────────────
   const TABS = [
@@ -264,7 +298,6 @@ const CampaignDisplay = () => {
     { id: "business",   label: "Business & Financials" },
     { id: "team",       label: "Team & Risks" },
     ...(campaign.milestones?.length ? [{ id: "milestones", label: "Milestones" }] : []),
-    ...(videoUrls.length || galleryImages.length ? [{ id: "media", label: "Media" }] : []),
   ];
 
   const renderTab = () => {
@@ -272,6 +305,15 @@ const CampaignDisplay = () => {
       case "overview":
         return (
           <div className="space-y-6">
+            {/* Videos Section - if any */}
+            {videoUrls.length > 0 && (
+              <Section icon={Play} title="Campaign Video">
+                <div className="space-y-4">
+                  {videoUrls.map((url, i) => <VideoEmbed key={i} url={url} />)}
+                </div>
+              </Section>
+            )}
+            
             {campaign.description && (
               <Section icon={BookOpen} title="About This Campaign">
                 <RichContent html={campaign.description} />
@@ -292,7 +334,7 @@ const CampaignDisplay = () => {
                 <RichContent html={campaign.competitiveAdvantage} />
               </Section>
             )}
-            {!campaign.description && !campaign.problemStatement && !campaign.solution && (
+            {!campaign.description && !campaign.problemStatement && !campaign.solution && !videoUrls.length && (
               <div className="text-center py-16 text-gray-400">
                 <BookOpen className="mx-auto h-12 w-12 mb-3 opacity-40" />
                 <p>No overview content yet.</p>
@@ -467,24 +509,6 @@ const CampaignDisplay = () => {
           </div>
         );
 
-      case "media":
-        return (
-          <div className="space-y-6">
-            {videoUrls.length > 0 && (
-              <Section icon={Play} title="Videos">
-                <div className="space-y-4">
-                  {videoUrls.map((url, i) => <VideoEmbed key={i} url={url} />)}
-                </div>
-              </Section>
-            )}
-            {galleryImages.length > 0 && (
-              <Section icon={Award} title="Gallery">
-                <Gallery images={galleryImages} />
-              </Section>
-            )}
-          </div>
-        );
-
       default: return null;
     }
   };
@@ -520,18 +544,60 @@ const CampaignDisplay = () => {
     <div className={`min-h-screen bg-gray-50${showInvestBar ? ' pb-20' : ''}`}>
       <UnifiedNavbar variant="display" />
 
-      {/* ── Hero ── */}
-      <div className="relative w-full h-64 md:h-[460px] bg-gray-900 overflow-hidden">
-        <img src={heroImg()} alt={campaign.title}
-          className="w-full h-full object-cover opacity-75"
-          onError={(e) => { e.target.src = "/assets/placeholder-campaign.jpg"; }} />
+      {/* ── Hero Carousel ── */}
+      <div className="relative w-full h-64 md:h-[460px] bg-gray-900 overflow-hidden group">
+        {/* Current Image */}
+        <img 
+          src={carouselImages[currentImageIndex]} 
+          alt={campaign.title}
+          className="w-full h-full object-cover opacity-75 transition-opacity duration-500"
+          onError={(e) => { e.target.src = "/assets/placeholder-campaign.jpg"; }} 
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
+        {/* Navigation Arrows - only show if multiple images */}
+        {carouselImages.length > 1 && (
+          <>
+            <button 
+              onClick={prevImage}
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <button 
+              onClick={nextImage}
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+            
+            {/* Image Indicators */}
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
+              {carouselImages.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentImageIndex(idx)}
+                  className={`h-2 rounded-full transition-all ${
+                    idx === currentImageIndex 
+                      ? 'w-8 bg-white' 
+                      : 'w-2 bg-white/50 hover:bg-white/75'
+                  }`}
+                  aria-label={`Go to image ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Back Button */}
         <button onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition">
+          className="absolute top-4 left-4 bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition z-10">
           <ArrowLeft className="h-5 w-5" />
         </button>
 
+        {/* Content Overlay */}
         <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-8">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-wrap gap-2 mb-3">

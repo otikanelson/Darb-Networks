@@ -1,130 +1,98 @@
-import {Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
+
+  const links = {
+    Explore: [
+      { label: 'Browse Campaigns', to: '/dashboard' },
+      { label: 'Tech & Innovation', to: '/dashboard' },
+      { label: 'Health & Fitness', to: '/dashboard' },
+      { label: 'Creative Works', to: '/dashboard' },
+    ],
+    Company: [
+      { label: 'About Us', to: '/about' },
+      { label: 'How It Works', to: '/#how-it-works' },
+      { label: 'FAQ', to: '/faq' },
+      { label: 'Privacy Policy', to: '/privacy-policy' },
+    ],
+    Account: [
+      { label: 'Sign Up', to: '/register' },
+      { label: 'Log In', to: '/login' },
+      { label: 'Start a Campaign', to: '/pages/CreateCampaign' },
+      { label: 'My Campaigns', to: '/my-campaigns' },
+    ],
+  };
+
+  const socials = [
+    { label: 'Instagram', icon: '/assets/instagram.svg', href: '#' },
+    { label: 'Facebook', icon: '/assets/facebook.svg', href: '#' },
+    { label: 'Twitter', icon: '/assets/twitter.svg', href: '#' },
+    { label: 'LinkedIn', icon: '/assets/linkedin.svg', href: '#' },
+  ];
+
   return (
-    <div className="px-2 sm:px-6 lg:px-3 py-1">
-      <footer className="bg-green-700 text-white rounded-t-xl rounded-b-xl overflow-hidden">
-        <div className="max-w-7xl mx-auto px-8 sm:px-10 lg:px-5 py-3">
-          {/* Main Footer Content */}
-          <div className="py-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-x-12 gap-y-16">
-              {/* Brand Section */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-2">
-                  <img 
-                    src="/assets/Logo.png" 
-                    alt="Logo" 
-                    className="w-24 h-14 object-contain"
-                  />
-                </div>
-                <p className="text-gray-400 text-1xl font-semibold leading-relaxed">
-                  Elevating Experience & Seize <br />
-                  Control Of Your Smart Home!
-                </p>
-              </div>
+    <footer className="bg-gray-950 text-white">
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 pt-16 pb-8">
 
-              {/* Donate Links */}
-              <div>
-                <h3 className="font-bold mb-8">Donate</h3>
-                <ul className="space-y-4">
-                  <li>
-                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
-                      Tech & Innovation
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
-                      Creative Works
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
-                      Community Projects
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/dashboard" className="text-gray-400 hover:text-white font-semibold">
-                      Disaster
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+        {/* Top grid */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-12 pb-12 border-b border-white/10">
 
-              {/* Help Links */}
-              <div>
-                <h3 className="font-bold mb-8">Help</h3>
-                <ul className="space-y-4">
-                  <li>
-                    <Link to="/faq" className="text-gray-400 hover:text-white font-semibold">
-                      FAQ
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/privacy-policy" className="text-gray-400 hover:text-white font-semibold">
-                      Privacy Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/about" className="text-gray-400 hover:text-white font-semibold">
-                      Contact Us
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Company Links */}
-              <div>
-                <h3 className="font-bold mb-8">Company</h3>
-                <ul className="space-y-4">
-                  <li>
-                    <Link to="/about" className="text-gray-400 hover:text-white font-semibold">
-                      About Us
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/about" className="text-gray-400 hover:text-white font-semibold">
-                      Services
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+          {/* Brand */}
+          <div className="md:col-span-2 space-y-5">
+            <img src="/assets/Logo.png" alt="Darb Network" className="h-12 w-auto" />
+            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+              Connecting ambitious Nigerian founders with investors who believe in their vision. Fund the future, one startup at a time.
+            </p>
+            {/* Social icons */}
+            <div className="flex items-center gap-3 pt-1">
+              {socials.map(({ label, icon, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  className="h-9 w-9 rounded-full bg-white/5 hover:bg-green-700 flex items-center justify-center transition-colors"
+                >
+                  <img src={icon} alt={label} className="h-4 w-4 brightness-0 invert" />
+                </a>
+              ))}
             </div>
           </div>
 
-          {/* Copyright and Social Links */}
-          <div className="border-t border-green-900">
-            <div className="py-5 flex flex-col md:flex-row justify-between items-center">
-              <p className="text-gray-400">
-                © Fund Inc. {currentYear}
-                <br />
-                All Rights Reserved.
-              </p>
-              
-              <div className="flex space-x-6 mt-6 md:mt-0">
-                <a href="#" className="text-gray-400 hover:text-white flex items-center border-x-2 border-y-2 border-green-900 rounded-b-3xl rounded-t-3xl px-1">
-                  <img src="/assets/instagram.svg" alt="Instagram" className="h-5 w-5" />
-                  <p className="text-stone-950 text-sm m-2">Instagram</p>
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white flex items-center border-x-2 border-y-2 border-green-900 rounded-b-3xl rounded-t-3xl px-1">
-                  <img src="/assets/facebook.svg" alt="Facebook" className="h-5 w-5" />
-                  <p className="text-stone-950 text-sm m-2">Facebook</p>
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white flex items-center border-x-2 border-y-2 border-green-900 rounded-b-3xl rounded-t-3xl px-1">
-                  <img src="/assets/twitter.svg" alt="Twitter" className="h-5 w-5" />
-                  <p className="text-stone-950 text-sm m-2">Twitter</p>
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white flex items-center border-x-2 border-y-2 border-green-900 rounded-b-3xl rounded-t-3xl px-1">
-                  <img src="/assets/linkedin.svg" alt="LinkedIn" className="h-5 w-5" />
-                  <p className="text-stone-950 text-sm m-2">Linkedin</p>
-                </a>
-              </div>
+          {/* Link columns */}
+          {Object.entries(links).map(([heading, items]) => (
+            <div key={heading}>
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-5">
+                {heading}
+              </h4>
+              <ul className="space-y-3">
+                {items.map(({ label, to }) => (
+                  <li key={label}>
+                    <Link
+                      to={to}
+                      className="text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
+          ))}
+        </div>
+
+        {/* Bottom bar */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+          <p>© {currentYear} Darb Network. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
+            <Link to="/about" className="hover:text-white transition-colors">Contact</Link>
           </div>
         </div>
-      </footer>
-    </div>
+
+      </div>
+    </footer>
   );
 };
 
