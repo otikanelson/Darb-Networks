@@ -1,8 +1,14 @@
 import { Shield, Users, Share2, Key, Lock, Mail } from "lucide-react";
+import { useEffect } from "react";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
 
 const PrivacyPolicy = () => {
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const sections = [
     {
       id: "collection",
@@ -125,7 +131,7 @@ const PrivacyPolicy = () => {
               className="bg-white rounded-xl shadow-sm p-8"
             >
               <div className="flex items-center space-x-4 mb-6">
-                <section.icon className="h-6 w-6 text-green-600" />
+                <section.icon className="h-6 w-6 text-primary-600" />
                 <h2 className="text-2xl font-bold text-gray-900">
                   {section.title}
                 </h2>
@@ -150,28 +156,6 @@ const PrivacyPolicy = () => {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Back to Top Button */}
-      <div className="fixed bottom-8 right-8">
-        <a
-          href="#"
-          className="bg-green-600 text-white rounded-full p-3 shadow-lg hover:bg-green-700 transition-colors"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 10l7-7m0 0l7 7m-7-7v18"
-            />
-          </svg>
-        </a>
       </div>
 
       <Footer />

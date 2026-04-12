@@ -19,7 +19,7 @@ const ToolBtn = ({ onClick, active, title, children }) => (
     title={title}
     className={`p-1.5 rounded transition-colors ${
       active
-        ? 'bg-green-100 text-green-700'
+        ? 'bg-primary-100 text-primary-700'
         : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
     }`}
   >
@@ -84,7 +84,7 @@ const RichEditor = ({ value, onChange, placeholder = 'Start writing…', minHeig
   if (!editor) return null;
 
   return (
-    <div className="border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500 transition-all bg-white">
+    <div className="border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-500 transition-all bg-white">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-gray-200 bg-gray-50">
         <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">

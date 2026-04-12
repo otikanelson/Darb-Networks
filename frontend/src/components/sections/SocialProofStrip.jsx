@@ -52,8 +52,8 @@ const SocialProofStrip = () => (
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: i * 0.1 }}
           >
-            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Icon className="h-5 w-5 text-green-600" />
+            <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Icon className="h-5 w-5 text-primary-600" />
             </div>
             <div>
               <div className="text-2xl font-extrabold text-gray-900 leading-none">

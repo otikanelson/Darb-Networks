@@ -42,7 +42,7 @@ const FieldError = ({ msg }) =>
 
 // ── Password strength bar ────────────────────────────────────────────────────
 const StrengthBar = ({ score }) => {
-  const colors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-500'];
+  const colors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-blue-400', 'bg-primary-500'];
   const labels = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'];
   return (
     <div className="mt-2">
@@ -51,7 +51,7 @@ const StrengthBar = ({ score }) => {
           <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= score ? colors[score-1] : 'bg-gray-200'}`} />
         ))}
       </div>
-      {score > 0 && <p className={`text-xs ${score < 3 ? 'text-red-500' : score < 5 ? 'text-yellow-600' : 'text-green-600'}`}>{labels[score-1]}</p>}
+      {score > 0 && <p className={`text-xs ${score < 3 ? 'text-red-500' : score < 5 ? 'text-yellow-600' : 'text-primary-600'}`}>{labels[score-1]}</p>}
     </div>
   );
 };
@@ -220,7 +220,7 @@ const RegisterForm = () => {
             <button key={type} type="button"
               className={`flex flex-col items-center justify-center py-5 px-4 rounded-lg border-2 transition-all ${
                 formData.userType === type
-                  ? 'border-green-600 bg-green-50 text-green-700'
+                  ? 'border-primary-600 bg-primary-50 text-primary-700'
                   : 'border-gray-200 hover:bg-gray-50 text-gray-600'
               }`}
               onClick={() => handleInputChange({ target: { name: 'userType', value: type } })}
@@ -241,7 +241,7 @@ const RegisterForm = () => {
         <div className="relative">
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange}
-            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 ${fieldErrors.fullName ? 'border-red-400' : 'border-gray-300'}`}
+            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 ${fieldErrors.fullName ? 'border-red-400' : 'border-gray-300'}`}
             placeholder="Enter your full name" />
         </div>
         <FieldError msg={fieldErrors.fullName} />
@@ -253,7 +253,7 @@ const RegisterForm = () => {
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           <input type="email" name="email" value={formData.email} onChange={handleInputChange}
-            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
+            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
             placeholder="name@example.com" />
         </div>
         <FieldError msg={fieldErrors.email} />
@@ -265,7 +265,7 @@ const RegisterForm = () => {
         <div className="relative">
           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange}
-            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 font-mono ${fieldErrors.phoneNumber ? 'border-red-400' : 'border-gray-300'}`}
+            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 font-mono ${fieldErrors.phoneNumber ? 'border-red-400' : 'border-gray-300'}`}
             placeholder="+2348012345678" maxLength={14} />
         </div>
         <p className="mt-1 text-xs text-gray-400">Nigerian format: +234 followed by 10 digits</p>
@@ -283,7 +283,7 @@ const RegisterForm = () => {
           <div className="relative">
             <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
             <input type="text" name="companyName" value={formData.companyName} onChange={handleInputChange}
-              className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 ${fieldErrors.companyName ? 'border-red-400' : 'border-gray-300'}`}
+              className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 ${fieldErrors.companyName ? 'border-red-400' : 'border-gray-300'}`}
               placeholder="Your registered company name" />
           </div>
           <FieldError msg={fieldErrors.companyName} />
@@ -297,7 +297,7 @@ const RegisterForm = () => {
           <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           <input type="text" name="bvn" value={formData.bvn} onChange={handleInputChange}
             inputMode="numeric" maxLength={11}
-            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 font-mono tracking-widest ${fieldErrors.bvn ? 'border-red-400' : 'border-gray-300'}`}
+            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 font-mono tracking-widest ${fieldErrors.bvn ? 'border-red-400' : 'border-gray-300'}`}
             placeholder="11-digit BVN" />
         </div>
         <p className="mt-1 text-xs text-gray-400">{formData.bvn.length}/11 digits</p>
@@ -311,7 +311,7 @@ const RegisterForm = () => {
           <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           <input type="text" name="nin" value={formData.nin} onChange={handleInputChange}
             inputMode="numeric" maxLength={11}
-            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 font-mono tracking-widest ${fieldErrors.nin ? 'border-red-400' : 'border-gray-300'}`}
+            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 font-mono tracking-widest ${fieldErrors.nin ? 'border-red-400' : 'border-gray-300'}`}
             placeholder="11-digit NIN" />
         </div>
         <p className="mt-1 text-xs text-gray-400">{formData.nin.length}/11 digits</p>
@@ -327,7 +327,7 @@ const RegisterForm = () => {
           <div className="relative">
             <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
             <input type="text" name="cacNumber" value={formData.cacNumber} onChange={handleInputChange}
-              className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 font-mono ${fieldErrors.cacNumber ? 'border-red-400' : 'border-gray-300'}`}
+              className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 font-mono ${fieldErrors.cacNumber ? 'border-red-400' : 'border-gray-300'}`}
               placeholder="RC123456 / BN12345 / IT12345" maxLength={10} />
           </div>
           <p className="mt-1 text-xs text-gray-400">Format: RC, BN, or IT followed by 5–7 digits</p>
@@ -341,7 +341,7 @@ const RegisterForm = () => {
         <div className="relative">
           <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400 pointer-events-none" />
           <textarea name="address" value={formData.address} onChange={handleInputChange} rows={3}
-            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 resize-none ${fieldErrors.address ? 'border-red-400' : 'border-gray-300'}`}
+            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 resize-none ${fieldErrors.address ? 'border-red-400' : 'border-gray-300'}`}
             placeholder="Enter your full residential address" />
         </div>
         <p className="mt-1 text-xs text-gray-400">{formData.address.length} chars (min 8)</p>
@@ -359,7 +359,7 @@ const RegisterForm = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
           <select name="bankName" value={formData.bankName} onChange={handleInputChange}
-            className={`block w-full pl-3 pr-10 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 ${fieldErrors.bankName ? 'border-red-400' : 'border-gray-300'}`}>
+            className={`block w-full pl-3 pr-10 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 ${fieldErrors.bankName ? 'border-red-400' : 'border-gray-300'}`}>
             <option value="">Select your bank</option>
             {['Access Bank','GT Bank','First Bank','Zenith Bank','UBA','Fidelity Bank','Sterling Bank','Polaris Bank','Wema Bank','Keystone Bank','Other'].map(b => (
               <option key={b} value={b.toLowerCase().replace(/\s/g,'')}>{b}</option>
@@ -375,7 +375,7 @@ const RegisterForm = () => {
             <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
             <input type="text" name="accountNumber" value={formData.accountNumber} onChange={handleInputChange}
               inputMode="numeric" maxLength={10}
-              className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 font-mono tracking-widest ${fieldErrors.accountNumber ? 'border-red-400' : 'border-gray-300'}`}
+              className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 font-mono tracking-widest ${fieldErrors.accountNumber ? 'border-red-400' : 'border-gray-300'}`}
               placeholder="10-digit account number" />
           </div>
           <p className="mt-1 text-xs text-gray-400">{formData.accountNumber.length}/10 digits</p>
@@ -388,7 +388,7 @@ const RegisterForm = () => {
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
             <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleInputChange}
-              className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 ${fieldErrors.password ? 'border-red-400' : 'border-gray-300'}`}
+              className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 ${fieldErrors.password ? 'border-red-400' : 'border-gray-300'}`}
               placeholder="Create a strong password" />
             <button type="button" onClick={() => setShowPassword(v => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -405,7 +405,7 @@ const RegisterForm = () => {
               { key: 'number',    label: 'One number' },
               { key: 'special',   label: 'One special character (!@#$…)' },
             ].map(({ key, label }) => (
-              <li key={key} className={`flex items-center gap-1.5 text-xs ${checks[key] ? 'text-green-600' : 'text-gray-400'}`}>
+              <li key={key} className={`flex items-center gap-1.5 text-xs ${checks[key] ? 'text-primary-600' : 'text-gray-400'}`}>
                 {checks[key] ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
                 {label}
               </li>
@@ -420,7 +420,7 @@ const RegisterForm = () => {
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
             <input type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange}
-              className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300'}`}
+              className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300'}`}
               placeholder="Repeat your password" />
             <button type="button" onClick={() => setShowConfirmPassword(v => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -428,7 +428,7 @@ const RegisterForm = () => {
             </button>
           </div>
           {formData.confirmPassword && formData.password === formData.confirmPassword && (
-            <p className="mt-1 text-xs text-green-600 flex items-center gap-1"><CheckCircle className="h-3 w-3" />Passwords match</p>
+            <p className="mt-1 text-xs text-primary-600 flex items-center gap-1"><CheckCircle className="h-3 w-3" />Passwords match</p>
           )}
           <FieldError msg={fieldErrors.confirmPassword} />
         </div>
@@ -451,14 +451,14 @@ const RegisterForm = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-green-700 to-green-900 p-12 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-green-800/95 to-green-900/90" />
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-primary-700 to-primary-900 p-12 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary-800/95 to-primary-900/90" />
         <img src="/assets/featured-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-10" />
         <div className="relative z-10 flex flex-col justify-between h-full">
           <div>
             <img src="/assets/Logo.png" alt="Logo" className="h-16 w-auto mb-12" />
             <h1 className="text-4xl font-bold text-white mb-6">Join our community</h1>
-            <p className="text-green-100 text-lg max-w-md">
+            <p className="text-primary-100 text-lg max-w-md">
               {formData.userType === 'founder'
                 ? 'Create your campaign and connect with investors who believe in your vision.'
                 : 'Discover promising Nigerian startups and be part of their success story.'}
@@ -469,10 +469,10 @@ const RegisterForm = () => {
               "I've invested in three startups through this platform, and the milestone-based funding gives me confidence that my investments are being put to good use."
             </p>
             <div className="flex items-center mt-4">
-              <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold mr-3">JO</div>
+              <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold mr-3">JO</div>
               <div>
                 <p className="text-white font-medium">Johnson Oladele</p>
-                <p className="text-green-200 text-sm">Angel Investor</p>
+                <p className="text-primary-200 text-sm">Angel Investor</p>
               </div>
             </div>
           </div>
@@ -486,7 +486,7 @@ const RegisterForm = () => {
             <h2 className="text-3xl font-bold text-gray-900">Create your account</h2>
             <p className="mt-2 text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="font-medium text-green-600 hover:text-green-500">Sign in</Link>
+              <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">Sign in</Link>
             </p>
           </div>
 
@@ -494,12 +494,12 @@ const RegisterForm = () => {
           <div className="mb-8">
             <div className="relative">
               <div className="absolute left-0 top-5 w-full h-1 bg-gray-200 rounded">
-                <div className="h-1 bg-green-500 rounded transition-all duration-300" style={{ width: `${((step - 1) / 2) * 100}%` }} />
+                <div className="h-1 bg-primary-500 rounded transition-all duration-300" style={{ width: `${((step - 1) / 2) * 100}%` }} />
               </div>
               <div className="relative flex justify-between">
                 {[1, 2, 3].map(n => (
                   <div key={n} className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                    step >= n ? 'bg-green-500 text-white border-green-500' : 'bg-white border-gray-300 text-gray-500'
+                    step >= n ? 'bg-primary-500 text-white border-primary-500' : 'bg-white border-gray-300 text-gray-500'
                   }`}>{n}</div>
                 ))}
               </div>
@@ -525,12 +525,12 @@ const RegisterForm = () => {
               )}
               {step < 3 ? (
                 <button type="button" onClick={nextStep}
-                  className={`${step > 1 ? '' : 'ml-auto'} flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all`}>
+                  className={`${step > 1 ? '' : 'ml-auto'} flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all`}>
                   Next <ChevronRight className="h-4 w-4 ml-2" />
                 </button>
               ) : (
                 <button type="submit" disabled={isSubmitting}
-                  className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                  className="flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                   {isSubmitting ? (
                     <>
                       <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -549,9 +549,9 @@ const RegisterForm = () => {
 
           <div className="mt-6 text-center text-xs text-gray-500">
             By creating an account, you agree to our{' '}
-            <Link to="/terms" className="text-green-600 hover:text-green-500">Terms of Service</Link>{' '}
+            <Link to="/terms" className="text-primary-600 hover:text-primary-500">Terms of Service</Link>{' '}
             and{' '}
-            <Link to="/privacy-policy" className="text-green-600 hover:text-green-500">Privacy Policy</Link>
+            <Link to="/privacy-policy" className="text-primary-600 hover:text-primary-500">Privacy Policy</Link>
           </div>
         </div>
       </div>

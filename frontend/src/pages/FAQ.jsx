@@ -1,5 +1,5 @@
 // src/pages/FAQ.jsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ChevronDown,
   Search,
@@ -10,6 +10,7 @@ import {
   Copy,
   Share2,
   AlertCircle,
+  Check,
 } from "lucide-react";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
@@ -76,7 +77,7 @@ const FAQItem = ({ question, answer, isOpen, onClick, id }) => {
         </span>
         <ChevronDown
           className={`transition-transform duration-300 flex-shrink-0 h-6 w-6 ${
-            isOpen ? "rotate-180 text-green-600" : "text-gray-500"
+            isOpen ? "rotate-180 text-primary-600" : "text-gray-500"
           }`}
         />
       </button>
@@ -104,8 +105,8 @@ const FAQItem = ({ question, answer, isOpen, onClick, id }) => {
             >
               {copied ? (
                 <>
-                  <Check className="h-4 w-4 mr-1 text-green-500" />
-                  <span className="text-green-500">Copied</span>
+                  <Check className="h-4 w-4 mr-1 text-primary-500" />
+                  <span className="text-primary-500">Copied</span>
                 </>
               ) : (
                 <>
@@ -144,6 +145,11 @@ const FAQItem = ({ question, answer, isOpen, onClick, id }) => {
 };
 
 const FAQ = () => {
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   // State
   const [openQuestionId, setOpenQuestionId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -354,14 +360,14 @@ const FAQ = () => {
       <UnifiedNavbar variant="default" />
 
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-green-700 to-green-900 py-16 md:py-24">
+      <div className="relative bg-gradient-to-r from-primary-700 to-primary-900 py-16 md:py-24">
         <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl leading-tight">
               Frequently Asked Questions
             </h1>
-            <p className="mt-6 max-w-2xl mx-auto text-xl text-green-100">
+            <p className="mt-6 max-w-2xl mx-auto text-xl text-primary-100">
               Find answers to common questions about our P2P lending platform
               for Nigerian startups
             </p>
@@ -377,7 +383,7 @@ const FAQ = () => {
                   placeholder="Search for answers..."
                   value={searchTerm}
                   onChange={handleSearch}
-                  className="w-full pl-10 pr-10 py-4 rounded-xl border-0 bg-white/90 backdrop-blur-sm focus:ring-2 focus:ring-green-500 shadow-lg"
+                  className="w-full pl-10 pr-10 py-4 rounded-xl border-0 bg-white/90 backdrop-blur-sm focus:ring-2 focus:ring-primary-500 shadow-lg"
                 />
                 {searchTerm && (
                   <button
@@ -403,7 +409,7 @@ const FAQ = () => {
               onClick={() => setActiveCategory(category.id)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 activeCategory === category.id
-                  ? "bg-green-600 text-white shadow-md"
+                  ? "bg-primary-600 text-white shadow-md"
                   : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
@@ -440,7 +446,7 @@ const FAQ = () => {
               {searchTerm && (
                 <button
                   onClick={clearSearch}
-                  className="mt-4 text-green-600 hover:text-green-700 font-medium"
+                  className="mt-4 text-primary-600 hover:text-primary-700 font-medium"
                 >
                   Clear search
                 </button>
@@ -466,7 +472,7 @@ const FAQ = () => {
               <button
                 onClick={() => setShowAskForm(true)}
                 className="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm 
-                         text-base font-medium text-white bg-green-600 hover:bg-green-700 transition-all"
+                         text-base font-medium text-white bg-primary-600 hover:bg-primary-700 transition-all"
               >
                 <MessageSquare className="h-5 w-5 mr-2" />
                 Ask a Question
@@ -475,12 +481,12 @@ const FAQ = () => {
           ) : (
             <form onSubmit={handleSubmitQuestion} className="max-w-xl mx-auto">
               {submitSuccess ? (
-                <div className="text-center py-8 bg-green-50 rounded-lg border border-green-200">
-                  <Check className="mx-auto h-12 w-12 text-green-500" />
-                  <h3 className="mt-2 text-lg font-medium text-green-800">
+                <div className="text-center py-8 bg-primary-50 rounded-lg border border-primary-200">
+                  <Check className="mx-auto h-12 w-12 text-primary-500" />
+                  <h3 className="mt-2 text-lg font-medium text-primary-800">
                     Question Submitted!
                   </h3>
-                  <p className="mt-1 text-green-700">
+                  <p className="mt-1 text-primary-700">
                     Thanks for your question. We'll review it and get back to
                     you shortly.
                   </p>
@@ -500,7 +506,7 @@ const FAQ = () => {
                       placeholder="What would you like to know about our platform?"
                       value={newQuestion}
                       onChange={(e) => setNewQuestion(e.target.value)}
-                      className="w-full rounded-lg border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
+                      className="w-full rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500"
                       required
                     />
                   </div>
@@ -541,7 +547,7 @@ const FAQ = () => {
                     <button
                       type="submit"
                       className="flex-1 flex justify-center items-center px-4 py-2 border border-transparent 
-                               rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 
+                               rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 
                                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-700"
                     >
                       <Send className="h-4 w-4 mr-2" />

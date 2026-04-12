@@ -53,8 +53,8 @@ const Login = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Image */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-green-700 to-green-900 p-12 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-green-800/95 to-green-900/90" />
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-primary-700 to-primary-900 p-12 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary-800/95 to-primary-900/90" />
         <img 
           src="/assets/featured-bg.png" 
           alt="Background Pattern" 
@@ -68,7 +68,7 @@ const Login = () => {
               className="h-16 w-auto mb-12"
             />
             <h1 className="text-4xl font-bold text-white mb-6">Welcome Back</h1>
-            <p className="text-green-100 text-lg max-w-md">
+            <p className="text-primary-100 text-lg max-w-md">
               Connect with the most promising Nigerian startups and be part of their success story.
             </p>
           </div>
@@ -77,12 +77,12 @@ const Login = () => {
               "The platform made it incredibly easy to connect with investors who truly understood our vision. We secured funding within weeks!"
             </p>
             <div className="flex items-center mt-4">
-              <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold mr-3">
+              <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold mr-3">
                 OA
               </div>
               <div>
                 <p className="text-white font-medium">Oluwaseun Afolabi</p>
-                <p className="text-green-200 text-sm">CEO, EcoCharge</p>
+                <p className="text-primary-200 text-sm">CEO, EcoCharge</p>
               </div>
             </div>
           </div>
@@ -96,7 +96,7 @@ const Login = () => {
             <h2 className="text-3xl font-bold text-gray-900">Sign in to your account</h2>
             <p className="mt-2 text-gray-600">
               Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-green-600 hover:text-green-500">
+              <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
                 Create one now
               </Link>
             </p>
@@ -119,7 +119,7 @@ const Login = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="Your email address"
                 />
               </div>
@@ -130,7 +130,7 @@ const Login = () => {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Link to="/forgot-password" className="text-sm font-medium text-green-600 hover:text-green-500">
+                <Link to="/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-500">
                   Forgot your password?
                 </Link>
               </div>
@@ -146,7 +146,7 @@ const Login = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   placeholder="Your password"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -173,7 +173,7 @@ const Login = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                   Remember me
@@ -185,7 +185,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>

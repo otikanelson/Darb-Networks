@@ -40,7 +40,7 @@ const passwordStrength = (pw) => {
 };
 
 const StrengthBar = ({ score }) => {
-  const colors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-500'];
+  const colors = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-blue-400', 'bg-primary-500'];
   const labels = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'];
   return (
     <div className="mt-2">
@@ -49,7 +49,7 @@ const StrengthBar = ({ score }) => {
           <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= score ? colors[score-1] : 'bg-gray-200'}`} />
         ))}
       </div>
-      {score > 0 && <p className={`text-xs ${score < 3 ? 'text-red-500' : score < 5 ? 'text-yellow-600' : 'text-green-600'}`}>{labels[score-1]}</p>}
+      {score > 0 && <p className={`text-xs ${score < 3 ? 'text-red-500' : score < 5 ? 'text-yellow-600' : 'text-primary-600'}`}>{labels[score-1]}</p>}
     </div>
   );
 };
@@ -521,7 +521,7 @@ const Profile = () => {
   if (loading && !profileData.email) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-700 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-700 border-t-transparent"></div>
       </div>
     );
   }
@@ -544,7 +544,7 @@ const Profile = () => {
                 onClick={() => setActiveTab(tab)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab
-                    ? "border-green-500 text-green-600"
+                    ? "border-primary-500 text-primary-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
@@ -603,7 +603,7 @@ const Profile = () => {
 
                   {/* Upload Controls */}
                   <div className="absolute bottom-0 right-0 flex space-x-1">
-                    <label className="bg-green-700 text-white p-2 rounded-full cursor-pointer hover:bg-green-800 transition-colors shadow-md">
+                    <label className="bg-primary-700 text-white p-2 rounded-full cursor-pointer hover:bg-primary-800 transition-colors shadow-md">
                       <Camera className="h-4 w-4" />
                       <input
                         type="file"
@@ -629,7 +629,7 @@ const Profile = () => {
                   <button
                     onClick={uploadProfileImage}
                     disabled={imageUploading}
-                    className="mb-4 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 flex items-center"
+                    className="mb-4 px-4 py-2 bg-primary-700 text-white rounded-lg hover:bg-primary-800 disabled:opacity-50 flex items-center"
                   >
                     {imageUploading ? (
                       <>
@@ -727,7 +727,7 @@ const Profile = () => {
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+                      className="px-4 py-2 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors"
                     >
                       Edit Profile
                     </button>
@@ -754,7 +754,7 @@ const Profile = () => {
                         value={profileData.fullName}
                         onChange={handleProfileChange}
                         disabled={!isEditing}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50"
                         placeholder="Your full name"
                       />
                     </div>
@@ -768,7 +768,7 @@ const Profile = () => {
                         value={profileData.userType}
                         onChange={handleProfileChange}
                         disabled={!isEditing}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50"
                       >
                         <option value="">Select type</option>
                         <option value="founder">Founder</option>
@@ -787,7 +787,7 @@ const Profile = () => {
                         value={profileData.phoneNumber}
                         onChange={handleProfileChange}
                         disabled={!isEditing}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50"
                         placeholder="Your phone number"
                       />
                     </div>
@@ -802,7 +802,7 @@ const Profile = () => {
                         value={profileData.companyName}
                         onChange={handleProfileChange}
                         disabled={!isEditing}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50"
                         placeholder="Your company name"
                       />
                     </div>
@@ -818,7 +818,7 @@ const Profile = () => {
                       onChange={handleProfileChange}
                       disabled={!isEditing}
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50"
                       placeholder="Your full address"
                     />
                   </div>
@@ -843,7 +843,7 @@ const Profile = () => {
                             onChange={handleProfileChange}
                             disabled={!isEditing}
                             maxLength="11"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50"
                             placeholder="11-digit BVN"
                           />
                         </div>
@@ -858,7 +858,7 @@ const Profile = () => {
                             value={profileData.cacNumber}
                             onChange={handleProfileChange}
                             disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50"
                             placeholder="CAC registration number"
                           />
                         </div>
@@ -872,7 +872,7 @@ const Profile = () => {
                             value={profileData.bankName}
                             onChange={handleProfileChange}
                             disabled={!isEditing}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50"
                           >
                             <option value="">Select your bank</option>
                             <option value="Access Bank">Access Bank</option>
@@ -900,7 +900,7 @@ const Profile = () => {
                             onChange={handleProfileChange}
                             disabled={!isEditing}
                             maxLength="10"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50"
                             placeholder="10-digit account number"
                           />
                         </div>
@@ -913,7 +913,7 @@ const Profile = () => {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="px-6 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors disabled:opacity-50 flex items-center"
+                        className="px-6 py-3 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 flex items-center"
                       >
                         {loading ? (
                           <>
@@ -952,7 +952,7 @@ const Profile = () => {
                           name="currentPassword"
                           value={passwordData.currentPassword}
                           onChange={handlePasswordChange}
-                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           placeholder="Enter current password"
                         />
                         <button
@@ -981,7 +981,7 @@ const Profile = () => {
                           name="newPassword"
                           value={passwordData.newPassword}
                           onChange={handlePasswordChange}
-                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           placeholder="Enter new password"
                         />
                         <button
@@ -1005,7 +1005,7 @@ const Profile = () => {
                                 { key: 'number',    label: 'One number' },
                                 { key: 'special',   label: 'One special character (!@#$…)' },
                               ].map(({ key, label }) => (
-                                <li key={key} className={`flex items-center gap-1.5 text-xs ${checks[key] ? 'text-green-600' : 'text-gray-400'}`}>
+                                <li key={key} className={`flex items-center gap-1.5 text-xs ${checks[key] ? 'text-primary-600' : 'text-gray-400'}`}>
                                   {checks[key] ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
                                   {label}
                                 </li>
@@ -1026,7 +1026,7 @@ const Profile = () => {
                           name="confirmPassword"
                           value={passwordData.confirmPassword}
                           onChange={handlePasswordChange}
-                          className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                          className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
                             errors.confirmPassword ? "border-red-500" : "border-gray-300"
                           }`}
                           placeholder="Confirm new password"
@@ -1040,7 +1040,7 @@ const Profile = () => {
                         </button>
                       </div>
                       {passwordData.confirmPassword && passwordData.newPassword === passwordData.confirmPassword && (
-                        <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                        <p className="mt-1 text-xs text-primary-600 flex items-center gap-1">
                           <CheckCircle className="h-3 w-3" /> Passwords match
                         </p>
                       )}
@@ -1055,7 +1055,7 @@ const Profile = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-6 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors disabled:opacity-50 flex items-center"
+                      className="px-6 py-3 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 flex items-center"
                     >
                       {loading ? (
                         <>
@@ -1092,7 +1092,7 @@ const Profile = () => {
                       </p>
                       <p className="text-sm text-gray-500">
                         {user?.isVerified ? (
-                          <span className="flex items-center text-green-600">
+                          <span className="flex items-center text-primary-600">
                             <Check className="h-4 w-4 mr-1" />
                             Verified
                           </span>
@@ -1123,7 +1123,7 @@ const Profile = () => {
                         name="newEmail"
                         value={emailData.newEmail}
                         onChange={handleEmailChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         placeholder="Enter new email address"
                       />
                     </div>
@@ -1138,7 +1138,7 @@ const Profile = () => {
                           name="currentPassword"
                           value={emailData.currentPassword}
                           onChange={handleEmailChange}
-                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           placeholder="Enter current password"
                         />
                         <button
@@ -1178,7 +1178,7 @@ const Profile = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-6 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors disabled:opacity-50 flex items-center"
+                      className="px-6 py-3 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 flex items-center"
                     >
                       {loading ? (
                         <>

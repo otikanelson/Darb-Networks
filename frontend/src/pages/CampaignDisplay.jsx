@@ -34,7 +34,7 @@ const RichContent = ({ html, className = "" }) => {
   if (isHtml) {
     return (
       <div
-        className={`prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900 prose-a:text-green-600 ${className}`}
+        className={`prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900 prose-a:text-primary-600 ${className}`}
         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
       />
     );
@@ -48,9 +48,9 @@ const RichContent = ({ html, className = "" }) => {
 
 // Section block with icon + title
 const Section = ({ icon: Icon, title, children, accent = false }) => (
-  <div className={`rounded-2xl p-6 md:p-8 ${accent ? "bg-green-50 border border-green-100" : "bg-white border border-gray-100"} shadow-sm`}>
+  <div className={`rounded-2xl p-6 md:p-8 ${accent ? "bg-primary-50 border border-primary-100" : "bg-white border border-gray-100"} shadow-sm`}>
     <div className="flex items-center gap-2 mb-4">
-      {Icon && <div className={`p-2 rounded-lg ${accent ? "bg-green-100" : "bg-gray-100"}`}><Icon className={`h-4 w-4 ${accent ? "text-green-700" : "text-gray-600"}`} /></div>}
+      {Icon && <div className={`p-2 rounded-lg ${accent ? "bg-primary-100" : "bg-gray-100"}`}><Icon className={`h-4 w-4 ${accent ? "text-primary-700" : "text-gray-600"}`} /></div>}
       <h3 className="text-base font-semibold text-gray-900">{title}</h3>
     </div>
     {children}
@@ -417,7 +417,7 @@ const CampaignDisplay = () => {
                 {/* Progress summary */}
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
                   <span>{campaign.milestones.filter(m => m.status === 'completed').length} of {campaign.milestones.length} milestones completed</span>
-                  <span className="font-medium text-green-600">
+                  <span className="font-medium text-primary-600">
                     {Math.round((campaign.milestones.filter(m => m.status === 'completed').length / campaign.milestones.length) * 100)}%
                   </span>
                 </div>
@@ -432,7 +432,7 @@ const CampaignDisplay = () => {
                   return (
                     <div key={m.id}
                       className={`rounded-2xl border p-5 transition-all ${
-                        isCompleted ? 'bg-green-50 border-green-200' :
+                        isCompleted ? 'bg-primary-50 border-primary-200' :
                         isActive    ? 'bg-blue-50 border-blue-200' :
                                       'bg-white border-gray-100'
                       }`}
@@ -440,7 +440,7 @@ const CampaignDisplay = () => {
                       <div className="flex items-start gap-4">
                         {/* Step indicator */}
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5 ${
-                          isCompleted ? 'bg-green-600 text-white' :
+                          isCompleted ? 'bg-primary-600 text-white' :
                           isActive    ? 'bg-blue-600 text-white' :
                                         'bg-gray-100 text-gray-500'
                         }`}>
@@ -451,7 +451,7 @@ const CampaignDisplay = () => {
                           <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
                             <h4 className="font-semibold text-gray-900">{m.title}</h4>
                             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                              isCompleted ? 'bg-green-100 text-green-700' :
+                              isCompleted ? 'bg-primary-100 text-primary-700' :
                               isActive    ? 'bg-blue-100 text-blue-700' :
                                             'bg-gray-100 text-gray-500'
                             }`}>
@@ -468,7 +468,7 @@ const CampaignDisplay = () => {
                             <div className="mb-3">
                               <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full transition-all duration-700 ${isCompleted ? 'bg-green-500' : 'bg-blue-500'}`}
+                                  className={`h-full rounded-full transition-all duration-700 ${isCompleted ? 'bg-primary-500' : 'bg-blue-500'}`}
                                   style={{ width: `${pctFunded}%` }}
                                 />
                               </div>
@@ -488,7 +488,7 @@ const CampaignDisplay = () => {
                               </span>
                             )}
                             {m.completedAt && (
-                              <span className="flex items-center gap-1 text-green-600">
+                              <span className="flex items-center gap-1 text-primary-600">
                                 <CheckCircle className="h-3 w-3" />
                                 Completed: {new Date(m.completedAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
                               </span>
@@ -517,9 +517,114 @@ const CampaignDisplay = () => {
   if (loading) return (
     <div className="min-h-screen bg-gray-50">
       <UnifiedNavbar variant="display" />
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent" />
+      
+      {/* Hero Skeleton */}
+      <div className="relative w-full h-64 md:h-[460px] bg-gray-200 animate-pulse">
+        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex gap-2 mb-3">
+              <div className="h-6 w-20 bg-gray-300 rounded-full" />
+              <div className="h-6 w-24 bg-gray-300 rounded-full" />
+            </div>
+            <div className="h-10 bg-gray-300 rounded-lg w-3/4 mb-3" />
+            <div className="flex gap-4">
+              <div className="h-4 w-24 bg-gray-300 rounded" />
+              <div className="h-4 w-28 bg-gray-300 rounded" />
+              <div className="h-4 w-20 bg-gray-300 rounded" />
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Body Skeleton */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Left Content Skeleton */}
+          <div className="lg:col-span-2 space-y-5">
+            {/* Action Bar Skeleton */}
+            <div className="flex gap-2">
+              <div className="h-10 w-24 bg-white rounded-xl animate-pulse" />
+              <div className="h-10 w-24 bg-white rounded-xl animate-pulse" />
+            </div>
+
+            {/* Tabs Skeleton */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="flex border-b border-gray-100 p-2 gap-2">
+                <div className="h-10 w-28 bg-gray-100 rounded animate-pulse" />
+                <div className="h-10 w-32 bg-gray-100 rounded animate-pulse" />
+                <div className="h-10 w-36 bg-gray-100 rounded animate-pulse" />
+              </div>
+              <div className="p-6 md:p-8 space-y-4">
+                <div className="h-6 bg-gray-100 rounded w-3/4 animate-pulse" />
+                <div className="h-4 bg-gray-100 rounded w-full animate-pulse" />
+                <div className="h-4 bg-gray-100 rounded w-5/6 animate-pulse" />
+                <div className="h-4 bg-gray-100 rounded w-4/5 animate-pulse" />
+                <div className="h-32 bg-gray-100 rounded-lg animate-pulse mt-4" />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar Skeleton */}
+          <div className="space-y-4">
+            {/* Funding Card Skeleton */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="h-10 bg-gray-100 rounded w-2/3 mb-2 animate-pulse" />
+              <div className="h-4 bg-gray-100 rounded w-1/2 mb-4 animate-pulse" />
+              <div className="h-2.5 bg-gray-100 rounded-full mb-5 animate-pulse" />
+              
+              <div className="grid grid-cols-3 gap-2 mb-5 py-4 border-y border-gray-50">
+                <div className="text-center">
+                  <div className="h-8 bg-gray-100 rounded w-12 mx-auto mb-1 animate-pulse" />
+                  <div className="h-3 bg-gray-100 rounded w-16 mx-auto animate-pulse" />
+                </div>
+                <div className="text-center">
+                  <div className="h-8 bg-gray-100 rounded w-12 mx-auto mb-1 animate-pulse" />
+                  <div className="h-3 bg-gray-100 rounded w-16 mx-auto animate-pulse" />
+                </div>
+                <div className="text-center">
+                  <div className="h-8 bg-gray-100 rounded w-12 mx-auto mb-1 animate-pulse" />
+                  <div className="h-3 bg-gray-100 rounded w-16 mx-auto animate-pulse" />
+                </div>
+              </div>
+
+              <div className="space-y-2.5 mb-5">
+                <div className="h-4 bg-gray-100 rounded animate-pulse" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse" />
+              </div>
+
+              <div className="h-12 bg-gray-100 rounded-xl animate-pulse" />
+            </div>
+
+            {/* Creator Card Skeleton */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="h-3 bg-gray-100 rounded w-32 mb-4 animate-pulse" />
+              <div className="flex items-start gap-3">
+                <div className="h-14 w-14 rounded-full bg-gray-100 animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 bg-gray-100 rounded w-32 animate-pulse" />
+                  <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
+                  <div className="h-3 bg-gray-100 rounded w-full animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            {/* Details Card Skeleton */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="h-3 bg-gray-100 rounded w-32 mb-4 animate-pulse" />
+              <div className="space-y-2.5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex justify-between py-1.5">
+                    <div className="h-4 bg-gray-100 rounded w-20 animate-pulse" />
+                    <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <Footer />
     </div>
   );
@@ -531,7 +636,7 @@ const CampaignDisplay = () => {
         <AlertTriangle className="mx-auto h-16 w-16 text-red-400 mb-4" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Campaign Not Found</h1>
         <p className="text-gray-500 mb-8">{error}</p>
-        <button onClick={() => navigate("/dashboard")} className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">Browse Campaigns</button>
+        <button onClick={() => navigate("/dashboard")} className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700">Browse Campaigns</button>
       </div>
       <Footer />
     </div>
@@ -615,7 +720,7 @@ const CampaignDisplay = () => {
                 </span>
               )}
               {progress >= 100 && (
-                <span className="flex items-center gap-1 px-3 py-1 bg-green-500/90 text-white rounded-full text-xs font-semibold">
+                <span className="flex items-center gap-1 px-3 py-1 bg-primary-500/90 text-white rounded-full text-xs font-semibold">
                   <CheckCircle className="h-3 w-3" /> Fully Funded
                 </span>
               )}
@@ -650,7 +755,7 @@ const CampaignDisplay = () => {
                 </button>
                 <button onClick={handleShare}
                   className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
-                  {copied ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}
+                  {copied ? <Check className="h-4 w-4 text-primary-600" /> : <Share2 className="h-4 w-4" />}
                   {copied ? "Copied!" : "Share"}
                 </button>
                 {canEdit() && (
@@ -669,7 +774,7 @@ const CampaignDisplay = () => {
                   <button key={t.id} onClick={() => setActiveTab(t.id)}
                     className={`flex-shrink-0 px-5 py-3.5 text-sm font-medium border-b-2 transition whitespace-nowrap ${
                       activeTab === t.id
-                        ? "border-green-600 text-green-700 bg-green-50/50"
+                        ? "border-primary-600 text-primary-700 bg-primary-50/50"
                         : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}>
                     {t.label}
@@ -705,7 +810,7 @@ const CampaignDisplay = () => {
               </p>
 
               <div className="w-full bg-gray-100 rounded-full h-2.5 mb-1 overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-700"
+                <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-700"
                   style={{ width: `${progress}%` }} />
               </div>
               <p className="text-xs text-gray-400 mb-5">{Math.round(progress)}% funded</p>
@@ -739,7 +844,7 @@ const CampaignDisplay = () => {
 
               {canInvest() ? (
                 <button onClick={() => setShowInvestmentModal(true)}
-                  className="w-full bg-green-600 text-white py-3.5 rounded-xl font-semibold hover:bg-green-700 transition flex items-center justify-center gap-2 shadow-sm">
+                  className="w-full bg-primary-600 text-white py-3.5 rounded-xl font-semibold hover:bg-primary-700 transition flex items-center justify-center gap-2 shadow-sm">
                   <DollarSign className="h-5 w-5" /> Invest Now
                 </button>
               ) : (
@@ -770,7 +875,7 @@ const CampaignDisplay = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <p className="font-semibold text-gray-900 truncate">{campaign.creator?.fullName || "Unknown"}</p>
-                    {campaign.creator?.isVerified && <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />}
+                    {campaign.creator?.isVerified && <CheckCircle className="h-4 w-4 text-primary-500 flex-shrink-0" />}
                   </div>
                   {campaign.creator?.company && (
                     <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
@@ -782,7 +887,7 @@ const CampaignDisplay = () => {
                   )}
                   {campaign.creator?.website && (
                     <a href={campaign.creator.website} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-green-600 hover:underline mt-2">
+                      className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline mt-2">
                       <ExternalLink className="h-3 w-3" /> Website
                     </a>
                   )}
@@ -834,13 +939,13 @@ const CampaignDisplay = () => {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">{campaign.title}</p>
               <p className="text-xs text-gray-500">
-                <span className="font-semibold text-green-600">{Math.round(progress)}% funded</span>
+                <span className="font-semibold text-primary-600">{Math.round(progress)}% funded</span>
                 {' · '}{fmt(campaign.currentAmount)} raised
               </p>
             </div>
             <button
               onClick={() => setShowInvestmentModal(true)}
-              className="flex-shrink-0 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-full transition-all hover:scale-105 shadow-md shadow-green-200"
+              className="flex-shrink-0 flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2.5 rounded-full transition-all hover:scale-105 shadow-md shadow-primary-200"
             >
               <DollarSign className="h-4 w-4" />
               Invest Now

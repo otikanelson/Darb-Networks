@@ -13,7 +13,7 @@ const features = [
     icon: ShieldCheck,
     title: 'Milestone-Based Funding',
     description: 'Funds are held in escrow and released as you hit pre-defined milestones, giving investors confidence and founders accountability.',
-    accent: 'text-green-600 bg-green-50',
+    accent: 'text-primary-600 bg-primary-50',
   },
   {
     icon: BarChart3,
@@ -39,7 +39,7 @@ const FeaturesSection = () => (
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        <span className="text-green-600 font-semibold text-sm uppercase tracking-widest">Why Darb</span>
+        <span className="text-primary-600 font-semibold text-sm uppercase tracking-widest">Why Darb</span>
         <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">Built for African startups</h2>
         <p className="text-lg text-gray-500 max-w-xl mx-auto">
           Every feature is designed around the unique challenges and opportunities of the African startup ecosystem.

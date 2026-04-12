@@ -4,7 +4,7 @@ const FeatureCard = ({ icon, title, description }) => {
   return (
     <div className="p-6 bg-white rounded-lg">
       {/* Icon/Emoji container */}
-      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+      <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
         <span className="text-2xl">{icon}</span>
       </div>
       

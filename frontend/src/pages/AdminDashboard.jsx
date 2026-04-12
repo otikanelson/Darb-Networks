@@ -227,7 +227,7 @@ const AdminDashboard = () => {
       case "submitted":
         return "bg-yellow-100 text-yellow-800";
       case "approved":
-        return "bg-green-100 text-green-800";
+        return "bg-primary-100 text-primary-800";
       case "rejected":
         return "bg-red-100 text-red-800";
       default:
@@ -289,7 +289,7 @@ const AdminDashboard = () => {
 
         {/* Messages */}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center text-green-700">
+          <div className="mb-6 p-4 bg-primary-50 border border-primary-200 rounded-lg flex items-center text-primary-700">
             <CheckCircle className="h-5 w-5 mr-2" />
             {success}
           </div>
@@ -344,11 +344,11 @@ const AdminDashboard = () => {
                     <p className="text-sm font-medium text-gray-600">
                       Approved
                     </p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="text-2xl font-bold text-primary-600">
                       {stats.statusCounts?.approved || 0}
                     </p>
                   </div>
-                  <CheckCircle className="h-8 w-8 text-green-600" />
+                  <CheckCircle className="h-8 w-8 text-primary-600" />
                 </div>
               </div>
 
@@ -401,7 +401,7 @@ const AdminDashboard = () => {
                     placeholder="Search campaigns..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
 
@@ -412,7 +412,7 @@ const AdminDashboard = () => {
                     console.log("🔄 Changing filter to:", e.target.value);
                     setStatusFilter(e.target.value);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="all">All Status</option>
                   <option value="submitted">Pending Review</option>
@@ -622,7 +622,7 @@ const CampaignReviewCard = ({
               <button
                 onClick={() => handleApprove(false)}
                 disabled={approveLoading}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center text-sm"
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center text-sm"
               >
                 <CheckCircle className="h-4 w-4 mr-1" />
                 {approveLoading ? "Approving..." : "Approve"}

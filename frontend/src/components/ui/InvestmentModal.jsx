@@ -160,16 +160,16 @@ const InvestmentModal = ({
           {/* Progress Indicator */}
           <div className="flex items-center mt-4 space-x-2">
             <div className={`h-2 flex-1 rounded-full ${
-              ['input', 'confirm', 'processing', 'success'].includes(step) ? 'bg-green-500' : 'bg-gray-200'
+              ['input', 'confirm', 'processing', 'success'].includes(step) ? 'bg-primary-500' : 'bg-gray-200'
             }`} />
             <div className={`h-2 flex-1 rounded-full ${
-              ['confirm', 'processing', 'success'].includes(step) ? 'bg-green-500' : 'bg-gray-200'
+              ['confirm', 'processing', 'success'].includes(step) ? 'bg-primary-500' : 'bg-gray-200'
             }`} />
             <div className={`h-2 flex-1 rounded-full ${
-              ['processing', 'success'].includes(step) ? 'bg-green-500' : 'bg-gray-200'
+              ['processing', 'success'].includes(step) ? 'bg-primary-500' : 'bg-gray-200'
             }`} />
             <div className={`h-2 flex-1 rounded-full ${
-              step === 'success' ? 'bg-green-500' : 'bg-gray-200'
+              step === 'success' ? 'bg-primary-500' : 'bg-gray-200'
             }`} />
           </div>
         </div>
@@ -210,7 +210,7 @@ const InvestmentModal = ({
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     placeholder="Enter amount"
                   />
                 </div>
@@ -229,7 +229,7 @@ const InvestmentModal = ({
                   value={investorMessage}
                   onChange={(e) => setInvestorMessage(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   placeholder="Share your thoughts or encouragement with the campaign creator..."
                 />
               </div>
@@ -252,7 +252,7 @@ const InvestmentModal = ({
               <button
                 onClick={handleNext}
                 disabled={!amount || validateAmount()}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Continue to Payment
               </button>
@@ -294,10 +294,10 @@ const InvestmentModal = ({
                 </div>
               )}
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
                 <div className="flex items-center">
-                  <Shield className="h-5 w-5 text-green-600 mr-2" />
-                  <div className="text-sm text-green-800">
+                  <Shield className="h-5 w-5 text-primary-600 mr-2" />
+                  <div className="text-sm text-primary-800">
                     <p className="font-medium">Secure Payment</p>
                     <p>Your payment will be processed securely by Paystack</p>
                   </div>
@@ -314,7 +314,7 @@ const InvestmentModal = ({
                 <button
                   onClick={handleInvest}
                   disabled={loading}
-                  className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+                  className="flex-1 bg-primary-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center justify-center"
                 >
                   <CreditCard className="h-5 w-5 mr-2" />
                   Proceed to Payment
@@ -326,7 +326,7 @@ const InvestmentModal = ({
           {/* Step: Processing */}
           {step === 'processing' && (
             <div className="text-center py-8">
-              <Loader className="h-12 w-12 text-green-600 animate-spin mx-auto mb-4" />
+              <Loader className="h-12 w-12 text-primary-600 animate-spin mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Processing Investment
               </h3>
@@ -347,7 +347,7 @@ const InvestmentModal = ({
           {/* Step: Success */}
           {step === 'success' && (
             <div className="text-center py-8">
-              <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+              <CheckCircle className="h-16 w-16 text-primary-600 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Investment Successful!
               </h3>
@@ -359,7 +359,7 @@ const InvestmentModal = ({
                   handleClose();
                   if (onInvestmentSuccess) onInvestmentSuccess();
                 }}
-                className="bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                className="bg-primary-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
               >
                 Continue
               </button>

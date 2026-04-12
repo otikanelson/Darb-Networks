@@ -110,7 +110,7 @@ const MobileFilters = ({
                                 name="category"
                                 checked={tempCategory === "All Categories"}
                                 onChange={() => setTempCategory("All Categories")}
-                                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                               />
                               <label htmlFor="category-all" className="ml-3 text-sm text-gray-700">
                                 All Categories
@@ -126,7 +126,7 @@ const MobileFilters = ({
                                     name="category"
                                     checked={tempCategory === group}
                                     onChange={() => setTempCategory(group)}
-                                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                                   />
                                   <label htmlFor={`category-${group}`} className="ml-3 text-sm font-medium text-gray-900">
                                     {group}
@@ -141,7 +141,7 @@ const MobileFilters = ({
                                       name="category"
                                       checked={tempCategory === category}
                                       onChange={() => setTempCategory(category)}
-                                      className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                                     />
                                     <label htmlFor={`category-${category}`} className="ml-3 text-sm text-gray-700">
                                       {category}
@@ -174,7 +174,7 @@ const MobileFilters = ({
                                   name="stage"
                                   checked={tempStage === option.value}
                                   onChange={() => setTempStage(option.value)}
-                                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                                 />
                                 <label htmlFor={`stage-${option.value}`} className="ml-3 text-sm text-gray-700">
                                   {option.label}
@@ -205,7 +205,7 @@ const MobileFilters = ({
                                   name="status"
                                   checked={tempStatus === option.label}
                                   onChange={() => setTempStatus(option.label)}
-                                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                                 />
                                 <label htmlFor={`status-${option.id}`} className="ml-3 text-sm text-gray-700">
                                   {option.label}
@@ -236,7 +236,7 @@ const MobileFilters = ({
                                   name="sort"
                                   checked={tempSort === option}
                                   onChange={() => setTempSort(option)}
-                                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                                 />
                                 <label htmlFor={`sort-${option}`} className="ml-3 text-sm text-gray-700">
                                   {option}
@@ -259,7 +259,7 @@ const MobileFilters = ({
                       </button>
                       <button
                         type="button"
-                        className="px-4 py-2 bg-green-700 text-white rounded-md text-sm font-medium hover:bg-green-800"
+                        className="px-4 py-2 bg-primary-700 text-white rounded-md text-sm font-medium hover:bg-primary-800"
                         onClick={applyFilters}
                       >
                         Apply Filters

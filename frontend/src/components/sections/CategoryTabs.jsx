@@ -127,10 +127,10 @@ const CategoryTabs = () => {
                 <button
                   key={category.value || 'all'}
                   onClick={() => handleCategoryClick(category.value)}
-                  className="flex-none group flex items-center space-x-2 px-5 py-2.5 rounded-full border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all duration-200 bg-white"
+                  className="flex-none group flex items-center space-x-2 px-5 py-2.5 rounded-full border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all duration-200 bg-white"
                 >
-                  <Icon className="h-4 w-4 text-gray-600 group-hover:text-green-600 transition-colors" />
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-green-700 whitespace-nowrap">
+                  <Icon className="h-4 w-4 text-gray-600 group-hover:text-primary-600 transition-colors" />
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-primary-700 whitespace-nowrap">
                     {category.name}
                   </span>
                 </button>

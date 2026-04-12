@@ -16,7 +16,7 @@ const steps = [
     step: '02',
     title: 'Get Matched with Investors',
     description: 'Our platform surfaces your campaign to verified investors who align with your industry and funding stage.',
-    color: 'bg-green-50 text-green-600',
+    color: 'bg-primary-50 text-primary-600',
   },
   {
     icon: Rocket,
@@ -41,7 +41,7 @@ const HowItWorks = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <span className="text-green-600 font-semibold text-sm uppercase tracking-widest">How it works</span>
+          <span className="text-primary-600 font-semibold text-sm uppercase tracking-widest">How it works</span>
           <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">From idea to funded in 3 steps</h2>
           <p className="text-lg text-gray-500 max-w-xl mx-auto">
             We've simplified the fundraising journey so you can focus on building, not paperwork.
@@ -51,7 +51,7 @@ const HowItWorks = () => {
         {/* Steps */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
           {/* Connector line */}
-          <div className="hidden md:block absolute top-12 left-1/3 right-1/3 h-0.5 bg-gradient-to-r from-blue-200 via-green-200 to-purple-200 z-0" />
+          <div className="hidden md:block absolute top-12 left-1/3 right-1/3 h-0.5 bg-gradient-to-r from-blue-200 via-primary-200 to-purple-200 z-0" />
 
           {steps.map(({ icon: Icon, step, title, description, color }, i) => (
             <motion.div

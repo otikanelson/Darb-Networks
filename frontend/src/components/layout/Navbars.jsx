@@ -279,7 +279,7 @@ const Navbars = ({
             onFocus={() => setShowSearchSuggestions(searchQuery.length > 0)}
             placeholder="Search campaign categories"
             className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-full 
-                     focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 
+                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
                      bg-white shadow-sm text-gray-900 placeholder-gray-500"
           />
           {searchQuery && (
@@ -492,8 +492,8 @@ return (
               {showCreateButton && isFounder && (
                 <Link
                   to="/pages/CreateCampaign"
-                  className="flex items-center mx-3 px-4 py-2 bg-green-700 text-white rounded-3xl 
-                           hover:bg-green-700 transition-colors text-sm font-medium"
+                  className="flex items-center mx-3 px-4 py-2 bg-primary-700 text-white rounded-3xl 
+                           hover:bg-primary-700 transition-colors text-sm font-medium"
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   New Campaign
@@ -516,7 +516,7 @@ return (
                     Login
                   </Link>
                   <Link 
-                    className="text-gray-500 hover:text-green-700 font-bold"
+                    className="text-gray-500 hover:text-primary-700 font-bold"
                   >
                     /
                   </Link>
@@ -528,7 +528,7 @@ return (
                   </Link>
                   <button 
                     onClick={() => navigate('/Register')}
-                    className="bg-green-700 text-white font-bold font-sans px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-green-600 transition-colors"
+                    className="bg-primary-700 text-white font-bold font-sans px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-primary-600 transition-colors"
                   >
                     <span>Join Campaign</span>
                     <ChevronRight size={16} />
@@ -540,7 +540,7 @@ return (
                   <Link to="/login" className="text-gray-500 hover:text-gray-900 font-medium text-sm">
                     Log in
                   </Link>
-                  <Link to="/register" className="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
+                  <Link to="/register" className="bg-primary-700 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
                     Sign up
                   </Link>
                 </>

@@ -37,16 +37,16 @@ const CompactCard = ({ campaign, onClick }) => {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <span className="text-xs font-medium text-green-400 uppercase tracking-wide">{campaign.category}</span>
-        <h4 className="text-sm font-semibold text-white leading-snug line-clamp-2 mt-0.5 group-hover:text-green-300 transition-colors">
+        <span className="text-xs font-medium text-primary-400 uppercase tracking-wide">{campaign.category}</span>
+        <h4 className="text-sm font-semibold text-white leading-snug line-clamp-2 mt-0.5 group-hover:text-primary-300 transition-colors">
           {campaign.title}
         </h4>
         {/* Mini progress */}
         <div className="mt-2 flex items-center gap-2">
           <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-green-400 rounded-full" style={{ width: `${pct}%` }} />
+            <div className="h-full bg-primary-400 rounded-full" style={{ width: `${pct}%` }} />
           </div>
-          <span className="text-xs text-green-300 font-medium flex-shrink-0">{pct}%</span>
+          <span className="text-xs text-primary-300 font-medium flex-shrink-0">{pct}%</span>
         </div>
         <p className="text-xs text-gray-400 mt-1">{fmt(campaign.current_amount)} raised</p>
       </div>
@@ -91,8 +91,8 @@ const HeroCard = ({ campaign, onClick }) => {
 
       {/* Content */}
       <div className="absolute bottom-0 left-0 right-0 p-6">
-        <span className="text-xs font-semibold text-green-400 uppercase tracking-widest">{campaign.category}</span>
-        <h3 className="text-2xl font-bold text-white mt-1 mb-2 leading-tight group-hover:text-green-300 transition-colors">
+        <span className="text-xs font-semibold text-primary-400 uppercase tracking-widest">{campaign.category}</span>
+        <h3 className="text-2xl font-bold text-white mt-1 mb-2 leading-tight group-hover:text-primary-300 transition-colors">
           {campaign.title}
         </h3>
         <p className="text-gray-300 text-sm line-clamp-2 mb-4">{campaign.description}</p>
@@ -101,21 +101,21 @@ const HeroCard = ({ campaign, onClick }) => {
         <div className="mb-3">
           <div className="flex justify-between text-xs text-gray-400 mb-1">
             <span>{fmt(campaign.current_amount)} raised</span>
-            <span className="text-green-400 font-semibold">{pct}%</span>
+            <span className="text-primary-400 font-semibold">{pct}%</span>
           </div>
           <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-green-400 to-green-300 rounded-full" style={{ width: `${pct}%` }} />
+            <div className="h-full bg-gradient-to-r from-primary-400 to-primary-300 rounded-full" style={{ width: `${pct}%` }} />
           </div>
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-green-500/30 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-7 h-7 rounded-full bg-primary-500/30 flex items-center justify-center text-white text-xs font-bold">
               {(campaign.founder_name || 'A').charAt(0).toUpperCase()}
             </div>
             <span className="text-sm text-gray-300">{campaign.founder_name || 'Anonymous'}</span>
           </div>
-          <div className="flex items-center gap-1 text-green-400 text-sm font-semibold group-hover:gap-2 transition-all">
+          <div className="flex items-center gap-1 text-primary-400 text-sm font-semibold group-hover:gap-2 transition-all">
             <span>View</span><ArrowRight className="h-4 w-4" />
           </div>
         </div>
@@ -160,7 +160,7 @@ const UserCampaignsSection = () => {
   return (
     <section className="relative py-24 overflow-hidden">
       {/* Dark gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-900 to-green-950" />
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-900 to-primary-950" />
       <img src="/assets/featured-bg.png" alt=""
         className="absolute inset-0 w-full h-full object-cover opacity-5 pointer-events-none" />
 
@@ -175,15 +175,15 @@ const UserCampaignsSection = () => {
         >
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-5 w-5 text-green-400" />
-              <span className="text-green-400 font-semibold text-sm uppercase tracking-widest">Top Picks</span>
+              <TrendingUp className="h-5 w-5 text-primary-400" />
+              <span className="text-primary-400 font-semibold text-sm uppercase tracking-widest">Top Picks</span>
             </div>
             <h2 className="text-4xl font-bold text-white">Campaigns to Watch</h2>
             <p className="text-gray-400 mt-2">Hand-picked opportunities from across Africa</p>
           </div>
           <button
             onClick={() => navigate('/dashboard')}
-            className="hidden md:flex items-center gap-2 text-green-400 hover:text-green-300 font-semibold transition-colors"
+            className="hidden md:flex items-center gap-2 text-primary-400 hover:text-primary-300 font-semibold transition-colors"
           >
             <span>Browse all</span><ArrowRight className="h-5 w-5" />
           </button>
@@ -192,13 +192,13 @@ const UserCampaignsSection = () => {
         {/* Content */}
         {loading ? (
           <div className="flex justify-center py-24">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-400 border-t-transparent" />
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-400 border-t-transparent" />
           </div>
         ) : campaigns.length === 0 ? (
           <div className="text-center py-24">
             <p className="text-gray-400 text-lg mb-6">No featured campaigns yet.</p>
             <button onClick={() => navigate('/dashboard')}
-              className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full inline-flex items-center gap-2">
+              className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3 rounded-full inline-flex items-center gap-2">
               <span>Browse All Startups</span><ArrowRight className="h-5 w-5" />
             </button>
           </div>
@@ -244,12 +244,12 @@ const UserCampaignsSection = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: 0.4 }}
                   onClick={() => navigate('/dashboard')}
-                  className="flex flex-col items-center justify-center gap-3 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 rounded-2xl p-6 cursor-pointer transition-colors group"
+                  className="flex flex-col items-center justify-center gap-3 bg-primary-600/20 hover:bg-primary-600/30 border border-primary-500/30 rounded-2xl p-6 cursor-pointer transition-colors group"
                 >
-                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <ArrowRight className="h-5 w-5 text-green-400 group-hover:translate-x-1 transition-transform" />
+                  <div className="w-10 h-10 rounded-full bg-primary-500/20 flex items-center justify-center">
+                    <ArrowRight className="h-5 w-5 text-primary-400 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <p className="text-green-300 font-semibold text-sm text-center">Explore more startups</p>
+                  <p className="text-primary-300 font-semibold text-sm text-center">Explore more startups</p>
                 </motion.div>
               )}
             </motion.div>
@@ -259,7 +259,7 @@ const UserCampaignsSection = () => {
         {/* Mobile CTA */}
         <div className="text-center mt-10 md:hidden">
           <button onClick={() => navigate('/dashboard')}
-            className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full inline-flex items-center gap-2">
+            className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3 rounded-full inline-flex items-center gap-2">
             <span>View All Campaigns</span><ArrowRight className="h-5 w-5" />
           </button>
         </div>
@@ -275,7 +275,7 @@ const UserCampaignsSection = () => {
             <p className="text-gray-400 text-sm">
               Want to save campaigns and track your investments?{' '}
               <button onClick={() => navigate('/register')}
-                className="text-green-400 hover:text-green-300 font-semibold underline underline-offset-2">
+                className="text-primary-400 hover:text-primary-300 font-semibold underline underline-offset-2">
                 Create a free account
               </button>
             </p>

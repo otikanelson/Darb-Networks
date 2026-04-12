@@ -60,7 +60,7 @@ const FAQSection = () => {
                   {faq.question}
                 </span>
                 <ChevronDown 
-                  className={`transition-transform duration-200 ${openQuestion === index ? 'rotate-180 text-green-600' : 'text-gray-400'}`}
+                  className={`transition-transform duration-200 ${openQuestion === index ? 'rotate-180 text-primary-600' : 'text-gray-400'}`}
                 />
               </button>
               
@@ -79,7 +79,7 @@ const FAQSection = () => {
           <button 
             onClick={() => navigate('/faq')}
             className="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm 
-                     text-base font-medium text-white bg-green-600 hover:bg-green-700 transition-all"
+                     text-base font-medium text-white bg-primary-600 hover:bg-primary-700 transition-all"
           >
             View All FAQs
           </button>

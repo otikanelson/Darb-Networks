@@ -130,7 +130,7 @@ const CampaignCard = ({
 
     if (isFunded) {
       return (
-        <div className="absolute top-3 right-3 bg-green-600 text-white px-2 py-1 text-xs font-medium rounded-md flex items-center">
+        <div className="absolute top-3 right-3 bg-tertiary-600 text-white px-2 py-1 text-xs font-medium rounded-md flex items-center">
           <CheckCircle className="h-3 w-3 mr-1" />
           FUNDED
         </div>
@@ -218,13 +218,13 @@ const CampaignCard = ({
                   e.target.nextElementSibling.style.display = 'flex';
                 }}
               />
-              <div className="hidden w-full h-full bg-gradient-to-br from-green-50 to-green-100 items-center justify-center">
-                <BookOpen className="h-20 w-20 text-green-600" strokeWidth={1.5} />
+              <div className="hidden w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 items-center justify-center">
+                <BookOpen className="h-20 w-20 text-primary-600" strokeWidth={1.5} />
               </div>
             </>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
-              <BookOpen className="h-20 w-20 text-green-600" strokeWidth={1.5} />
+            <div className="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
+              <BookOpen className="h-20 w-20 text-primary-600" strokeWidth={1.5} />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -252,14 +252,14 @@ const CampaignCard = ({
 
         {/* Minimal content */}
         <div className="p-4">
-          <h3 className="text-base font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-green-700 transition-colors">
+          <h3 className="text-base font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-primary-700 transition-colors">
             {campaign.title}
           </h3>
 
           {/* Progress bar */}
           <div className="w-full bg-gray-100 rounded-full h-1.5 mb-2 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-full transition-all duration-500"
               style={{ width: `${fundingPercentage()}%` }}
             />
           </div>
@@ -267,7 +267,7 @@ const CampaignCard = ({
           {/* Raised + % */}
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-gray-800">{formatCurrency(campaign.current_amount || 0)} raised</span>
-            <span className="font-bold text-green-600">{fundingPercentage()}%</span>
+            <span className="font-bold text-primary-600">{fundingPercentage()}%</span>
           </div>
 
           {/* Founder */}
@@ -315,13 +315,13 @@ const CampaignCard = ({
                 e.target.nextElementSibling.style.display = 'flex';
               }}
             />
-            <div className="hidden w-full h-full bg-gradient-to-br from-green-50 to-green-100 items-center justify-center">
-              <BookOpen className="h-24 w-24 text-green-600" strokeWidth={1.5} />
+            <div className="hidden w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 items-center justify-center">
+              <BookOpen className="h-24 w-24 text-primary-600" strokeWidth={1.5} />
             </div>
           </>
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
-            <BookOpen className="h-24 w-24 text-green-600" strokeWidth={1.5} />
+          <div className="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
+            <BookOpen className="h-24 w-24 text-primary-600" strokeWidth={1.5} />
           </div>
         )}
         
@@ -365,7 +365,7 @@ const CampaignCard = ({
       <div className="p-4 md:p-5">
         {/* Category & Location */}
         <div className="flex justify-between items-center mb-3">
-          <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
+          <span className="text-xs font-medium text-tertiary-700 bg-tertiary-100 px-2 py-1 rounded-full">
             {campaign.category}
           </span>
           <div className="flex items-center text-xs text-gray-500">
@@ -375,7 +375,7 @@ const CampaignCard = ({
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
+        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-700 transition-colors">
           {campaign.title}
         </h3>
         
@@ -389,7 +389,7 @@ const CampaignCard = ({
           {/* Progress Bar */}
           <div className="w-full bg-gray-100 rounded-full h-2 mb-3 overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500 relative"
+              className="h-full bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-full transition-all duration-500 relative"
               style={{ width: `${fundingPercentage()}%` }}
             >
               {/* Shimmer effect for active campaigns */}
@@ -500,7 +500,7 @@ const CampaignCard = ({
           
           {/* Trending Indicator */}
           {(campaign.view_count || campaign.viewCount || 0) > 100 && (
-            <div className="flex items-center text-green-600">
+            <div className="flex items-center text-primary-600">
               <TrendingUp className="h-4 w-4" />
             </div>
           )}

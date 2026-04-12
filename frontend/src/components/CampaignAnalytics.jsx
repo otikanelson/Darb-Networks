@@ -117,12 +117,12 @@ const CampaignAnalytics = ({ campaignId, isOwner = false }) => {
           <div className="text-xs text-red-600">Favorites</div>
         </div>
 
-        <div className="text-center p-4 bg-green-50 rounded-lg">
-          <DollarSign className="h-6 w-6 text-green-600 mx-auto mb-2" />
-          <div className="text-2xl font-bold text-green-900">
+        <div className="text-center p-4 bg-primary-50 rounded-lg">
+          <DollarSign className="h-6 w-6 text-primary-600 mx-auto mb-2" />
+          <div className="text-2xl font-bold text-primary-900">
             {Math.round(analytics.overall.funding_percentage || 0)}%
           </div>
-          <div className="text-xs text-green-600">Funded</div>
+          <div className="text-xs text-primary-600">Funded</div>
         </div>
 
         <div className="text-center p-4 bg-purple-50 rounded-lg">
@@ -250,7 +250,7 @@ const CampaignAnalytics = ({ campaignId, isOwner = false }) => {
           )}
           {analytics.overall.funding_percentage < 25 && (
             <div className="flex items-start">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0"></div>
+              <div className="w-2 h-2 bg-primary-500 rounded-full mt-2 mr-2 flex-shrink-0"></div>
               <span>Consider reaching out to your network for initial funding</span>
             </div>
           )}

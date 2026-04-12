@@ -7,12 +7,74 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Dynamic theme colors from CSS variables
+        primary: {
+          50: 'var(--color-primary-50)',
+          100: 'var(--color-primary-100)',
+          200: 'var(--color-primary-200)',
+          300: 'var(--color-primary-300)',
+          400: 'var(--color-primary-400)',
+          500: 'var(--color-primary-500)',
+          600: 'var(--color-primary-600)',
+          700: 'var(--color-primary-700)',
+          800: 'var(--color-primary-800)',
+          900: 'var(--color-primary-900)',
+          DEFAULT: 'var(--color-primary)',
+        },
+        secondary: {
+          50: 'var(--color-secondary-50)',
+          100: 'var(--color-secondary-100)',
+          200: 'var(--color-secondary-200)',
+          300: 'var(--color-secondary-300)',
+          400: 'var(--color-secondary-400)',
+          500: 'var(--color-secondary-500)',
+          600: 'var(--color-secondary-600)',
+          700: 'var(--color-secondary-700)',
+          800: 'var(--color-secondary-800)',
+          900: 'var(--color-secondary-900)',
+          DEFAULT: 'var(--color-secondary)',
+        },
+        tertiary: {
+          50: 'var(--color-tertiary-50)',
+          100: 'var(--color-tertiary-100)',
+          200: 'var(--color-tertiary-200)',
+          300: 'var(--color-tertiary-300)',
+          400: 'var(--color-tertiary-400)',
+          500: 'var(--color-tertiary-500)',
+          600: 'var(--color-tertiary-600)',
+          700: 'var(--color-tertiary-700)',
+          800: 'var(--color-tertiary-800)',
+          900: 'var(--color-tertiary-900)',
+          DEFAULT: 'var(--color-tertiary)',
+        },
+        accent: {
+          50: 'var(--color-accent-50)',
+          100: 'var(--color-accent-100)',
+          200: 'var(--color-accent-200)',
+          300: 'var(--color-accent-300)',
+          400: 'var(--color-accent-400)',
+          500: 'var(--color-accent-500)',
+          600: 'var(--color-accent-600)',
+          700: 'var(--color-accent-700)',
+          800: 'var(--color-accent-800)',
+          900: 'var(--color-accent-900)',
+          DEFAULT: 'var(--color-accent)',
+        },
+        // Keep green as fallback/default (Nigeria colors)
         green: {
-          500: '#10B981', // You can adjust this to the exact shade you want
-          600: '#059669', // Slightly darker shade for hover states
+          50: '#e6f4ed',
+          100: '#c0e4d3',
+          200: '#96d3b6',
+          300: '#6cc199',
+          400: '#4db483',
+          500: '#2ea76d',
+          600: '#299f65',
+          700: '#23965a',
+          800: '#1d8c50',
+          900: '#127a3e',
         },
       },
-        fontFamily: {
+      fontFamily: {
         'inter': ['inter', 'sans-serif'],
       },
     },

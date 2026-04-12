@@ -15,6 +15,7 @@ const Footer = () => {
       { label: 'How It Works', to: '/#how-it-works' },
       { label: 'FAQ', to: '/faq' },
       { label: 'Privacy Policy', to: '/privacy-policy' },
+      { label: 'Terms of Service', to: '/terms-of-service' },
     ],
     Account: [
       { label: 'Sign Up', to: '/register' },
@@ -51,7 +52,7 @@ const Footer = () => {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="h-9 w-9 rounded-full bg-white/5 hover:bg-green-700 flex items-center justify-center transition-colors"
+                  className="h-9 w-9 rounded-full bg-white/5 hover:bg-primary-700 flex items-center justify-center transition-colors"
                 >
                   <img src={icon} alt={label} className="h-4 w-4 brightness-0 invert" />
                 </a>
@@ -86,6 +87,7 @@ const Footer = () => {
           <p>© {currentYear} Darb Network. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
             <Link to="/about" className="hover:text-white transition-colors">Contact</Link>
           </div>

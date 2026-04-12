@@ -53,15 +53,15 @@ const FeaturedStartups = () => {
         >
           <div>
             <div className="flex items-center space-x-2 mb-2">
-              <Sparkles className="h-5 w-5 text-green-600" />
-              <span className="text-green-600 font-semibold text-sm uppercase tracking-widest">Featured Projects</span>
+              <Sparkles className="h-5 w-5 text-primary-600" />
+              <span className="text-primary-600 font-semibold text-sm uppercase tracking-widest">Featured Projects</span>
             </div>
             <h2 className="text-4xl font-bold text-gray-900">Trending Startups</h2>
             <p className="text-gray-500 mt-2">Innovative African startups making waves right now</p>
           </div>
           <button
             onClick={() => navigate('/dashboard')}
-            className="hidden md:flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold transition-colors"
+            className="hidden md:flex items-center space-x-2 text-primary-600 hover:text-primary-700 font-semibold transition-colors"
           >
             <span>View all</span>
             <ArrowRight className="h-5 w-5" />
@@ -71,14 +71,14 @@ const FeaturedStartups = () => {
         {/* Content */}
         {loading ? (
           <div className="flex justify-center py-24">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent" />
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent" />
           </div>
         ) : error || campaigns.length === 0 ? (
           <div className="text-center py-24">
             <p className="text-gray-500 text-lg mb-6">{error || 'No featured campaigns yet.'}</p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full inline-flex items-center space-x-2"
+              className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-full inline-flex items-center space-x-2"
             >
               <span>Browse All Startups</span>
               <ArrowRight className="h-5 w-5" />
@@ -105,7 +105,7 @@ const FeaturedStartups = () => {
                 {/* Filler promo panel */}
                 <div className="flex-1 bg-gray-900 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center gap-6">
                   <div className="flex-1">
-                    <p className="text-green-400 text-xs font-semibold uppercase tracking-widest mb-2">Why invest on Darb?</p>
+                    <p className="text-primary-400 text-xs font-semibold uppercase tracking-widest mb-2">Why invest on Darb?</p>
                     <h3 className="text-white font-bold text-lg leading-snug mb-4">
                       Milestone-based funding keeps your capital protected.
                     </h3>
@@ -116,7 +116,7 @@ const FeaturedStartups = () => {
                         { icon: Users,       text: '18K+ verified investors on the platform' },
                       ].map(({ icon: Icon, text }) => (
                         <div key={text} className="flex items-center gap-2 text-gray-300 text-sm">
-                          <Icon className="h-4 w-4 text-green-400 flex-shrink-0" />
+                          <Icon className="h-4 w-4 text-primary-400 flex-shrink-0" />
                           <span>{text}</span>
                         </div>
                       ))}
@@ -124,7 +124,7 @@ const FeaturedStartups = () => {
                   </div>
                   <button
                     onClick={() => navigate('/register')}
-                    className="flex-shrink-0 self-start sm:self-center inline-flex items-center gap-2 bg-green-500 hover:bg-green-400 text-white font-semibold text-sm px-5 py-2.5 rounded-full transition-all"
+                    className="flex-shrink-0 self-start sm:self-center inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-400 text-white font-semibold text-sm px-5 py-2.5 rounded-full transition-all"
                   >
                     Get started
                     <ArrowRight className="h-4 w-4" />
@@ -160,7 +160,7 @@ const FeaturedStartups = () => {
           <div className="text-center mt-10 md:hidden">
             <button
               onClick={() => navigate('/dashboard')}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full inline-flex items-center space-x-2"
+              className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-full inline-flex items-center space-x-2"
             >
               <span>View All Campaigns</span>
               <ArrowRight className="h-5 w-5" />

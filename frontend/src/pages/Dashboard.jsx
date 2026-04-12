@@ -53,7 +53,7 @@ const ListCard = ({ campaign, navigate, buildImageUrl, formatCurrency, calcPct }
       whileHover={{ y: -2 }}
       transition={{ duration: 0.25 }}
       onClick={() => navigate(`/campaign/${campaign.id}`)}
-      className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-green-200 hover:shadow-lg shadow-sm cursor-pointer flex transition-all duration-200"
+      className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-primary-200 hover:shadow-lg shadow-sm cursor-pointer flex transition-all duration-200"
     >
       <div className="w-52 h-44 flex-shrink-0 relative overflow-hidden">
         <img src={imgSrc} alt={campaign.title}
@@ -75,13 +75,13 @@ const ListCard = ({ campaign, navigate, buildImageUrl, formatCurrency, calcPct }
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <div className="text-lg font-bold text-green-600">{pct}%</div>
+            <div className="text-lg font-bold text-primary-600">{pct}%</div>
             <div className="text-xs text-gray-400">funded</div>
           </div>
         </div>
         <p className="text-sm text-gray-500 line-clamp-2 mb-3">{campaign.description}</p>
         <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
-          <motion.div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
+          <motion.div className="h-full bg-gradient-to-r from-primary-500 to-primary-400 rounded-full"
             initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: "easeOut" }} />
         </div>
         <div className="flex items-center justify-between text-xs text-gray-500">
@@ -235,7 +235,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="px-5 pt-5 pb-3 border-b border-gray-50">
         <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider flex items-center gap-2">
-          <LayoutGrid className="h-4 w-4 text-green-600" /> Categories
+          <LayoutGrid className="h-4 w-4 text-primary-600" /> Categories
         </h3>
       </div>
 
@@ -246,7 +246,7 @@ const Dashboard = () => {
           onClick={() => { setSelectedCategory("All Categories"); updateURL({ category: null }); }}
           className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center gap-2.5 transition-all ${
             selectedCategory === "All Categories"
-              ? "bg-green-600 text-white font-semibold shadow-sm shadow-green-200"
+              ? "bg-primary-600 text-white font-semibold shadow-sm shadow-primary-200"
               : "text-gray-600 hover:bg-gray-50"
           }`}
         >
@@ -269,17 +269,17 @@ const Dashboard = () => {
                 }}
                 className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center justify-between gap-2 transition-all ${
                   isGroupActive
-                    ? "text-green-700 font-semibold bg-green-50"
+                    ? "text-primary-700 font-semibold bg-primary-50"
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 <span className="flex items-center gap-2.5">
-                  <span className={`flex-shrink-0 ${isGroupActive ? "text-green-600" : "text-gray-400"}`}>
+                  <span className={`flex-shrink-0 ${isGroupActive ? "text-primary-600" : "text-gray-400"}`}>
                     {groupIcons[group]}
                   </span>
                   {group}
                 </span>
-                <ChevronDown className={`h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-green-600" : "text-gray-400"}`} />
+                <ChevronDown className={`h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-primary-600" : "text-gray-400"}`} />
               </button>
 
               <AnimatePresence initial={false}>
@@ -298,12 +298,12 @@ const Dashboard = () => {
                           onClick={() => { setSelectedCategory(cat); updateURL({ category: cat }); }}
                           className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-2 ${
                             selectedCategory === cat
-                              ? "text-green-700 font-semibold bg-green-50"
+                              ? "text-primary-700 font-semibold bg-primary-50"
                               : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
                           }`}
                         >
                           {selectedCategory === cat && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary-500 flex-shrink-0" />
                           )}
                           {cat}
                         </button>
@@ -325,7 +325,7 @@ const Dashboard = () => {
     return (
       <div className="flex justify-center items-center gap-2 mt-10">
         <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage === 1}
-          className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-40 hover:border-green-400 hover:text-green-600 transition-colors">
+          className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-40 hover:border-primary-400 hover:text-primary-600 transition-colors">
           <ChevronLeft className="h-4 w-4" />
         </button>
         {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -334,13 +334,13 @@ const Dashboard = () => {
           if (pg > totalPages) return null;
           return (
             <button key={pg} onClick={() => setCurrentPage(pg)}
-              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${currentPage === pg ? "bg-green-600 text-white shadow-md shadow-green-200" : "bg-white border border-gray-200 text-gray-600 hover:border-green-400"}`}>
+              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${currentPage === pg ? "bg-primary-600 text-white shadow-md shadow-primary-200" : "bg-white border border-gray-200 text-gray-600 hover:border-primary-400"}`}>
               {pg}
             </button>
           );
         })}
         <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage === totalPages}
-          className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-40 hover:border-green-400 hover:text-green-600 transition-colors">
+          className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-40 hover:border-primary-400 hover:text-primary-600 transition-colors">
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
@@ -355,19 +355,19 @@ const Dashboard = () => {
       {/* ── Hero banner ── */}
       <div className="relative overflow-hidden bg-gray-900 h-64">
         <img src="/assets/featured-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-green-900/60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-primary-900/60" />
 
         {/* Floating orbs */}
         <motion.div animate={{ y: [0, -14, 0], opacity: [0.15, 0.25, 0.15] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-8 right-32 w-48 h-48 bg-green-500 rounded-full blur-3xl pointer-events-none" />
+          className="absolute top-8 right-32 w-48 h-48 bg-primary-500 rounded-full blur-3xl pointer-events-none" />
         <motion.div animate={{ y: [0, 12, 0], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
           className="absolute bottom-0 right-64 w-32 h-32 bg-emerald-400 rounded-full blur-2xl pointer-events-none" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 h-full flex items-center justify-between">
           <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
             <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="h-4 w-4 text-green-400" />
-              <span className="text-green-400 text-sm font-semibold uppercase tracking-widest">Explore</span>
+              <Sparkles className="h-4 w-4 text-primary-400" />
+              <span className="text-primary-400 text-sm font-semibold uppercase tracking-widest">Explore</span>
             </div>
             <h1 className="text-4xl font-bold text-white mb-2">Discover Startups</h1>
             <p className="text-gray-400 text-base">
@@ -391,7 +391,7 @@ const Dashboard = () => {
               <input type="search" placeholder="Search campaigns, founders, categories…"
                 value={searchTerm}
                 onChange={e => { setSearchTerm(e.target.value); updateURL({ search: e.target.value }); }}
-                className="w-full pl-10 pr-9 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all" />
+                className="w-full pl-10 pr-9 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all" />
               {searchTerm && (
                 <button onClick={() => { setSearchTerm(""); updateURL({ search: null }); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -407,7 +407,7 @@ const Dashboard = () => {
                   onClick={() => { setSelectedFilter(opt.label); updateURL({ filter: opt.label }); }}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     selectedFilter === opt.label
-                      ? "bg-green-600 text-white shadow-md shadow-green-200"
+                      ? "bg-primary-600 text-white shadow-md shadow-primary-200"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}>
                   {opt.icon}{opt.label}
@@ -424,7 +424,7 @@ const Dashboard = () => {
               <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
                 {[["grid", <Grid className="h-4 w-4" />], ["list", <List className="h-4 w-4" />]].map(([mode, icon]) => (
                   <button key={mode} onClick={() => setViewMode(mode)}
-                    className={`p-1.5 rounded-lg transition-all ${viewMode === mode ? "bg-white shadow text-green-600" : "text-gray-500 hover:text-gray-700"}`}>
+                    className={`p-1.5 rounded-lg transition-all ${viewMode === mode ? "bg-white shadow text-primary-600" : "text-gray-500 hover:text-gray-700"}`}>
                     {icon}
                   </button>
                 ))}
@@ -442,7 +442,7 @@ const Dashboard = () => {
                       className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20">
                       {["Date Posted", "Most Funded", "End Date"].map(opt => (
                         <button key={opt} onClick={() => { setSortBy(opt); setSortOpen(false); }}
-                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${sortBy === opt ? "text-green-600 font-semibold bg-green-50" : "text-gray-700 hover:bg-gray-50"}`}>
+                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${sortBy === opt ? "text-primary-600 font-semibold bg-primary-50" : "text-gray-700 hover:bg-gray-50"}`}>
                           {opt}
                         </button>
                       ))}
@@ -471,7 +471,7 @@ const Dashboard = () => {
                 </span>
               )}
               {selectedFilter !== "All Campaigns" && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-primary-50 text-primary-700 border border-primary-100">
                   {selectedFilter} <button onClick={() => { setSelectedFilter("All Campaigns"); updateURL({ filter: null }); }}><X className="h-3 w-3" /></button>
                 </span>
               )}
@@ -503,7 +503,7 @@ const Dashboard = () => {
                     ] : []),
                   ].map(({ to, icon, label }) => (
                     <Link key={to} to={to}
-                      className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 px-3 py-2 rounded-xl transition-colors">
+                      className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-xl transition-colors">
                       {icon}{label}
                     </Link>
                   ))}
@@ -534,7 +534,7 @@ const Dashboard = () => {
                 <SlidersHorizontal className="h-10 w-10 text-red-300 mx-auto mb-3" />
                 <h3 className="text-lg font-semibold text-gray-800 mb-1">Couldn't load campaigns</h3>
                 <p className="text-sm text-gray-500 mb-5">{error}</p>
-                <button onClick={loadCampaigns} className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors">
+                <button onClick={loadCampaigns} className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition-colors">
                   Try Again
                 </button>
               </motion.div>
@@ -545,7 +545,7 @@ const Dashboard = () => {
                 <h3 className="text-lg font-semibold text-gray-800 mb-1">No campaigns match</h3>
                 <p className="text-sm text-gray-500 mb-5">Try adjusting your search or filters.</p>
                 {hasFilters && (
-                  <button onClick={clearAll} className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors">
+                  <button onClick={clearAll} className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition-colors">
                     Clear Filters
                   </button>
                 )}

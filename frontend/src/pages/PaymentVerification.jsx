@@ -124,7 +124,7 @@ const PaymentVerification = () => {
       case "success":
         return (
           <div className="text-center py-16">
-            <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-6" />
+            <CheckCircle className="h-20 w-20 text-primary-500 mx-auto mb-6" />
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Payment Successful! 🎉
             </h1>
@@ -133,7 +133,7 @@ const PaymentVerification = () => {
             </p>
 
             {/* Investment Details Card */}
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 max-w-lg mx-auto mb-8">
+            <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-xl p-6 max-w-lg mx-auto mb-8">
               <div className="text-center">
                 <div className="text-3xl font-bold text-gray-900 mb-2">
                   {formatCurrency(investmentData?.amount)}
@@ -149,7 +149,7 @@ const PaymentVerification = () => {
                   </div>
                   <div>
                     <div className="text-sm text-gray-600">Status</div>
-                    <div className="font-medium text-green-600 text-sm">
+                    <div className="font-medium text-primary-600 text-sm">
                       Confirmed
                     </div>
                   </div>
@@ -158,8 +158,8 @@ const PaymentVerification = () => {
             </div>
 
             {/* Success Message */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-lg mx-auto mb-8">
-              <div className="text-green-800">
+            <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 max-w-lg mx-auto mb-8">
+              <div className="text-primary-800">
                 <h3 className="font-semibold mb-2">What happens next?</h3>
                 <ul className="text-sm space-y-1 text-left">
                   <li className="flex items-center">

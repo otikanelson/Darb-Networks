@@ -11,12 +11,20 @@ const cloudinaryConfigured = !!(
   process.env.CLOUDINARY_API_SECRET
 );
 
+console.log('🔧 Cloudinary Configuration Check:', {
+  cloudName: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
+  apiKey: process.env.CLOUDINARY_API_KEY ? 'SET' : 'NOT SET',
+  apiSecret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'NOT SET',
+  configured: cloudinaryConfigured
+});
+
 if (cloudinaryConfigured) {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key:    process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
+  console.log('✅ Cloudinary configured successfully');
 } else {
   console.warn('⚠️ Cloudinary credentials not configured — image uploads will fail');
 }
@@ -302,24 +310,48 @@ exports.uploadProfileImage = [
     try {
       const userId = req.userId;
 
+      console.log('📸 Profile image upload request:', {
+        userId,
+        hasFile: !!req.file,
+        cloudinaryConfigured,
+        fileName: req.file?.originalname,
+        fileSize: req.file?.size
+      });
+
       if (!req.file) {
         return res.status(400).send({ success: false, message: "No image file provided." });
       }
 
       if (!cloudinaryConfigured) {
-        return res.status(500).send({ success: false, message: "Image upload service not configured." });
+        console.error('❌ Cloudinary not configured. Check environment variables.');
+        return res.status(500).send({ 
+          success: false, 
+          message: "Image upload service not configured. Please contact support." 
+        });
       }
+
+      console.log('☁️ Uploading to Cloudinary...');
 
       // Upload buffer directly to Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           { folder: 'darb/profiles', resource_type: 'image' },
-          (error, result) => { if (error) reject(error); else resolve(result); }
+          (error, result) => { 
+            if (error) {
+              console.error('❌ Cloudinary upload error:', error);
+              reject(error);
+            } else {
+              console.log('✅ Cloudinary upload success:', result.secure_url);
+              resolve(result);
+            }
+          }
         );
         stream.end(req.file.buffer);
       });
 
       const imageUrl = uploadResult.secure_url;
+
+      console.log('💾 Saving image URL to database:', imageUrl);
 
       const [affectedRows] = await User.update(
         { profileImageUrl: imageUrl },
@@ -331,6 +363,8 @@ exports.uploadProfileImage = [
       }
 
       const updatedUser = await User.findByPk(userId, { attributes: { exclude: ['password'] } });
+
+      console.log('✅ Profile image updated successfully for user:', userId);
 
       res.status(200).send({
         success: true,
@@ -347,8 +381,12 @@ exports.uploadProfileImage = [
         },
       });
     } catch (error) {
-      console.error("Upload profile image error:", error);
-      res.status(500).send({ success: false, message: "Error updating profile image.", error: error.message });
+      console.error("❌ Upload profile image error:", error);
+      res.status(500).send({ 
+        success: false, 
+        message: "Error updating profile image.", 
+        error: error.message 
+      });
     }
   },
 ];

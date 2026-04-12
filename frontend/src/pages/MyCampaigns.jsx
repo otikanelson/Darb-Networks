@@ -18,7 +18,7 @@ import {
 const STATUS_STYLES = {
   draft:     { bg: "bg-gray-100 text-gray-700",    dot: "bg-gray-400",   icon: FileText },
   submitted: { bg: "bg-amber-100 text-amber-700",  dot: "bg-amber-400",  icon: Clock },
-  approved:  { bg: "bg-green-100 text-green-700",  dot: "bg-green-500",  icon: CheckCircle },
+  approved:  { bg: "bg-primary-100 text-primary-700",  dot: "bg-primary-500",  icon: CheckCircle },
   rejected:  { bg: "bg-red-100 text-red-700",      dot: "bg-red-500",    icon: XCircle },
 };
 
@@ -169,13 +169,13 @@ const MyCampaigns = () => {
     ? [
         { label: "Total",       value: campaignData.created?.all?.length || 0,       color: "text-gray-900" },
         { label: "Under Review",value: campaignData.created?.submitted?.length || 0,  color: "text-amber-600" },
-        { label: "Published",   value: campaignData.created?.approved?.length || 0,   color: "text-green-600" },
+        { label: "Published",   value: campaignData.created?.approved?.length || 0,   color: "text-primary-600" },
         { label: "Drafts",      value: campaignData.created?.drafts?.length || 0,     color: "text-gray-500" },
       ]
     : [
         { label: "Viewed",    value: campaignData.viewed?.length || 0,    color: "text-blue-600" },
         { label: "Favourites",value: campaignData.favorites?.length || 0, color: "text-red-500" },
-        { label: "Funded",    value: campaignData.funded?.length || 0,    color: "text-green-600" },
+        { label: "Funded",    value: campaignData.funded?.length || 0,    color: "text-primary-600" },
         { label: "Portfolio", value: "—",                                  color: "text-gray-400" },
       ];
 
@@ -190,17 +190,17 @@ const MyCampaigns = () => {
 
       {/* ── Hero banner ── */}
       <div className="relative overflow-hidden bg-gray-900 h-52">
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/85 to-green-900/60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/85 to-primary-900/60" />
         <motion.div
           animate={{ y: [0, -12, 0], opacity: [0.12, 0.22, 0.12] }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-6 right-24 w-56 h-56 bg-green-500 rounded-full blur-3xl pointer-events-none"
+          className="absolute top-6 right-24 w-56 h-56 bg-primary-500 rounded-full blur-3xl pointer-events-none"
         />
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 h-full flex items-center justify-between">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.55 }}>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-4 w-4 text-green-400" />
-              <span className="text-green-400 text-xs font-semibold uppercase tracking-widest">
+              <Sparkles className="h-4 w-4 text-primary-400" />
+              <span className="text-primary-400 text-xs font-semibold uppercase tracking-widest">
                 {isFounder ? "Founder Hub" : "Investor Hub"}
               </span>
             </div>
@@ -221,7 +221,7 @@ const MyCampaigns = () => {
             </button>
             {isFounder && (
               <button onClick={() => navigate("/pages/CreateCampaign")}
-                className="flex items-center gap-2 px-5 py-2.5 bg-green-500 hover:bg-green-400 text-white text-sm font-bold rounded-full transition-all hover:scale-105 shadow-lg shadow-green-900/30">
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary-500 hover:bg-primary-400 text-white text-sm font-bold rounded-full transition-all hover:scale-105 shadow-lg shadow-primary-900/30">
                 <Plus className="h-4 w-4" /> New Campaign
               </button>
             )}
@@ -256,8 +256,8 @@ const MyCampaigns = () => {
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   active
-                    ? "bg-green-600 text-white shadow-md shadow-green-200"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-green-300 hover:text-green-700"
+                    ? "bg-primary-600 text-white shadow-md shadow-primary-200"
+                    : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300 hover:text-primary-700"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -275,7 +275,7 @@ const MyCampaigns = () => {
         {/* ── Content ── */}
         {loading ? (
           <div className="flex justify-center py-24">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent" />
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent" />
           </div>
         ) : campaigns.length > 0 ? (
           <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -335,7 +335,7 @@ const MyCampaigns = () => {
             <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">{empty.msg}</p>
             {empty.cta && (
               <button onClick={() => navigate(empty.to)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-full transition-all hover:scale-105">
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-full transition-all hover:scale-105">
                 {empty.to?.includes("Create") && <Plus className="h-4 w-4" />}
                 {empty.cta}
               </button>

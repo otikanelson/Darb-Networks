@@ -37,7 +37,7 @@ const StatCard = ({ value, change, comparison }) => {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: i * 0.05, duration: 0.3 }}
-                className={`h-6 w-6 rounded-md ${i < 7 ? 'bg-green-700' : 'bg-gray-200'}`}
+                className={`h-6 w-6 rounded-md ${i < 7 ? 'bg-primary-700' : 'bg-gray-200'}`}
               />
             ))}
           </div>
@@ -53,7 +53,7 @@ const StatCard = ({ value, change, comparison }) => {
                   initial={{ height: 0 }}
                   animate={{ height: [8, 16, 24, 16, 32][i % 5] }}
                   transition={{ duration: 0.7, delay: i * 0.1 }}
-                  className="w-6 bg-green-700 rounded-t-md"
+                  className="w-6 bg-primary-700 rounded-t-md"
                 />
               ))}
             </div>
@@ -117,7 +117,7 @@ const StatCard = ({ value, change, comparison }) => {
         <div>
           <div className="text-4xl font-bold text-gray-900">{value}</div>
           <div className="flex items-center space-x-1 mt-1">
-            <span className={`font-medium ${isPositive ? 'text-green-700' : 'text-green-600'}`}>
+            <span className={`font-medium ${isPositive ? 'text-primary-700' : 'text-primary-600'}`}>
               {change}
             </span>
             <span className="text-gray-500">{comparison}</span>
@@ -126,8 +126,8 @@ const StatCard = ({ value, change, comparison }) => {
         
         <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
           comparison.toLowerCase() === 'total funded' ? 'bg-purple-100 text-purple-600' :
-          comparison.toLowerCase() === 'startups funded' ? 'bg-green-100 text-green-700' :
-          comparison.toLowerCase() === 'active investors' ? 'bg-green-100 text-green-700' : 
+          comparison.toLowerCase() === 'startups funded' ? 'bg-primary-100 text-primary-700' :
+          comparison.toLowerCase() === 'active investors' ? 'bg-primary-100 text-primary-700' : 
           'bg-purple-100 text-purple-700'
         }`}>
           {comparison.toLowerCase() === 'total funded' && (

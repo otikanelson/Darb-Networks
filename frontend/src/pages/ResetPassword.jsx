@@ -80,7 +80,7 @@ const ResetPassword = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
-            <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
+            <CheckCircle className="mx-auto h-16 w-16 text-primary-500" />
             <h2 className="mt-6 text-3xl font-bold text-gray-900">Password reset successful</h2>
             <p className="mt-2 text-gray-600">
               Your password has been reset successfully. You'll be redirected to login in a few seconds.
@@ -119,7 +119,7 @@ const ResetPassword = () => {
                 required
                 value={formData.newPassword}
                 onChange={handleInputChange}
-                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Enter new password"
               />
               <button
@@ -147,7 +147,7 @@ const ResetPassword = () => {
                 required
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Confirm new password"
               />
               <button
@@ -164,7 +164,7 @@ const ResetPassword = () => {
             <button
               type="submit"
               disabled={isLoading || !token}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
             >
               {isLoading ? 'Resetting...' : 'Reset password'}
             </button>

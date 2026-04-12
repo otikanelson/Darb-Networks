@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import About from './pages/About';
 import FAQ from './pages/FAQ';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import NotFound from './pages/NotFound';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
@@ -41,6 +42,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
 
           {/* Dashboard - Public but shows different content based on auth */}
           <Route path="/dashboard" element={<Dashboard />} />

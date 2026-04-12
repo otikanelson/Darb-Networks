@@ -8,7 +8,7 @@ const testimonials = [
     name: 'Chidi Okafor',
     role: 'Founder, AgroSmart Nigeria',
     avatar: 'CO',
-    avatarBg: 'bg-green-100 text-green-700',
+    avatarBg: 'bg-primary-100 text-primary-700',
   },
   {
     quote: "I've invested in 12 startups through Darb. The milestone-based disbursement gives me confidence that my capital is being used responsibly.",
@@ -36,7 +36,7 @@ const Testimonials = () => (
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        <span className="text-green-600 font-semibold text-sm uppercase tracking-widest">Success stories</span>
+        <span className="text-primary-600 font-semibold text-sm uppercase tracking-widest">Success stories</span>
         <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">Founders and investors love Darb</h2>
         <p className="text-lg text-gray-500 max-w-xl mx-auto">
           Real people, real results. Here's what our community has to say.
@@ -55,7 +55,7 @@ const Testimonials = () => (
             whileHover={{ y: -4, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
           >
             <div>
-              <Quote className="h-8 w-8 text-green-400 mb-4" />
+              <Quote className="h-8 w-8 text-primary-400 mb-4" />
               <p className="text-gray-700 leading-relaxed text-[15px]">"{quote}"</p>
             </div>
             <div className="flex items-center mt-8 space-x-3">

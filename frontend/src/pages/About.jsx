@@ -7,10 +7,16 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
+import { useEffect } from "react";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
 
 const About = () => {
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const resources = [
     {
       title: "Educational Guides",
@@ -35,16 +41,16 @@ const About = () => {
       <UnifiedNavbar variant="default" />
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-green-700 to-green-900">
+      <div className="relative overflow-hidden bg-gradient-to-r from-primary-700 to-primary-900">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 to-green-700/90" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-900/90 to-primary-700/90" />
         </div>
         <div className="relative px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
               Transforming Startup Funding
             </h1>
-            <p className="mt-6 text-lg leading-8 text-green-100">
+            <p className="mt-6 text-lg leading-8 text-primary-100">
               We're revolutionizing how startups access capital through our
               innovative P2P lending platform. Join thousands of successful
               ventures that have found their perfect funding match.
@@ -56,8 +62,8 @@ const About = () => {
       {/* Mission & Vision */}
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-2">
-          <div className="bg-green-50 p-8 rounded-xl">
-            <Target className="h-12 w-12 text-green-700 mb-4" />
+          <div className="bg-primary-50 p-8 rounded-xl">
+            <Target className="h-12 w-12 text-primary-700 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Our Mission
             </h2>
@@ -69,8 +75,8 @@ const About = () => {
               they deserve, regardless of background or location.
             </p>
           </div>
-          <div className="bg-green-50 p-8 rounded-xl">
-            <Award className="h-12 w-12 text-green-700 mb-4" />
+          <div className="bg-primary-50 p-8 rounded-xl">
+            <Award className="h-12 w-12 text-primary-700 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Our Vision
             </h2>
@@ -99,7 +105,7 @@ const About = () => {
           <div className="grid gap-8 md:grid-cols-3">
             {resources.map((resource, index) => (
               <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
-                <resource.icon className="h-8 w-8 text-green-700 mb-4" />
+                <resource.icon className="h-8 w-8 text-primary-700 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   {resource.title}
                 </h3>
@@ -123,7 +129,7 @@ const About = () => {
         </div>
         <div className="grid gap-8 md:grid-cols-2">
           <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-            <Mail className="h-8 w-8 text-green-700 mb-4" />
+            <Mail className="h-8 w-8 text-primary-700 mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Email Us
             </h3>
@@ -136,7 +142,7 @@ const About = () => {
             </a>
           </div>
           <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-            <Phone className="h-8 w-8 text-green-700 mb-4" />
+            <Phone className="h-8 w-8 text-primary-700 mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Call Us
             </h3>

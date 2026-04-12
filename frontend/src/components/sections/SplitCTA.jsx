@@ -41,8 +41,8 @@ const SplitCTA = () => {
             onMouseLeave={() => setHovered(null)}
           >
             <div>
-              <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-6">
-                <Rocket className="h-6 w-6 text-green-400" />
+              <div className="w-12 h-12 bg-primary-500/20 rounded-xl flex items-center justify-center mb-6">
+                <Rocket className="h-6 w-6 text-primary-400" />
               </div>
               <h3 className="text-3xl font-bold text-white mb-3 whitespace-nowrap">Ready to launch?</h3>
               <motion.p
@@ -55,7 +55,7 @@ const SplitCTA = () => {
             </div>
             <button
               onClick={handleCampaignClick}
-              className="mt-8 self-start inline-flex items-center space-x-2 bg-green-500 hover:bg-green-400 text-white font-bold px-7 py-3.5 rounded-full transition-all transform hover:scale-105"
+              className="mt-8 self-start inline-flex items-center space-x-2 bg-primary-500 hover:bg-primary-400 text-white font-bold px-7 py-3.5 rounded-full transition-all transform hover:scale-105"
             >
               <span>Launch Your Campaign</span>
               <ArrowRight className="h-5 w-5" />
@@ -64,7 +64,7 @@ const SplitCTA = () => {
 
           {/* Investor side */}
           <motion.div
-            className="bg-green-700 p-12 flex flex-col justify-between min-h-[320px] cursor-pointer overflow-hidden"
+            className="bg-primary-700 p-12 flex flex-col justify-between min-h-[320px] cursor-pointer overflow-hidden"
             style={{ flexGrow: investorGrow, flexBasis: 0 }}
             animate={{ flexGrow: investorGrow }}
             transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -77,7 +77,7 @@ const SplitCTA = () => {
               </div>
               <h3 className="text-3xl font-bold text-white mb-3 whitespace-nowrap">Start investing today.</h3>
               <motion.p
-                className="text-green-100 leading-relaxed max-w-sm"
+                className="text-primary-100 leading-relaxed max-w-sm"
                 animate={{ opacity: hovered === 'founder' ? 0.4 : 1 }}
                 transition={{ duration: 0.3 }}
               >
@@ -86,7 +86,7 @@ const SplitCTA = () => {
             </div>
             <button
               onClick={() => navigate('/dashboard')}
-              className="mt-8 self-start inline-flex items-center space-x-2 bg-white hover:bg-green-50 text-green-700 font-bold px-7 py-3.5 rounded-full transition-all transform hover:scale-105"
+              className="mt-8 self-start inline-flex items-center space-x-2 bg-white hover:bg-primary-50 text-primary-700 font-bold px-7 py-3.5 rounded-full transition-all transform hover:scale-105"
             >
               <span>Explore Startups</span>
               <ArrowRight className="h-5 w-5" />

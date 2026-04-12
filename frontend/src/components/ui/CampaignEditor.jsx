@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildApiUrl } from '../../config/apiUrl';
+import { useCountry } from '../../context/CountryContext';
 import RichEditor from './RichEditor';
 import toast from 'react-hot-toast';
 import {
@@ -103,7 +104,7 @@ const Err = ({ msg }) => msg
 
 const inp = (err) =>
   `w-full px-4 py-3 rounded-xl border outline-none transition-all text-gray-900 text-sm
-   focus:ring-2 focus:ring-green-500 focus:border-transparent
+   focus:ring-2 focus:ring-primary-500 focus:border-transparent
    ${err ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300'}`;
 
 // ─── ImageUploadZone ──────────────────────────────────────────────────────────
@@ -145,11 +146,11 @@ const ImageUploadZone = ({ value, onChange, onRemove, multiple = false, compact 
       {/* drop zone */}
       <label onDragOver={e => e.preventDefault()} onDrop={onDrop}
         className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl cursor-pointer transition-all
-          hover:border-green-400 hover:bg-green-50/50 group
+          hover:border-primary-400 hover:bg-primary-50/50 group
           ${compact ? 'h-24' : 'h-40'}
           ${(!multiple && value) || (multiple && value?.length >= 8) ? 'border-gray-100 bg-gray-50' : 'border-gray-200 bg-white'}`}>
-        <ImageIcon className="h-7 w-7 text-gray-300 group-hover:text-green-500 transition mb-1.5" />
-        <span className="text-sm text-gray-400 group-hover:text-green-600 transition">
+        <ImageIcon className="h-7 w-7 text-gray-300 group-hover:text-primary-500 transition mb-1.5" />
+        <span className="text-sm text-gray-400 group-hover:text-primary-600 transition">
           Drop here or <span className="font-medium underline underline-offset-2">browse</span>
         </span>
         <span className="text-xs text-gray-300 mt-1">JPG, PNG, WebP · max 10 MB</span>
@@ -178,7 +179,7 @@ const VideoList = ({ videos, onChange }) => {
         </div>
       ))}
       <button type="button" onClick={() => onChange([...videos, ''])}
-        className="flex items-center gap-1.5 text-sm text-green-600 font-medium hover:text-green-700 transition mt-1">
+        className="flex items-center gap-1.5 text-sm text-primary-600 font-medium hover:text-primary-700 transition mt-1">
         <Plus className="h-4 w-4" /> Add another video
       </button>
     </div>
@@ -188,6 +189,7 @@ const VideoList = ({ videos, onChange }) => {
 // ─── CampaignEditor ───────────────────────────────────────────────────────────
 const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
   const navigate = useNavigate();
+  const { country } = useCountry();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState({});
   const [globalError, setGlobalError] = useState('');
@@ -243,7 +245,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
     if (idx === 7) {
       const t = parseFloat(String(form.targetAmount).replace(/,/g, ''));
       if (!form.targetAmount || isNaN(t)) e.targetAmount = 'Required';
-      else if (t < 100000) e.targetAmount = 'Minimum ₦100,000';
+      else if (t < 100000) e.targetAmount = `Minimum ${country.currencySymbol}100,000`;
       if (!form.minimumInvestment) e.minimumInvestment = 'Required';
     }
     return e;
@@ -531,9 +533,9 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <Label required sub="Total amount you need to raise.">Target Amount (₦)</Label>
+              <Label required sub="Total amount you need to raise.">Target Amount ({country.currencySymbol})</Label>
               <div className="relative">
-                <span className="absolute left-4 top-3.5 text-gray-400 text-sm font-medium">₦</span>
+                <span className="absolute left-4 top-3.5 text-gray-400 text-sm font-medium">{country.currencySymbol}</span>
                 <input value={form.targetAmount}
                   onChange={e => set('targetAmount', e.target.value)}
                   onBlur={e => set('targetAmount', fmtNum(e.target.value))}
@@ -542,9 +544,9 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
               <Err msg={errors.targetAmount} />
             </div>
             <div>
-              <Label required sub="Smallest amount an investor can contribute.">Minimum Investment (₦)</Label>
+              <Label required sub="Smallest amount an investor can contribute.">Minimum Investment ({country.currencySymbol})</Label>
               <div className="relative">
-                <span className="absolute left-4 top-3.5 text-gray-400 text-sm font-medium">₦</span>
+                <span className="absolute left-4 top-3.5 text-gray-400 text-sm font-medium">{country.currencySymbol}</span>
                 <input value={form.minimumInvestment}
                   onChange={e => set('minimumInvestment', e.target.value)}
                   onBlur={e => set('minimumInvestment', fmtNum(e.target.value))}
@@ -553,9 +555,9 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
               <Err msg={errors.minimumInvestment} />
             </div>
             <div>
-              <Label sub="Optional cap per investor.">Maximum Investment (₦)</Label>
+              <Label sub="Optional cap per investor.">Maximum Investment ({country.currencySymbol})</Label>
               <div className="relative">
-                <span className="absolute left-4 top-3.5 text-gray-400 text-sm font-medium">₦</span>
+                <span className="absolute left-4 top-3.5 text-gray-400 text-sm font-medium">{country.currencySymbol}</span>
                 <input value={form.maximumInvestment}
                   onChange={e => set('maximumInvestment', e.target.value)}
                   onBlur={e => set('maximumInvestment', fmtNum(e.target.value))}
@@ -595,7 +597,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
                         className={inp(false)} placeholder="Milestone title, e.g. MVP Launch" />
                     </div>
                     <div className="relative">
-                      <span className="absolute left-4 top-3.5 text-gray-400 text-sm">₦</span>
+                      <span className="absolute left-4 top-3.5 text-gray-400 text-sm">{country.currencySymbol}</span>
                       <input value={m.amount}
                         onChange={e => setMilestones(p => p.map((x, idx) => idx === i ? { ...x, amount: e.target.value } : x))}
                         className={inp(false) + ' pl-8'} placeholder="Amount" />
@@ -613,7 +615,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
               ))}
               {milestones.length < 8 && (
                 <button type="button" onClick={() => setMilestones(p => [...p, emptyMs()])}
-                  className="flex items-center gap-2 text-sm text-green-600 font-medium hover:text-green-700 transition w-full justify-center py-3 border-2 border-dashed border-gray-200 rounded-2xl hover:border-green-300 hover:bg-green-50/50">
+                  className="flex items-center gap-2 text-sm text-primary-600 font-medium hover:text-primary-700 transition w-full justify-center py-3 border-2 border-dashed border-gray-200 rounded-2xl hover:border-primary-300 hover:bg-primary-50/50">
                   <Plus className="h-4 w-4" /> Add milestone
                 </button>
               )}
@@ -630,7 +632,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* ── top progress bar ── */}
       <div className="h-1 bg-gray-100 fixed top-0 left-0 right-0 z-50">
-        <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-primary-500 transition-all duration-500" style={{ width: `${pct}%` }} />
       </div>
 
       <div className="flex flex-1 pt-1">
@@ -651,12 +653,12 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
                 <button key={st.id} type="button"
                   onClick={() => { if (i < step) { setStep(i); window.scrollTo({ top: 0 }); } }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all
-                    ${active ? 'bg-green-50 text-green-800' : done ? 'text-gray-600 hover:bg-gray-50 cursor-pointer' : 'text-gray-300 cursor-default'}`}>
+                    ${active ? 'bg-primary-50 text-primary-800' : done ? 'text-gray-600 hover:bg-gray-50 cursor-pointer' : 'text-gray-300 cursor-default'}`}>
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all
-                    ${done ? 'bg-green-500 text-white' : active ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-300'}`}>
+                    ${done ? 'bg-primary-500 text-white' : active ? 'bg-primary-700 text-white' : 'bg-gray-100 text-gray-300'}`}>
                     {done ? <Check className="h-3 w-3" /> : i + 1}
                   </div>
-                  <span className={`text-sm font-medium ${active ? 'text-green-800' : ''}`}>{st.label}</span>
+                  <span className={`text-sm font-medium ${active ? 'text-primary-800' : ''}`}>{st.label}</span>
                 </button>
               );
             })}
@@ -678,7 +680,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
           <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 sticky top-1 z-40">
             <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{step + 1}/{STEPS.length}</span>
             <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-              <div className="bg-green-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
+              <div className="bg-primary-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
             </div>
             <span className="text-xs font-semibold text-gray-600 whitespace-nowrap">{s.label}</span>
           </div>
@@ -686,7 +688,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
           <div className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-10 lg:py-14">
             {/* step heading */}
             <div className="mb-8">
-              <p className="text-xs font-semibold text-green-600 uppercase tracking-widest mb-2">
+              <p className="text-xs font-semibold text-primary-600 uppercase tracking-widest mb-2">
                 Step {step + 1} of {STEPS.length} · {s.label}
               </p>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{s.title}</h1>
@@ -721,7 +723,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
 
                 {isLast ? (
                   <button type="button" onClick={() => save(false)} disabled={submitting || saving}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 disabled:opacity-50 transition shadow-sm text-sm">
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 disabled:opacity-50 transition shadow-sm text-sm">
                     {submitting
                       ? <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       : <Send className="h-4 w-4" />}
@@ -729,7 +731,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
                   </button>
                 ) : (
                   <button type="button" onClick={goNext}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition shadow-sm text-sm">
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition shadow-sm text-sm">
                     Continue <ArrowRight className="h-4 w-4" />
                   </button>
                 )}

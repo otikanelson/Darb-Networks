@@ -2,11 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme CSS Variables - Default to Nigeria colors */
+:root {
+  /* Primary colors (Nigeria Green) */
+  --color-primary-50: #e6f4ed;
+  --color-primary-100: #c0e4d3;
+  --color-primary-200: #96d3b6;
+  --color-primary-300: #6cc199;
+  --color-primary-400: #4db483;
+  --color-primary-500: #2ea76d;
+  --color-primary-600: #299f65;
+  --color-primary-700: #23965a;
+  --color-primary-800: #1d8c50;
+  --color-primary-900: #127a3e;
+  
+  /* Accent colors */
+  --color-accent-50: #fff9e6;
+  --color-accent-100: #fff0c0;
+  --color-accent-200: #ffe696;
+  --color-accent-300: #ffdc6c;
+  --color-accent-400: #ffd54d;
+  --color-accent-500: #ffcd2e;
+  --color-accent-600: #ffc829;
+  --color-accent-700: #ffc123;
+  --color-accent-800: #ffba1d;
+  --color-accent-900: #ffad12;
+  
+  /* Semantic colors */
+  --color-success: #2ea76d;
+  --color-warning: #ffcd2e;
+  --color-error: #dc2626;
+  --color-info: #3b82f6;
+  
+  /* UI colors */
+  --color-background: #ffffff;
+  --color-surface: #f9fafb;
+  --color-border: #e5e7eb;
+  
+  /* Text colors */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  
+  /* Shorthand */
+  --color-primary: #299f65;
+  --color-primary-hover: #23965a;
+  --color-primary-light: #e6f4ed;
+  --color-accent: #ffd54d;
+}
+
 body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  transition: background-color 0.3s ease;
 }
+
 ::-webkit-scrollbar {
   display: none;
 }
