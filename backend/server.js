@@ -1,12 +1,22 @@
 const express = require("express");
 const cors = require("cors");
 const path = require('path');
+
+// Load environment variables only in non-production environments
+// Vercel automatically injects environment variables, so dotenv is not needed there
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  require('dotenv').config();
+  console.log('📝 Loaded environment variables from .env file');
+}
+
 // Serverless function export for Vercel
 if (process.env.VERCEL) {
   console.log('🔷 Running on Vercel serverless');
+  console.log('🔧 Environment check:', {
+    nodeEnv: process.env.NODE_ENV,
+    hasCloudinary: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+  });
 }
-// Load environment variables
-require('dotenv').config();
 
 const app = express();
 
