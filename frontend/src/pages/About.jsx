@@ -138,7 +138,7 @@ const About = () => {
               href="mailto:info@example.com"
               className="text-purple-700 hover:text-purple-800"
             >
-              info@example.com
+              somtootika@gmail.com
             </a>
           </div>
           <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
@@ -148,10 +148,10 @@ const About = () => {
             </h3>
             <p className="text-gray-600 mb-4">Support available 24/7:</p>
             <a
-              href="tel:+15551234567"
+              href="tel:+2349156219654"
               className="text-purple-700 hover:text-purple-800"
             >
-              +1 (555) 123-4567
+              +234 (915)621 9654
             </a>
           </div>
         </div>
