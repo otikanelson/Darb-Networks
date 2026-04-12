@@ -17,6 +17,7 @@ import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
 import CampaignCard from "../components/ui/CampaignCard";
 import InvestmentModal from "../components/ui/InvestmentModal";
+import DocumentsCard from "../components/ui/DocumentsCard";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n) =>
@@ -916,6 +917,11 @@ const CampaignDisplay = () => {
                 ))}
               </div>
             </div>
+
+            {/* documents card */}
+            {campaign.documents && campaign.documents.length > 0 && (
+              <DocumentsCard documents={campaign.documents} />
+            )}
 
             {/* admin feedback */}
             {campaign.adminComments && (

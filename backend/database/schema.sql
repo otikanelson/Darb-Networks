@@ -103,6 +103,9 @@ CREATE TABLE campaigns (
   pitch_deck_url VARCHAR(500) NULL,
   business_plan_url VARCHAR(500) NULL,
   
+  -- Documents (JSON array of document objects)
+  documents JSON NULL,
+  
   -- Status and Workflow
   status ENUM('draft', 'submitted', 'under_review', 'approved', 'rejected', 'paused', 'completed', 'cancelled') DEFAULT 'draft',
   is_featured BOOLEAN DEFAULT FALSE,

@@ -111,6 +111,8 @@ const Profile = () => {
       return;
     }
 
+    // Clear any previous errors when component mounts
+    setErrors({});
     fetchUserProfile();
   }, [isAuthenticated, navigate]);
 
@@ -307,12 +309,15 @@ const Profile = () => {
         }, 1000);
       } else {
         console.error("❌ Upload failed:", result);
-        toast.error(result.message || "Upload failed");
-        setErrors((prev) => ({ ...prev, image: result.message || "Upload failed" }));
+        const errorMessage = result.message || "Upload failed. Please try again.";
+        toast.error(errorMessage);
+        setErrors((prev) => ({ ...prev, image: errorMessage }));
       }
     } catch (error) {
       console.error("❌ Upload error:", error);
-      setErrors((prev) => ({ ...prev, image: "Failed to upload image" }));
+      const errorMessage = "Failed to upload image. Please check your connection and try again.";
+      toast.error(errorMessage);
+      setErrors((prev) => ({ ...prev, image: errorMessage }));
     } finally {
       setImageUploading(false);
     }
@@ -646,9 +651,18 @@ const Profile = () => {
                 )}
 
                 {errors.image && (
-                  <p className="text-sm text-red-500 mb-2 text-center">
-                    {errors.image}
-                  </p>
+                  <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start justify-between">
+                    <p className="text-sm text-red-600 flex-1">
+                      {errors.image}
+                    </p>
+                    <button
+                      onClick={() => setErrors((prev) => ({ ...prev, image: null }))}
+                      className="ml-2 text-red-400 hover:text-red-600"
+                      aria-label="Dismiss error"
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </button>
+                  </div>
                 )}
 
                 <h2 className="text-xl font-bold text-gray-900">

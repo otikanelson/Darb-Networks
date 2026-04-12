@@ -10,6 +10,7 @@ import {
   ChevronLeft, ChevronRight, Check, AlertCircle, Save,
   Send, X, Plus, Trash2, Image as ImageIcon,
   DollarSign, MapPin, Calendar, Info, ArrowRight,
+  FileText, Upload,
 } from 'lucide-react';
 
 // ─── data ─────────────────────────────────────────────────────────────────────
@@ -70,6 +71,13 @@ const STEPS = [
     label: 'Media',
     title: 'Show, don\'t just tell',
     description: 'A great cover image and pitch video dramatically increase investor confidence. Add gallery images too.',
+    fields: [],
+  },
+  {
+    id: 'documents',
+    label: 'Documents',
+    title: 'Verify your campaign',
+    description: 'Upload supporting documents like business registration, financial statements, or pitch decks to build trust.',
     fields: [],
   },
   {
@@ -224,6 +232,13 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
   );
   const emptyMs = () => ({ title: '', description: '', amount: '', targetDate: '' });
   const [milestones, setMilestones] = useState(initialData.milestones?.length ? initialData.milestones : [emptyMs()]);
+  
+  // Documents state
+  const [documents, setDocuments] = useState(
+    initialData.documents && Array.isArray(initialData.documents) 
+      ? initialData.documents 
+      : []
+  );
 
   const set = (field, value) => {
     setForm(p => ({ ...p, [field]: value }));
@@ -273,6 +288,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
     videoUrl: videos.filter(Boolean).join(','),
     endDate: form.endDate || null,
     milestones: milestones.filter(m => m.title.trim()),
+    documents: documents.filter(d => d.name && d.url),
     isDraft,
   });
 
@@ -525,6 +541,68 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
           <div>
             <Label sub="YouTube, Vimeo, or any direct video link. Pitch video, product demo, etc.">Video Links</Label>
             <VideoList videos={videos} onChange={setVideos} />
+          </div>
+        </div>
+      );
+
+      case 'documents': return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-start gap-3">
+            <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-800">
+              <p className="font-medium mb-1">Why add documents?</p>
+              <p className="text-blue-700">Supporting documents like CAC registration, financial statements, or pitch decks help investors verify your campaign and build trust.</p>
+            </div>
+          </div>
+
+          <div>
+            <Label sub="Add links to your documents (Google Drive, Dropbox, etc.)">Campaign Documents</Label>
+            <div className="space-y-3">
+              {documents.map((doc, i) => (
+                <div key={i} className="bg-gray-50 border border-gray-100 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Document {i + 1}</span>
+                    {documents.length > 0 && (
+                      <button type="button" onClick={() => setDocuments(p => p.filter((_, idx) => idx !== i))}
+                        className="text-gray-300 hover:text-red-500 transition p-1 rounded-lg hover:bg-red-50">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
+                    <input 
+                      value={doc.name || ''}
+                      onChange={e => setDocuments(p => p.map((x, idx) => idx === i ? { ...x, name: e.target.value } : x))}
+                      className={inp(false)} 
+                      placeholder="Document name (e.g., CAC Registration Certificate)" 
+                    />
+                    <input 
+                      type="url"
+                      value={doc.url || ''}
+                      onChange={e => setDocuments(p => p.map((x, idx) => idx === i ? { ...x, url: e.target.value } : x))}
+                      className={inp(false)} 
+                      placeholder="Document URL (e.g., https://drive.google.com/...)" 
+                    />
+                    <select
+                      value={doc.type || 'other'}
+                      onChange={e => setDocuments(p => p.map((x, idx) => idx === i ? { ...x, type: e.target.value } : x))}
+                      className={inp(false)}
+                    >
+                      <option value="registration">Business Registration</option>
+                      <option value="financial">Financial Statement</option>
+                      <option value="pitch_deck">Pitch Deck</option>
+                      <option value="business_plan">Business Plan</option>
+                      <option value="legal">Legal Document</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={() => setDocuments(p => [...p, { name: '', url: '', type: 'other' }])}
+                className="flex items-center gap-2 text-sm text-primary-600 font-medium hover:text-primary-700 transition w-full justify-center py-3 border-2 border-dashed border-gray-200 rounded-2xl hover:border-primary-300 hover:bg-primary-50/50">
+                <Plus className="h-4 w-4" /> Add document
+              </button>
+            </div>
           </div>
         </div>
       );

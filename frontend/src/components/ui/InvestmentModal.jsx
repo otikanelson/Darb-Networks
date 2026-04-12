@@ -24,6 +24,7 @@ const InvestmentModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState('input'); // 'input', 'confirm', 'processing', 'success'
+  const [paymentType, setPaymentType] = useState('full'); // 'full' or 'milestone'
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-NG', {
@@ -82,7 +83,9 @@ const InvestmentModal = ({
       const investmentData = {
         campaignId: campaign.id,
         amount: parseFloat(amount),
-        investorMessage: investorMessage.trim() || null
+        investorMessage: investorMessage.trim() || null,
+        paymentType: paymentType, // 'full' or 'milestone'
+        initialPayment: paymentType === 'milestone' ? parseFloat(amount) * 0.3 : parseFloat(amount)
       };
 
       console.log('Creating investment:', investmentData);
@@ -123,6 +126,7 @@ const InvestmentModal = ({
     setError('');
     setStep('input');
     setLoading(false);
+    setPaymentType('full');
   };
 
   const handleClose = () => {
@@ -200,6 +204,50 @@ const InvestmentModal = ({
           {/* Step: Input */}
           {step === 'input' && (
             <div className="space-y-4">
+              {/* Payment Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Payment Method <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentType('full')}
+                    className={`p-4 border-2 rounded-lg text-left transition-all ${
+                      paymentType === 'full'
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-gray-900">Full Payment</span>
+                      {paymentType === 'full' && (
+                        <CheckCircle className="h-5 w-5 text-primary-600" />
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600">Pay the entire amount upfront</p>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setPaymentType('milestone')}
+                    className={`p-4 border-2 rounded-lg text-left transition-all ${
+                      paymentType === 'milestone'
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-gray-900">Milestone Payment</span>
+                      {paymentType === 'milestone' && (
+                        <CheckCircle className="h-5 w-5 text-primary-600" />
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600">Pay as milestones are reached</p>
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Investment Amount (NGN) <span className="text-red-500">*</span>
@@ -220,6 +268,24 @@ const InvestmentModal = ({
                   </p>
                 )}
               </div>
+
+              {/* Milestone Payment Info */}
+              {paymentType === 'milestone' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <Info className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-2">Milestone Payment Plan</p>
+                      <ul className="space-y-1">
+                        <li>• Pay 30% upfront to secure your investment</li>
+                        <li>• Remaining 70% released as campaign reaches milestones</li>
+                        <li>• You'll be notified when each milestone is achieved</li>
+                        <li>• Funds are held securely in escrow</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -270,6 +336,21 @@ const InvestmentModal = ({
                     <span className="text-gray-600">Investment Amount</span>
                     <span className="font-medium">{formatCurrency(numAmount)}</span>
                   </div>
+                  
+                  {paymentType === 'milestone' && (
+                    <>
+                      <div className="flex justify-between text-primary-600">
+                        <span>Initial Payment (30%)</span>
+                        <span className="font-medium">{formatCurrency(numAmount * 0.3)}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-500">
+                        <span>Milestone Payments (70%)</span>
+                        <span className="font-medium">{formatCurrency(numAmount * 0.7)}</span>
+                      </div>
+                      <div className="border-t border-gray-300 pt-2 mt-2" />
+                    </>
+                  )}
+                  
                   <div className="flex justify-between">
                     <span className="text-gray-600">Platform Fee (2.5%)</span>
                     <span className="font-medium">{formatCurrency(platformFee)}</span>
@@ -280,12 +361,31 @@ const InvestmentModal = ({
                   </div>
                   <div className="border-t border-gray-300 pt-2 mt-2">
                     <div className="flex justify-between font-semibold">
-                      <span>Total Amount</span>
-                      <span>{formatCurrency(totalAmount)}</span>
+                      <span>
+                        {paymentType === 'milestone' ? 'Initial Payment Due' : 'Total Amount'}
+                      </span>
+                      <span>
+                        {paymentType === 'milestone' 
+                          ? formatCurrency((numAmount * 0.3) + platformFee + paymentFee)
+                          : formatCurrency(totalAmount)
+                        }
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {paymentType === 'milestone' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <Info className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">Milestone Payment Schedule</p>
+                      <p>You'll pay {formatCurrency(numAmount * 0.3)} now. The remaining {formatCurrency(numAmount * 0.7)} will be charged as the campaign reaches its milestones.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {investorMessage && (
                 <div className="bg-gray-50 rounded-lg p-4">

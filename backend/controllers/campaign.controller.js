@@ -90,7 +90,8 @@ const createCampaign = async (req, res) => {
       videoUrl,
       endDate,
       durationDays,
-      isDraft
+      isDraft,
+      documents
     } = req.body;
 
     console.log('🎯 isDraft:', isDraft, '(type:', typeof isDraft, ')');
@@ -120,6 +121,11 @@ const createCampaign = async (req, res) => {
     console.log('📊 Campaign status:', status);
     console.log('📅 Submitted at:', submittedAt);
 
+    // Prepare documents JSON
+    const documentsJson = documents && Array.isArray(documents) && documents.length > 0
+      ? JSON.stringify(documents)
+      : null;
+
     // Prepare values for insertion
     const values = [
       title || '',
@@ -138,6 +144,7 @@ const createCampaign = async (req, res) => {
       teamInformation || '',
       risksAndChallenges || '',
       videoUrl || '',
+      documentsJson,
       endDate || null,
       durationDays ? parseInt(durationDays) : 90,
       founderId,
@@ -154,8 +161,8 @@ const createCampaign = async (req, res) => {
        (title, description, category, location, target_amount, minimum_investment, maximum_investment,
         problem_statement, solution, business_plan, market_analysis, competitive_advantage,
         financial_projections, team_information, risks_and_challenges,
-        video_url, end_date, duration_days, founder_id, status, submitted_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        video_url, documents, end_date, duration_days, founder_id, status, submitted_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       {
         replacements: values,
         type: db.sequelize.QueryTypes.INSERT,
@@ -566,6 +573,15 @@ const updateCampaign = async (req, res) => {
       endDate: 'end_date',
       durationDays: 'duration_days',
     };
+
+    // Handle documents separately (JSON field)
+    if (updateData.documents !== undefined) {
+      updates.push('documents = ?');
+      const documentsJson = updateData.documents && Array.isArray(updateData.documents) && updateData.documents.length > 0
+        ? JSON.stringify(updateData.documents)
+        : null;
+      values.push(documentsJson);
+    }
 
     // Add fields that have been provided
     const numericFields = ['targetAmount', 'minimumInvestment', 'maximumInvestment', 'durationDays'];
@@ -1056,6 +1072,8 @@ const getCampaignById = async (req, res) => {
       videoUrl: campaign.video_url,
       mainImageUrl: campaign.main_image_url,
       pitchDeckUrl: campaign.pitch_deck_url,
+      // Documents
+      documents: campaign.documents ? (typeof campaign.documents === 'string' ? JSON.parse(campaign.documents) : campaign.documents) : [],
       // Status
       status: campaign.status,
       isFeatured: campaign.is_featured,
