@@ -179,6 +179,11 @@ app.get("/api/cloudinary-status", (req, res) => {
     process.env.CLOUDINARY_API_SECRET
   );
   
+  // Get all environment variable keys (for debugging)
+  const allEnvKeys = Object.keys(process.env).filter(key => 
+    key.includes('CLOUDINARY') || key.includes('VERCEL') || key.includes('NODE')
+  );
+  
   res.status(200).json({
     success: true,
     cloudinary: {
@@ -192,7 +197,10 @@ app.get("/api/cloudinary-status", (req, res) => {
       debug: {
         cloudName: process.env.CLOUDINARY_CLOUD_NAME ? process.env.CLOUDINARY_CLOUD_NAME.substring(0, 4) + '...' : 'NOT SET',
         apiKey: process.env.CLOUDINARY_API_KEY ? process.env.CLOUDINARY_API_KEY.substring(0, 4) + '...' : 'NOT SET',
-        apiSecret: process.env.CLOUDINARY_API_SECRET ? '****' : 'NOT SET'
+        apiSecret: process.env.CLOUDINARY_API_SECRET ? '****' : 'NOT SET',
+        allCloudinaryKeys: allEnvKeys,
+        isVercel: !!process.env.VERCEL,
+        vercelEnv: process.env.VERCEL_ENV
       }
     }
   });
