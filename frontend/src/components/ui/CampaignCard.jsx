@@ -219,12 +219,12 @@ const CampaignCard = ({
                 }}
               />
               <div className="hidden w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 items-center justify-center">
-                <BookOpen className="h-20 w-20 text-primary-600" strokeWidth={1.5} />
+                <BookOpen className="h-16 w-16 sm:h-20 sm:w-20 text-primary-600" strokeWidth={1.5} />
               </div>
             </>
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
-              <BookOpen className="h-20 w-20 text-primary-600" strokeWidth={1.5} />
+              <BookOpen className="h-16 w-16 sm:h-20 sm:w-20 text-primary-600" strokeWidth={1.5} />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -232,27 +232,27 @@ const CampaignCard = ({
 
           {/* Action buttons */}
           {showActions && (
-            <div className="absolute top-3 left-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={handleFavoriteClick} disabled={isLoading} className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md">
-                <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={handleFavoriteClick} disabled={isLoading} className="p-1.5 sm:p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md">
+                <Heart className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
               </button>
-              <button onClick={handleShare} className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md">
-                <Share2 className="h-4 w-4 text-gray-600" />
+              <button onClick={handleShare} className="p-1.5 sm:p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md">
+                <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600" />
               </button>
             </div>
           )}
 
           {/* Category pill overlaid on image */}
-          <div className="absolute bottom-3 left-3">
-            <span className="text-xs font-semibold text-white bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full">
+          <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3">
+            <span className="text-xs font-semibold text-white bg-black/50 backdrop-blur-sm px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
               {campaign.category}
             </span>
           </div>
         </div>
 
         {/* Minimal content */}
-        <div className="p-4">
-          <h3 className="text-base font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-primary-700 transition-colors">
+        <div className="p-3 sm:p-4">
+          <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2 sm:mb-3 line-clamp-2 group-hover:text-primary-700 transition-colors">
             {campaign.title}
           </h3>
 
@@ -271,8 +271,8 @@ const CampaignCard = ({
           </div>
 
           {/* Founder */}
-          <div className="flex items-center mt-3 pt-3 border-t border-gray-100 space-x-2">
-            <div className="h-6 w-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-xs overflow-hidden flex-shrink-0">
+          <div className="flex items-center mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100 space-x-2">
+            <div className="h-5 w-5 sm:h-6 sm:w-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-xs overflow-hidden flex-shrink-0">
               {(() => {
                 const avatarUrl = campaign.founder_avatar || campaign.founderAvatar;
                 if (!avatarUrl) return (campaign.founder_name || campaign.founderName || 'A').charAt(0).toUpperCase();
@@ -364,30 +364,30 @@ const CampaignCard = ({
       {/* Campaign Content */}
       <div className="p-4 md:p-5">
         {/* Category & Location */}
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-xs font-medium text-tertiary-700 bg-tertiary-100 px-2 py-1 rounded-full">
+        <div className="flex justify-between items-center mb-2 sm:mb-3">
+          <span className="text-xs font-medium text-tertiary-700 bg-tertiary-100 px-2 py-0.5 sm:py-1 rounded-full">
             {campaign.category}
           </span>
           <div className="flex items-center text-xs text-gray-500">
             <MapPin className="h-3 w-3 mr-1" />
-            {campaign.location}
+            <span className="hidden sm:inline">{campaign.location}</span>
           </div>
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-700 transition-colors">
+        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-700 transition-colors">
           {campaign.title}
         </h3>
         
         {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+        <p className="text-gray-600 text-sm mb-3 sm:mb-4 line-clamp-2">
           {campaign.description}
         </p>
 
         {/* Progress Section */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           {/* Progress Bar */}
-          <div className="w-full bg-gray-100 rounded-full h-2 mb-3 overflow-hidden">
+          <div className="w-full bg-gray-100 rounded-full h-2 mb-2 sm:mb-3 overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-full transition-all duration-500 relative"
               style={{ width: `${fundingPercentage()}%` }}
@@ -400,21 +400,21 @@ const CampaignCard = ({
           </div>
           
           {/* Funding Stats */}
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
             <div>
-              <div className="text-sm font-bold text-gray-900">
+              <div className="text-xs sm:text-sm font-bold text-gray-900">
                 {formatCurrency(campaign.current_amount || 0)}
               </div>
               <div className="text-xs text-gray-500">raised</div>
             </div>
             <div>
-              <div className="text-sm font-bold text-gray-900">
+              <div className="text-xs sm:text-sm font-bold text-gray-900">
                 {fundingPercentage()}%
               </div>
               <div className="text-xs text-gray-500">funded</div>
             </div>
             <div>
-              <div className="text-sm font-bold text-gray-900">
+              <div className="text-xs sm:text-sm font-bold text-gray-900">
                 {campaign.view_count || 0}
               </div>
               <div className="text-xs text-gray-500 flex items-center justify-center">
@@ -426,10 +426,10 @@ const CampaignCard = ({
         </div>
 
         {/* Target Amount */}
-        <div className="bg-gray-50 rounded-lg p-3 mb-4">
+        <div className="bg-gray-50 rounded-lg p-2.5 sm:p-3 mb-3 sm:mb-4">
           <div className="flex justify-between items-center">
             <span className="text-xs font-medium text-gray-600">Target Amount</span>
-            <span className="text-sm font-bold text-gray-900">
+            <span className="text-xs sm:text-sm font-bold text-gray-900">
               {formatCurrency(campaign.target_amount)}
             </span>
           </div>
@@ -442,9 +442,9 @@ const CampaignCard = ({
         </div>
         
         {/* Founder Info */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div className="flex items-center">
-            <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-sm overflow-hidden">
+        <div className="flex items-center justify-between pt-2.5 sm:pt-3 border-t border-gray-100">
+          <div className="flex items-center min-w-0">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-medium text-xs sm:text-sm overflow-hidden flex-shrink-0">
               {campaign.founder_avatar || campaign.founderAvatar ? (
                 <img 
                   src={
@@ -479,19 +479,19 @@ const CampaignCard = ({
               
               {/* Fallback initials - always present but hidden if image loads */}
               <span 
-                className={`founder-initials text-gray-600 font-medium text-sm ${
+                className={`founder-initials text-gray-600 font-medium text-xs sm:text-sm ${
                   campaign.founder_avatar || campaign.founderAvatar ? 'hidden' : 'flex'
                 } items-center justify-center h-full w-full`}
               >
                 {(campaign.founder_name || campaign.founderName || 'Anonymous').charAt(0).toUpperCase()}
               </span>
             </div>
-            <div className="ml-2">
-              <div className="text-sm font-medium text-gray-900">
+            <div className="ml-2 min-w-0">
+              <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                 {campaign.founder_name || campaign.founderName || 'Anonymous'}
               </div>
               {(campaign.founder_company || campaign.founderCompany) && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 truncate">
                   {campaign.founder_company || campaign.founderCompany}
                 </div>
               )}
@@ -500,8 +500,8 @@ const CampaignCard = ({
           
           {/* Trending Indicator */}
           {(campaign.view_count || campaign.viewCount || 0) > 100 && (
-            <div className="flex items-center text-primary-600">
-              <TrendingUp className="h-4 w-4" />
+            <div className="flex items-center text-primary-600 flex-shrink-0">
+              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           )}
         </div>

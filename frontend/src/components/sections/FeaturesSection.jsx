@@ -30,37 +30,37 @@ const features = [
 ];
 
 const FeaturesSection = () => (
-  <section className="py-24 bg-gray-50">
+  <section className="py-16 sm:py-20 md:py-24 bg-gray-50">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <motion.div
-        className="text-center mb-16"
+        className="text-center mb-10 sm:mb-12 md:mb-16"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        <span className="text-primary-600 font-semibold text-sm uppercase tracking-widest">Why Darb</span>
-        <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">Built for African startups</h2>
-        <p className="text-lg text-gray-500 max-w-xl mx-auto">
+        <span className="text-primary-600 font-semibold text-xs sm:text-sm uppercase tracking-widest">Why Darb</span>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-3 sm:mb-4 px-2">Built for African startups</h2>
+        <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto px-4">
           Every feature is designed around the unique challenges and opportunities of the African startup ecosystem.
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
         {features.map(({ icon: Icon, title, description, accent }, i) => (
           <motion.div
             key={title}
-            className="bg-white rounded-2xl p-7 border border-gray-100 hover:shadow-md transition-all duration-200 cursor-default"
+            className="bg-white rounded-2xl p-6 sm:p-7 border border-gray-100 hover:shadow-md transition-all duration-200 cursor-default"
             initial={{ opacity: 0, y: 28 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.45, delay: i * 0.1 }}
             whileHover={{ y: -4 }}
           >
-            <div className={`w-12 h-12 rounded-xl ${accent} flex items-center justify-center mb-5`}>
-              <Icon className="h-6 w-6" />
+            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${accent} flex items-center justify-center mb-4 sm:mb-5`}>
+              <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{title}</h3>
             <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
           </motion.div>
         ))}

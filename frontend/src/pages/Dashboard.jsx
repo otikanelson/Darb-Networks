@@ -353,24 +353,24 @@ const Dashboard = () => {
       <UnifiedNavbar variant="dashboard" />
 
       {/* ── Hero banner ── */}
-      <div className="relative overflow-hidden bg-gray-900 h-64">
+      <div className="relative overflow-hidden bg-gray-900 h-48 sm:h-56 md:h-64">
         <img src="/assets/featured-bg.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-primary-900/60" />
 
-        {/* Floating orbs */}
+        {/* Floating orbs - hidden on mobile */}
         <motion.div animate={{ y: [0, -14, 0], opacity: [0.15, 0.25, 0.15] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-8 right-32 w-48 h-48 bg-primary-500 rounded-full blur-3xl pointer-events-none" />
+          className="hidden md:block absolute top-8 right-32 w-48 h-48 bg-primary-500 rounded-full blur-3xl pointer-events-none" />
         <motion.div animate={{ y: [0, 12, 0], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-0 right-64 w-32 h-32 bg-emerald-400 rounded-full blur-2xl pointer-events-none" />
+          className="hidden md:block absolute bottom-0 right-64 w-32 h-32 bg-emerald-400 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 h-full flex items-center justify-between">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
           <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="h-4 w-4 text-primary-400" />
-              <span className="text-primary-400 text-sm font-semibold uppercase tracking-widest">Explore</span>
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-400" />
+              <span className="text-primary-400 text-xs sm:text-sm font-semibold uppercase tracking-widest">Explore</span>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-2">Discover Startups</h1>
-            <p className="text-gray-400 text-base">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">Discover Startups</h1>
+            <p className="text-gray-400 text-sm sm:text-base">
               {!loading && `${totalCampaigns} campaign${totalCampaigns !== 1 ? "s" : ""} live right now`}
             </p>
           </motion.div>
@@ -383,12 +383,12 @@ const Dashboard = () => {
 
         {/* ── Search + filter bar ── */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
-          <div className="flex flex-wrap gap-3 items-center">
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center">
             {/* Search */}
-            <div className="relative flex-1 min-w-56">
+            <div className="relative flex-1 min-w-full sm:min-w-56">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input type="search" placeholder="Search campaigns, founders, categories…"
+              <input type="search" placeholder="Search campaigns…"
                 value={searchTerm}
                 onChange={e => { setSearchTerm(e.target.value); updateURL({ search: e.target.value }); }}
                 className="w-full pl-10 pr-9 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all" />
@@ -401,16 +401,16 @@ const Dashboard = () => {
             </div>
 
             {/* Filter pills */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               {filterOptions.map(opt => (
                 <button key={opt.id}
                   onClick={() => { setSelectedFilter(opt.label); updateURL({ filter: opt.label }); }}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
                     selectedFilter === opt.label
                       ? "bg-primary-600 text-white shadow-md shadow-primary-200"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}>
-                  {opt.icon}{opt.label}
+                  {opt.icon}<span className="hidden xs:inline">{opt.label}</span>
                   {selectedFilter === opt.label && filteredCount > 0 && (
                     <span className="bg-white/25 text-white text-xs px-1.5 py-0.5 rounded-full">{filteredCount}</span>
                   )}
@@ -419,9 +419,9 @@ const Dashboard = () => {
             </div>
 
             {/* Right controls */}
-            <div className="flex items-center gap-2 ml-auto">
-              {/* View toggle */}
-              <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+            <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+              {/* View toggle - hidden on mobile */}
+              <div className="hidden sm:flex bg-gray-100 rounded-xl p-1 gap-1">
                 {[["grid", <Grid className="h-4 w-4" />], ["list", <List className="h-4 w-4" />]].map(([mode, icon]) => (
                   <button key={mode} onClick={() => setViewMode(mode)}
                     className={`p-1.5 rounded-lg transition-all ${viewMode === mode ? "bg-white shadow text-primary-600" : "text-gray-500 hover:text-gray-700"}`}>
@@ -431,15 +431,20 @@ const Dashboard = () => {
               </div>
 
               {/* Sort */}
-              <div className="relative" ref={sortRef}>
+              <div className="relative flex-1 sm:flex-initial" ref={sortRef}>
                 <button onClick={() => setSortOpen(v => !v)}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm text-gray-700 transition-colors">
-                  <ArrowUpDown className="h-3.5 w-3.5" />{sortBy}<ChevronDown className="h-3.5 w-3.5" />
+                  className="w-full sm:w-auto flex items-center justify-between sm:justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs sm:text-sm text-gray-700 transition-colors">
+                  <span className="flex items-center gap-2">
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{sortBy}</span>
+                    <span className="sm:hidden">Sort</span>
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5" />
                 </button>
                 <AnimatePresence>
                   {sortOpen && (
                     <motion.div initial={{ opacity: 0, y: 6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 4, scale: 0.97 }} transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20">
+                      className="absolute right-0 mt-2 w-full sm:w-44 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20">
                       {["Date Posted", "Most Funded", "End Date"].map(opt => (
                         <button key={opt} onClick={() => { setSortBy(opt); setSortOpen(false); }}
                           className={`w-full text-left px-4 py-2 text-sm transition-colors ${sortBy === opt ? "text-primary-600 font-semibold bg-primary-50" : "text-gray-700 hover:bg-gray-50"}`}>
@@ -481,7 +486,7 @@ const Dashboard = () => {
         </AnimatePresence>
 
         {/* ── Main layout ── */}
-        <div className="flex gap-7">
+        <div className="flex flex-col lg:flex-row gap-5 lg:gap-7">
           {/* Sidebar */}
           <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
             className="hidden lg:block w-60 flex-shrink-0">

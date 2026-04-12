@@ -51,9 +51,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left side - Image */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-primary-700 to-primary-900 p-12 relative">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-primary-700 to-primary-900 p-8 xl:p-12 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-primary-800/95 to-primary-900/90" />
         <img 
           src="/assets/featured-bg.png" 
@@ -65,15 +65,15 @@ const Login = () => {
             <img 
               src="/assets/Logo.png" 
               alt="Logo" 
-              className="h-16 w-auto mb-12"
+              className="h-12 xl:h-16 w-auto mb-8 xl:mb-12"
             />
-            <h1 className="text-4xl font-bold text-white mb-6">Welcome Back</h1>
-            <p className="text-primary-100 text-lg max-w-md">
+            <h1 className="text-3xl xl:text-4xl font-bold text-white mb-4 xl:mb-6">Welcome Back</h1>
+            <p className="text-primary-100 text-base xl:text-lg max-w-md">
               Connect with the most promising Nigerian startups and be part of their success story.
             </p>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
-            <p className="text-white italic">
+          <div className="bg-white/10 backdrop-blur-sm p-5 xl:p-6 rounded-xl">
+            <p className="text-white italic text-sm xl:text-base">
               "The platform made it incredibly easy to connect with investors who truly understood our vision. We secured funding within weeks!"
             </p>
             <div className="flex items-center mt-4">
@@ -81,8 +81,8 @@ const Login = () => {
                 OA
               </div>
               <div>
-                <p className="text-white font-medium">Oluwaseun Afolabi</p>
-                <p className="text-primary-200 text-sm">CEO, EcoCharge</p>
+                <p className="text-white font-medium text-sm xl:text-base">Oluwaseun Afolabi</p>
+                <p className="text-primary-200 text-xs xl:text-sm">CEO, EcoCharge</p>
               </div>
             </div>
           </div>
@@ -90,11 +90,20 @@ const Login = () => {
       </div>
       
       {/* Right side - Login Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center p-6 sm:p-8 md:p-12 lg:p-16">
         <div className="max-w-md mx-auto w-full">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Sign in to your account</h2>
-            <p className="mt-2 text-gray-600">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <img 
+              src="/assets/Logo.png" 
+              alt="Logo" 
+              className="h-12 w-auto mx-auto mb-4"
+            />
+          </div>
+          
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Sign in to your account</h2>
+            <p className="mt-2 text-sm sm:text-base text-gray-600">
               Don't have an account?{' '}
               <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
                 Create one now
