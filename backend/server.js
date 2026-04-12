@@ -172,6 +172,7 @@ app.get("/api/db-status", (req, res) => {
 
 // Cloudinary status endpoint
 app.get("/api/cloudinary-status", (req, res) => {
+  // Check at runtime, not module load time
   const cloudinaryConfigured = !!(
     process.env.CLOUDINARY_CLOUD_NAME &&
     process.env.CLOUDINARY_API_KEY &&
@@ -186,6 +187,12 @@ app.get("/api/cloudinary-status", (req, res) => {
         cloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
         apiKey: !!process.env.CLOUDINARY_API_KEY,
         apiSecret: !!process.env.CLOUDINARY_API_SECRET
+      },
+      // Add actual values for debugging (first 4 chars only for security)
+      debug: {
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME ? process.env.CLOUDINARY_CLOUD_NAME.substring(0, 4) + '...' : 'NOT SET',
+        apiKey: process.env.CLOUDINARY_API_KEY ? process.env.CLOUDINARY_API_KEY.substring(0, 4) + '...' : 'NOT SET',
+        apiSecret: process.env.CLOUDINARY_API_SECRET ? '****' : 'NOT SET'
       }
     }
   });
