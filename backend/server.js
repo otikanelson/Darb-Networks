@@ -155,6 +155,27 @@ app.get("/api/db-status", (req, res) => {
   });
 });
 
+// Cloudinary status endpoint
+app.get("/api/cloudinary-status", (req, res) => {
+  const cloudinaryConfigured = !!(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+  );
+  
+  res.status(200).json({
+    success: true,
+    cloudinary: {
+      configured: cloudinaryConfigured,
+      hasConfig: {
+        cloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
+        apiKey: !!process.env.CLOUDINARY_API_KEY,
+        apiSecret: !!process.env.CLOUDINARY_API_SECRET
+      }
+    }
+  });
+});
+
 // Middleware to check database connection for routes that need it
 const requireDatabase = (req, res, next) => {
   if (!dbInitialized) {
