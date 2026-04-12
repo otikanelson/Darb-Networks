@@ -651,7 +651,7 @@ const CampaignDisplay = () => {
       <UnifiedNavbar variant="display" />
 
       {/* ── Hero Carousel ── */}
-      <div className="relative w-full h-64 md:h-[460px] bg-gray-900 overflow-hidden group">
+      <div className="relative w-full h-56 sm:h-64 md:h-80 lg:h-96 bg-gray-900 overflow-hidden group">
         {/* Current Image */}
         <img 
           src={carouselImages[currentImageIndex]} 
@@ -666,29 +666,29 @@ const CampaignDisplay = () => {
           <>
             <button 
               onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3 rounded-full transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
               aria-label="Previous image"
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
             <button 
               onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-3 rounded-full transition opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3 rounded-full transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
               aria-label="Next image"
             >
-              <ChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
             
             {/* Image Indicators */}
-            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
+            <div className="absolute bottom-16 sm:bottom-20 md:bottom-24 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-10">
               {carouselImages.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setCurrentImageIndex(idx)}
-                  className={`h-2 rounded-full transition-all ${
+                  className={`h-1.5 sm:h-2 rounded-full transition-all ${
                     idx === currentImageIndex 
-                      ? 'w-8 bg-white' 
-                      : 'w-2 bg-white/50 hover:bg-white/75'
+                      ? 'w-6 sm:w-8 bg-white' 
+                      : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75'
                   }`}
                   aria-label={`Go to image ${idx + 1}`}
                 />
@@ -699,70 +699,70 @@ const CampaignDisplay = () => {
 
         {/* Back Button */}
         <button onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition z-10">
-          <ArrowLeft className="h-5 w-5" />
+          className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-white/20 backdrop-blur-sm text-white p-1.5 sm:p-2 rounded-full hover:bg-white/30 transition z-10">
+          <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
 
         {/* Content Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-8">
+        <div className="absolute bottom-0 left-0 right-0 px-3 sm:px-4 md:px-8 pb-4 sm:pb-6 md:pb-8">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-wrap gap-2 mb-3">
-              <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white rounded-full text-xs font-medium border border-white/20">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+              <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm text-white rounded-full text-xs font-medium border border-white/20">
                 {campaign.category}
               </span>
               {campaign.isFeatured && (
-                <span className="flex items-center gap-1 px-3 py-1 bg-yellow-400/90 text-yellow-900 rounded-full text-xs font-semibold">
+                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-yellow-400/90 text-yellow-900 rounded-full text-xs font-semibold">
                   <Star className="h-3 w-3" /> Featured
                 </span>
               )}
               {campaign.isUrgent && (
-                <span className="flex items-center gap-1 px-3 py-1 bg-red-500/90 text-white rounded-full text-xs font-semibold">
+                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-500/90 text-white rounded-full text-xs font-semibold">
                   <Zap className="h-3 w-3" /> Urgent
                 </span>
               )}
               {progress >= 100 && (
-                <span className="flex items-center gap-1 px-3 py-1 bg-primary-500/90 text-white rounded-full text-xs font-semibold">
+                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-primary-500/90 text-white rounded-full text-xs font-semibold">
                   <CheckCircle className="h-3 w-3" /> Fully Funded
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight max-w-4xl mb-3">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight max-w-4xl mb-2 sm:mb-3">
               {campaign.title}
             </h1>
-            <div className="flex flex-wrap items-center gap-4 text-white/80 text-sm">
-              <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{campaign.location}</span>
-              <span className="flex items-center gap-1.5"><Eye className="h-4 w-4" />{(campaign.viewCount || 0).toLocaleString()} views</span>
-              <span className="flex items-center gap-1.5"><Heart className="h-4 w-4" />{campaign.favoriteCount || 0} saves</span>
-              <span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{campaign.investorCount || 0} investors</span>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-white/80 text-xs sm:text-sm">
+              <span className="flex items-center gap-1 sm:gap-1.5"><MapPin className="h-3 w-3 sm:h-4 sm:w-4" />{campaign.location}</span>
+              <span className="flex items-center gap-1 sm:gap-1.5"><Eye className="h-3 w-3 sm:h-4 sm:w-4" />{(campaign.viewCount || 0).toLocaleString()} views</span>
+              <span className="hidden sm:flex items-center gap-1.5"><Heart className="h-4 w-4" />{campaign.favoriteCount || 0} saves</span>
+              <span className="hidden sm:flex items-center gap-1.5"><Users className="h-4 w-4" />{campaign.investorCount || 0} investors</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* ── Body ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
 
           {/* ── LEFT: content ── */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-5">
 
             {/* action bar */}
-            <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3">
               <div className="flex gap-2 flex-wrap">
                 <button onClick={handleFavorite} disabled={favoriteLoading}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition ${isFavorited ? "bg-red-50 border-red-200 text-red-600" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}`}>
-                  <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl border text-xs sm:text-sm font-medium transition ${isFavorited ? "bg-red-50 border-red-200 text-red-600" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}`}>
+                  <Heart className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isFavorited ? "fill-current" : ""}`} />
                   {isFavorited ? "Saved" : "Save"}
                 </button>
                 <button onClick={handleShare}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
-                  {copied ? <Check className="h-4 w-4 text-primary-600" /> : <Share2 className="h-4 w-4" />}
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-gray-50 transition">
+                  {copied ? <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-600" /> : <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                   {copied ? "Copied!" : "Share"}
                 </button>
                 {canEdit() && (
                   <button onClick={() => navigate(`/edit-campaign/${campaign.id}`)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition">
-                    <Edit className="h-4 w-4" /> Edit Campaign
+                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium hover:bg-blue-700 transition">
+                    <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Edit Campaign
                   </button>
                 )}
               </div>
@@ -770,10 +770,10 @@ const CampaignDisplay = () => {
 
             {/* tabs */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="flex overflow-x-auto border-b border-gray-100">
+              <div className="flex overflow-x-auto border-b border-gray-100 scrollbar-hide">
                 {TABS.map((t) => (
                   <button key={t.id} onClick={() => setActiveTab(t.id)}
-                    className={`flex-shrink-0 px-5 py-3.5 text-sm font-medium border-b-2 transition whitespace-nowrap ${
+                    className={`flex-shrink-0 px-3 sm:px-5 py-2.5 sm:py-3.5 text-xs sm:text-sm font-medium border-b-2 transition whitespace-nowrap ${
                       activeTab === t.id
                         ? "border-primary-600 text-primary-700 bg-primary-50/50"
                         : "border-transparent text-gray-500 hover:text-gray-700"
@@ -782,7 +782,7 @@ const CampaignDisplay = () => {
                   </button>
                 ))}
               </div>
-              <div className="p-6 md:p-8">
+              <div className="p-4 sm:p-6 md:p-8">
                 {renderTab()}
               </div>
             </div>
@@ -790,9 +790,9 @@ const CampaignDisplay = () => {
             {/* related */}
             {relatedCampaigns.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">More Like This</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {relatedCampaigns.map((c) => <CampaignCard key={c.id} campaign={c} />)}
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">More Like This</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {relatedCampaigns.map((c) => <CampaignCard key={c.id} campaign={c} size="preview" />)}
                 </div>
               </div>
             )}
@@ -802,27 +802,27 @@ const CampaignDisplay = () => {
           <div className="space-y-4">
 
             {/* funding card */}
-            <div ref={fundingCardRef} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div ref={fundingCardRef} className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100">
               <div className="mb-1">
-                <span className="text-3xl font-bold text-gray-900">{fmt(campaign.currentAmount)}</span>
+                <span className="text-2xl sm:text-3xl font-bold text-gray-900">{fmt(campaign.currentAmount)}</span>
               </div>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                 raised of <span className="font-semibold text-gray-800">{fmt(campaign.targetAmount)}</span> goal
               </p>
 
-              <div className="w-full bg-gray-100 rounded-full h-2.5 mb-1 overflow-hidden">
+              <div className="w-full bg-gray-100 rounded-full h-2 sm:h-2.5 mb-1 overflow-hidden">
                 <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-700"
                   style={{ width: `${progress}%` }} />
               </div>
-              <p className="text-xs text-gray-400 mb-5">{Math.round(progress)}% funded</p>
+              <p className="text-xs text-gray-400 mb-4 sm:mb-5">{Math.round(progress)}% funded</p>
 
-              <div className="grid grid-cols-3 gap-2 mb-5 py-4 border-y border-gray-50">
+              <div className="grid grid-cols-3 gap-2 mb-4 sm:mb-5 py-3 sm:py-4 border-y border-gray-50">
                 <Stat value={campaign.investorCount || 0} label="Investors" />
                 <Stat value={daysLeft} label="Days Left" />
                 <Stat value={campaign.favoriteCount || 0} label="Saves" />
               </div>
 
-              <div className="space-y-2.5 text-sm mb-5">
+              <div className="space-y-2 sm:space-y-2.5 text-xs sm:text-sm mb-4 sm:mb-5">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Min. Investment</span>
                   <span className="font-semibold text-gray-900">{fmt(campaign.minimumInvestment)}</span>
@@ -845,11 +845,11 @@ const CampaignDisplay = () => {
 
               {canInvest() ? (
                 <button onClick={() => setShowInvestmentModal(true)}
-                  className="w-full bg-primary-600 text-white py-3.5 rounded-xl font-semibold hover:bg-primary-700 transition flex items-center justify-center gap-2 shadow-sm">
-                  <DollarSign className="h-5 w-5" /> Invest Now
+                  className="w-full bg-primary-600 text-white py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold hover:bg-primary-700 transition flex items-center justify-center gap-2 shadow-sm">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" /> Invest Now
                 </button>
               ) : (
-                <div className="w-full py-3.5 rounded-xl font-semibold text-center bg-gray-100 text-gray-400 text-sm">
+                <div className="w-full py-3 sm:py-3.5 rounded-xl font-semibold text-center bg-gray-100 text-gray-400 text-xs sm:text-sm">
                   {!isAuthenticated() ? "Log in to Invest"
                     : user?.id === campaign?.creator?.id ? "Your Campaign"
                     : progress >= 100 ? "Fully Funded"
