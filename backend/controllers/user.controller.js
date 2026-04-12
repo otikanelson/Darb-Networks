@@ -4,30 +4,32 @@ const bcrypt = require("bcryptjs");
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 
-// Configure Cloudinary (only if credentials are available)
-const cloudinaryConfigured = !!(
-  process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_API_KEY &&
-  process.env.CLOUDINARY_API_SECRET
-);
+// Helper function to check and configure Cloudinary at runtime
+const ensureCloudinaryConfigured = () => {
+  const isConfigured = !!(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+  );
 
-console.log('🔧 Cloudinary Configuration Check:', {
+  if (isConfigured) {
+    // Configure Cloudinary each time to ensure fresh config
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key:    process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+  }
+
+  return isConfigured;
+};
+
+// Log configuration status at module load (for debugging)
+console.log('🔧 User Controller - Cloudinary Check at module load:', {
   cloudName: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
   apiKey: process.env.CLOUDINARY_API_KEY ? 'SET' : 'NOT SET',
   apiSecret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'NOT SET',
-  configured: cloudinaryConfigured
 });
-
-if (cloudinaryConfigured) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key:    process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-  console.log('✅ Cloudinary configured successfully');
-} else {
-  console.warn('⚠️ Cloudinary credentials not configured — image uploads will fail');
-}
 
 // Use memory storage — no disk writes (required for Vercel)
 const upload = multer({
@@ -313,7 +315,6 @@ exports.uploadProfileImage = [
       console.log('📸 Profile image upload request:', {
         userId,
         hasFile: !!req.file,
-        cloudinaryConfigured,
         fileName: req.file?.originalname,
         fileSize: req.file?.size
       });
@@ -322,8 +323,22 @@ exports.uploadProfileImage = [
         return res.status(400).send({ success: false, message: "No image file provided." });
       }
 
+      // Check Cloudinary configuration at runtime
+      const cloudinaryConfigured = ensureCloudinaryConfigured();
+      
+      console.log('☁️ Cloudinary runtime check:', {
+        configured: cloudinaryConfigured,
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
+        apiKey: process.env.CLOUDINARY_API_KEY ? 'SET' : 'NOT SET',
+        apiSecret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'NOT SET'
+      });
+
       if (!cloudinaryConfigured) {
-        console.error('❌ Cloudinary not configured. Check environment variables.');
+        console.error('❌ Cloudinary not configured at runtime. Environment variables:', {
+          CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || 'undefined',
+          CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ? 'exists' : 'undefined',
+          CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ? 'exists' : 'undefined'
+        });
         return res.status(500).send({ 
           success: false, 
           message: "Image upload service not configured. Please contact support." 
@@ -399,6 +414,7 @@ exports.deleteProfileImage = async (req, res) => {
     if (!user) return res.status(404).send({ success: false, message: "User not found." });
 
     // Delete from Cloudinary if configured and it's a cloudinary URL
+    const cloudinaryConfigured = ensureCloudinaryConfigured();
     if (cloudinaryConfigured && user.profileImageUrl && user.profileImageUrl.includes('cloudinary.com')) {
       const publicId = user.profileImageUrl.split('/').slice(-2).join('/').replace(/\.[^/.]+$/, '');
       await cloudinary.uploader.destroy(publicId).catch(() => {});
