@@ -15,7 +15,8 @@ import {
   Home,
   ChevronRight,
   Search,
-  X
+  X,
+  Menu
 } from 'lucide-react';
 
 /**
@@ -36,10 +37,12 @@ const Navbars = ({
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
+  const mobileMenuRef = useRef(null);
 
   // Debug: Log when user context changes
   useEffect(() => {
@@ -100,6 +103,9 @@ const Navbars = ({
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSearchSuggestions(false);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setIsMobileMenuOpen(false);
+      }
     };
     
     document.addEventListener('mousedown', handleClickOutside);
@@ -107,6 +113,11 @@ const Navbars = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -267,28 +278,28 @@ const Navbars = ({
   };
 
   // Search component
-  const SearchBar = () => (
-    <div className="relative flex-1 max-w-2xl mx-8" ref={searchRef}>
+  const SearchBar = ({ isMobile = false }) => (
+    <div className={`relative ${isMobile ? 'w-full' : 'flex-1 max-w-2xl mx-4 lg:mx-8'}`} ref={isMobile ? null : searchRef}>
       <form onSubmit={handleSearch} className="relative">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+          <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
           <input
             type="text"
             value={searchQuery}
             onChange={handleSearchInputChange}
             onFocus={() => setShowSearchSuggestions(searchQuery.length > 0)}
-            placeholder="Search campaign categories"
-            className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-full 
+            placeholder="Search campaigns..."
+            className={`w-full pl-9 sm:pl-12 pr-9 sm:pr-12 ${isMobile ? 'py-2.5' : 'py-2 sm:py-3'} border border-gray-300 rounded-full 
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
-                     bg-white shadow-sm text-gray-900 placeholder-gray-500"
+                     bg-white shadow-sm text-gray-900 placeholder-gray-500 text-sm sm:text-base`}
           />
           {searchQuery && (
             <button
               type="button"
               onClick={clearSearch}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           )}
         </div>
@@ -446,112 +457,243 @@ const Navbars = ({
 
   const navLinks = getNavLinks();
 
-return (
-  <nav className={`bg-white border-b border-gray-200 py-1 px-16 ${className}`}>
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center h-16">
-        {/* Left: Logo */}
-        <div className="flex items-center flex-shrink-0">
-          <Link to="/" className="flex-shrink-0 flex items-center">
-            <img 
-              src="/assets/Logo.png" 
-              alt="Logo" 
-              className="h-14 w-auto"
-            />
-          </Link>
+  return (
+    <nav className={`bg-white border-b border-gray-200 ${className}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Left: Logo */}
+          <div className="flex items-center flex-shrink-0">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <img 
+                src="/assets/Logo.png" 
+                alt="Logo" 
+                className="h-10 sm:h-12 md:h-14 w-auto"
+              />
+            </Link>
+          </div>
+
+          {/* Center: Search Bar (desktop only when showSearch is true) */}
+          {showSearch && (
+            <div className="hidden md:flex flex-1">
+              <SearchBar />
+            </div>
+          )}
+
+          {/* Center/Right: Navigation Links (desktop) */}
+          {showNavLinks && navLinks.length > 0 && (
+            <div className={`hidden lg:flex lg:space-x-2 xl:space-x-3 ${showSearch ? 'lg:ml-4' : 'lg:ml-8'}`}>
+              {(showSearch ? navLinks.slice(0, 2) : navLinks).map((link, index) => (
+                <Link 
+                  key={index}
+                  to={link.to} 
+                  className="px-2 xl:px-3 py-2 font-bold text-gray-500 hover:text-purple-700 text-sm whitespace-nowrap"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Right: Actions */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {isAuthenticated() ? (
+              <>
+                {/* Create Campaign Button - Only show for Founders (hidden on small mobile) */}
+                {showCreateButton && isFounder && (
+                  <Link
+                    to="/pages/CreateCampaign"
+                    className="hidden sm:flex items-center px-3 sm:px-4 py-2 bg-primary-700 text-white rounded-full 
+                             hover:bg-primary-600 transition-colors text-xs sm:text-sm font-medium"
+                  >
+                    <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">New Campaign</span>
+                  </Link>
+                )}
+
+                {/* Profile Dropdown (desktop) */}
+                <div className="hidden md:block">
+                  {showProfileDropdown && <ProfileDropdown />}
+                </div>
+
+                {/* Mobile Menu Button (authenticated) */}
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
+              </>
+            ) : (
+              // Logged out view
+              <>
+                {variant === 'default' ? (
+                  // Home page style
+                  <>
+                    <div className="hidden sm:flex items-center space-x-3">
+                      <Link 
+                        to="/login" 
+                        className="text-sm text-gray-500 hover:text-purple-700 font-bold"
+                      >
+                        Login
+                      </Link>
+                      <span className="text-gray-500 font-bold">/</span>
+                      <Link 
+                        to="/Register" 
+                        className="text-sm text-gray-500 hover:text-purple-700 font-bold"
+                      >
+                        SignUp
+                      </Link>
+                      <button 
+                        onClick={() => navigate('/Register')}
+                        className="bg-primary-700 text-white font-bold px-4 lg:px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-primary-600 transition-colors text-sm"
+                      >
+                        <span className="hidden lg:inline">Join Campaign</span>
+                        <span className="lg:hidden">Join</span>
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                    {/* Mobile buttons */}
+                    <div className="flex sm:hidden items-center space-x-2">
+                      <Link 
+                        to="/login" 
+                        className="text-xs text-gray-500 hover:text-purple-700 font-bold px-2 py-1"
+                      >
+                        Login
+                      </Link>
+                      <button 
+                        onClick={() => navigate('/Register')}
+                        className="bg-primary-700 text-white font-bold px-3 py-1.5 rounded-full text-xs hover:bg-primary-600 transition-colors"
+                      >
+                        Sign Up
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  // Standard login/signup for other variants
+                  <>
+                    <div className="hidden sm:flex items-center space-x-3">
+                      <Link to="/login" className="text-gray-500 hover:text-gray-900 font-medium text-sm">
+                        Log in
+                      </Link>
+                      <Link to="/register" className="bg-primary-700 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
+                        Sign up
+                      </Link>
+                    </div>
+                    {/* Mobile buttons */}
+                    <div className="flex sm:hidden items-center space-x-2">
+                      <Link to="/login" className="text-xs text-gray-500 hover:text-gray-900 font-medium px-2 py-1">
+                        Log in
+                      </Link>
+                      <Link to="/register" className="bg-primary-700 text-white px-3 py-1.5 rounded-md hover:bg-purple-700 transition-colors text-xs font-medium">
+                        Sign up
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Center: Search Bar (when showSearch is true) */}
+        {/* Mobile Search Bar (when showSearch is true) */}
         {showSearch && (
-          <SearchBar />
+          <div className="md:hidden pb-3">
+            <SearchBar isMobile={true} />
+          </div>
         )}
+      </div>
 
-        {/* Center/Left: Navigation Links */}
-        {showNavLinks && navLinks.length > 0 && (
-          <div className={`hidden md:flex md:space-x-3 ${showSearch ? 'lg:ml-8' : 'md:ml-14'}`}>
-            {/* Show max 2 links when search is present, all links when no search */}
-            {(showSearch ? navLinks.slice(0, 2) : navLinks).map((link, index) => (
-              <Link 
+      {/* Mobile Menu (authenticated users) */}
+      {isAuthenticated() && isMobileMenuOpen && (
+        <div 
+          ref={mobileMenuRef}
+          className="md:hidden border-t border-gray-200 bg-white shadow-lg"
+        >
+          <div className="px-4 pt-2 pb-3 space-y-1">
+            {/* Profile Section */}
+            <div className="flex items-center px-3 py-3 border-b border-gray-100 mb-2">
+              <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300 flex-shrink-0">
+                {user?.profileImageUrl ? (
+                  <img 
+                    src={buildImageUrl(user.profileImageUrl)} 
+                    alt="Profile" 
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-gray-600 font-medium text-sm">
+                    {user?.displayName?.charAt(0) || user?.fullName?.charAt(0) || 'U'}
+                  </span>
+                )}
+              </div>
+              <div className="ml-3 flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{user?.displayName || user?.fullName}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
+            </div>
+
+            {/* Navigation Links */}
+            {navLinks.map((link, index) => (
+              <Link
                 key={index}
-                to={link.to} 
-                className={`px-3 py-2 font-bold text-gray-500 hover:text-purple-700 ${
-                  showSearch ? 'text-sm' : 'text-md'
-                }`}
+                to={link.to}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
               >
                 {link.label}
               </Link>
             ))}
-          </div>
-        )}
 
-        {/* Right: Actions */}
-        <div className="flex items-center flex-shrink-0">
-          {isAuthenticated() ? (
-            <>
-              {/* Create Campaign Button - Only show for Founders */}
-              {showCreateButton && isFounder && (
+            {/* Create Campaign (mobile - founders only) */}
+            {showCreateButton && isFounder && (
+              <Link
+                to="/pages/CreateCampaign"
+                className="flex items-center px-3 py-2 rounded-md text-base font-medium text-primary-700 hover:bg-primary-50"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                New Campaign
+              </Link>
+            )}
+
+            {/* Profile Links */}
+            <Link
+              to="/profile"
+              className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+            >
+              <User className="h-5 w-5 mr-2 text-gray-500" />
+              Profile
+            </Link>
+
+            {user?.userType !== 'admin' && (
+              <>
                 <Link
-                  to="/pages/CreateCampaign"
-                  className="flex items-center mx-3 px-4 py-2 bg-primary-700 text-white rounded-3xl 
-                           hover:bg-primary-700 transition-colors text-sm font-medium"
+                  to="/my-campaigns"
+                  className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
                 >
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Campaign
+                  <Heart className="h-5 w-5 mr-2 text-gray-500" />
+                  My Favorites
                 </Link>
-              )}
+                <Link
+                  to="/my-campaigns"
+                  className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  <FileText className="h-5 w-5 mr-2 text-gray-500" />
+                  My Campaigns
+                </Link>
+              </>
+            )}
 
-              {/* Profile Dropdown */}
-              {showProfileDropdown && <ProfileDropdown />}
-            </>
-          ) : (
-            // Logged out view - varies by variant
-            <div className="flex items-center pl-4 space-x-4">
-              {variant === 'default' ? (
-                // Home page style
-                <>
-                  <Link 
-                    to="/login" 
-                    className="text-sm text-gray-500 hover:text-purple-700 font-bold"
-                  >
-                    Login
-                  </Link>
-                  <Link 
-                    className="text-gray-500 hover:text-primary-700 font-bold"
-                  >
-                    /
-                  </Link>
-                  <Link 
-                    to="/Register" 
-                    className="text-sm text-gray-500 hover:text-purple-700 font-bold"
-                  >
-                    SignUp
-                  </Link>
-                  <button 
-                    onClick={() => navigate('/Register')}
-                    className="bg-primary-700 text-white font-bold font-sans px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-primary-600 transition-colors"
-                  >
-                    <span>Join Campaign</span>
-                    <ChevronRight size={16} />
-                  </button>
-                </>
-              ) : (
-                // Standard login/signup for other variants
-                <>
-                  <Link to="/login" className="text-gray-500 hover:text-gray-900 font-medium text-sm">
-                    Log in
-                  </Link>
-                  <Link to="/register" className="bg-primary-700 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
-                    Sign up
-                  </Link>
-                </>
-              )}
-            </div>
-          )}
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              Sign out
+            </button>
+          </div>
         </div>
-      </div>
-    </div>
-  </nav>
-);
+      )}
+    </nav>
+  );
 };
 
 export default Navbars;
