@@ -29,7 +29,7 @@ const HeroSection = () => {
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1600&q=80"
+          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80"
           alt=""
           className="w-full h-full object-cover opacity-20"
         />
