@@ -137,7 +137,7 @@ const Navbars = ({
   };
 
   // Handle search
-  const handleSearch = (e) => {
+  const handleSearch = React.useCallback((e) => {
     e.preventDefault();
     console.log('🔍 Navbar: Search submitted:', searchQuery);
     if (searchQuery.trim()) {
@@ -147,13 +147,13 @@ const Navbars = ({
       setSearchQuery('');
       setShowSearchSuggestions(false);
     }
-  };
+  }, [searchQuery, navigate]);
 
-  const handleSearchInputChange = (e) => {
+  const handleSearchInputChange = React.useCallback((e) => {
     const value = e.target.value;
     setSearchQuery(value);
     setShowSearchSuggestions(value.length > 0);
-  };
+  }, []);
 
   // Memoize filtered suggestions to prevent unnecessary recalculations
   const filteredSuggestions = React.useMemo(() => {
@@ -213,7 +213,7 @@ const Navbars = ({
     return suggestions.slice(0, 8);
   }, [searchQuery]);
 
-  const handleSuggestionClick = (suggestion) => {
+  const handleSuggestionClick = React.useCallback((suggestion) => {
     console.log('💡 Navbar: Suggestion clicked:', suggestion);
     
     // If it's a prefix suggestion, just add it to the search box
@@ -228,12 +228,12 @@ const Navbars = ({
     const searchUrl = `/dashboard?search=${encodeURIComponent(suggestion.text)}`;
     console.log('  - Navigating to:', searchUrl);
     navigate(searchUrl);
-  };
+  }, [navigate]);
 
-  const clearSearch = () => {
+  const clearSearch = React.useCallback(() => {
     setSearchQuery('');
     setShowSearchSuggestions(false);
-  };
+  }, []);
 
   // User type checks
   const isFounder = user?.userType?.toLowerCase() === 'founder';
@@ -316,8 +316,8 @@ const Navbars = ({
     return baseLinks;
   };
 
-  // Search component
-  const SearchBar = ({ isMobile = false }) => (
+  // Search component - Memoized to prevent re-renders
+  const SearchBar = React.memo(({ isMobile = false }) => (
     <div className={`relative ${isMobile ? 'w-full' : 'flex-1 max-w-2xl mx-4 lg:mx-8'}`} ref={isMobile ? null : searchRef}>
       <form onSubmit={handleSearch} className="relative">
         <div className="relative">
@@ -417,7 +417,7 @@ const Navbars = ({
         </div>
       )}
     </div>
-  );
+  ));
 
   // Profile dropdown component
   const ProfileDropdown = () => {
