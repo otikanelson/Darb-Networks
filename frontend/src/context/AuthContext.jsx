@@ -103,7 +103,19 @@ export const AuthProvider = ({ children }) => {
     return { ...user, id: user.id };
   };
 
-  const isAuthenticated = () => !!user;
+  const isAuthenticated = React.useCallback(() => !!user, [user]);
+
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = React.useMemo(() => ({
+    user,
+    login,
+    logout,
+    register,
+    isAuthenticated,
+    updateUserContext,
+    error,
+    loading
+  }), [user, login, logout, register, isAuthenticated, updateUserContext, error, loading]);
 
   if (loading) {
     return (
@@ -114,7 +126,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user: getUserData(), login, logout, register, isAuthenticated, updateUserContext, error, loading }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
