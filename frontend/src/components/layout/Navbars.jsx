@@ -16,7 +16,13 @@ import {
   ChevronRight,
   Search,
   X,
-  Menu
+  Menu,
+  Folder,
+  MapPin,
+  DollarSign,
+  Tag,
+  TrendingUp,
+  Lightbulb
 } from 'lucide-react';
 
 /**
@@ -149,6 +155,64 @@ const Navbars = ({
     setShowSearchSuggestions(value.length > 0);
   };
 
+  // Memoize filtered suggestions to prevent unnecessary recalculations
+  const filteredSuggestions = React.useMemo(() => {
+    if (!searchQuery) return [];
+    
+    const query = searchQuery.toLowerCase();
+    const suggestions = [];
+    
+    // Add matching categories
+    allCategories.forEach(category => {
+      if (category.toLowerCase().includes(query)) {
+        suggestions.push({
+          type: 'category',
+          text: category,
+          label: `Category: ${category}`,
+          IconComponent: Folder
+        });
+      }
+    });
+
+    // Add search type suggestions
+    const searchTypes = [
+      { prefix: 'founder:', label: 'Search by founder name', IconComponent: User },
+      { prefix: 'location:', label: 'Search by location', IconComponent: MapPin },
+      { prefix: 'goal:', label: 'Search by funding goal', IconComponent: DollarSign },
+      { prefix: 'tag:', label: 'Search by keyword/tag', IconComponent: Tag }
+    ];
+
+    searchTypes.forEach(({ prefix, label, IconComponent }) => {
+      if (prefix.includes(query) || label.toLowerCase().includes(query)) {
+        suggestions.push({
+          type: 'searchType',
+          text: prefix,
+          label: label,
+          IconComponent: IconComponent,
+          isPrefix: true
+        });
+      }
+    });
+
+    // Add popular search terms
+    const popularTerms = [
+      'Technology', 'Healthcare', 'Fintech', 'AI', 'Startup', 
+      'Innovation', 'Agriculture', 'Education', 'Renewable Energy'
+    ];
+    popularTerms.forEach(term => {
+      if (term.toLowerCase().includes(query) && !suggestions.some(s => s.text === term)) {
+        suggestions.push({
+          type: 'term',
+          text: term,
+          label: term,
+          IconComponent: TrendingUp
+        });
+      }
+    });
+
+    return suggestions.slice(0, 8);
+  }, [searchQuery]);
+
   const handleSuggestionClick = (suggestion) => {
     console.log('💡 Navbar: Suggestion clicked:', suggestion);
     
@@ -169,64 +233,6 @@ const Navbars = ({
   const clearSearch = () => {
     setSearchQuery('');
     setShowSearchSuggestions(false);
-  };
-
-  // Filter suggestions based on search query
-  const getFilteredSuggestions = () => {
-    if (!searchQuery) return [];
-    
-    const query = searchQuery.toLowerCase();
-    const suggestions = [];
-    
-    // Add matching categories
-    allCategories.forEach(category => {
-      if (category.toLowerCase().includes(query)) {
-        suggestions.push({
-          type: 'category',
-          text: category,
-          label: `Category: ${category}`,
-          icon: '📁'
-        });
-      }
-    });
-
-    // Add search type suggestions
-    const searchTypes = [
-      { prefix: 'founder:', label: 'Search by founder name', icon: '👤' },
-      { prefix: 'location:', label: 'Search by location', icon: '📍' },
-      { prefix: 'goal:', label: 'Search by funding goal', icon: '💰' },
-      { prefix: 'tag:', label: 'Search by keyword/tag', icon: '🏷️' }
-    ];
-
-    searchTypes.forEach(({ prefix, label, icon }) => {
-      if (prefix.includes(query) || label.toLowerCase().includes(query)) {
-        suggestions.push({
-          type: 'searchType',
-          text: prefix,
-          label: label,
-          icon: icon,
-          isPrefix: true
-        });
-      }
-    });
-
-    // Add popular search terms
-    const popularTerms = [
-      'Technology', 'Healthcare', 'Fintech', 'AI', 'Startup', 
-      'Innovation', 'Agriculture', 'Education', 'Renewable Energy'
-    ];
-    popularTerms.forEach(term => {
-      if (term.toLowerCase().includes(query) && !suggestions.some(s => s.text === term)) {
-        suggestions.push({
-          type: 'term',
-          text: term,
-          label: term,
-          icon: '🔍'
-        });
-      }
-    });
-
-    return suggestions.slice(0, 8); // Limit to 8 suggestions
   };
 
   // User type checks
@@ -341,47 +347,65 @@ const Navbars = ({
       {/* Search Suggestions Dropdown */}
       {showSearchSuggestions && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
-          {getFilteredSuggestions().length > 0 ? (
+          {filteredSuggestions.length > 0 ? (
             <div className="py-2">
               <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 Search Suggestions
               </div>
-              {getFilteredSuggestions().map((suggestion, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-start space-x-3 transition-colors"
-                >
-                  <span className="text-xl mt-0.5 flex-shrink-0">{suggestion.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900">
-                      {suggestion.label}
+              {filteredSuggestions.map((suggestion, index) => {
+                const IconComp = suggestion.IconComponent;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-start space-x-3 transition-colors"
+                  >
+                    <IconComp className="h-5 w-5 text-primary-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900">
+                        {suggestion.label}
+                      </div>
+                      {suggestion.type === 'category' && (
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          Browse campaigns in this category
+                        </div>
+                      )}
+                      {suggestion.type === 'searchType' && (
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          Type "{suggestion.text}" followed by your search term
+                        </div>
+                      )}
+                      {suggestion.type === 'term' && (
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          Search for campaigns related to {suggestion.text.toLowerCase()}
+                        </div>
+                      )}
                     </div>
-                    {suggestion.type === 'category' && (
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        Browse campaigns in this category
-                      </div>
-                    )}
-                    {suggestion.type === 'searchType' && (
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        Type "{suggestion.text}" followed by your search term
-                      </div>
-                    )}
-                    {suggestion.type === 'term' && (
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        Search for campaigns related to {suggestion.text.toLowerCase()}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
               <div className="px-4 py-3 border-t border-gray-100 mt-2">
-                <div className="text-xs text-gray-600 space-y-1">
-                  <p className="font-semibold">💡 Search Tips:</p>
-                  <p>• Type <span className="font-mono bg-gray-100 px-1 rounded">founder:John</span> to search by founder name</p>
-                  <p>• Type <span className="font-mono bg-gray-100 px-1 rounded">location:Kenya</span> to search by location</p>
-                  <p>• Type <span className="font-mono bg-gray-100 px-1 rounded">goal:50000</span> to find campaigns by funding goal</p>
-                  <p>• Type <span className="font-mono bg-gray-100 px-1 rounded">tag:innovation</span> to search by keywords</p>
+                <div className="text-xs text-gray-600 space-y-1.5">
+                  <div className="flex items-center space-x-2 font-semibold text-primary-700">
+                    <Lightbulb className="h-4 w-4" />
+                    <span>Search Tips:</span>
+                  </div>
+                  <p className="flex items-start space-x-2">
+                    <User className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">founder:John</span> to search by founder name</span>
+                  </p>
+                  <p className="flex items-start space-x-2">
+                    <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">location:Kenya</span> to search by location</span>
+                  </p>
+                  <p className="flex items-start space-x-2">
+                    <DollarSign className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">goal:50000</span> to find campaigns by funding goal</span>
+                  </p>
+                  <p className="flex items-start space-x-2">
+                    <Tag className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">tag:innovation</span> to search by keywords</span>
+                  </p>
                 </div>
               </div>
             </div>
