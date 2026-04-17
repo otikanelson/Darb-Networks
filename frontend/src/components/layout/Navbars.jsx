@@ -30,6 +30,47 @@ import {
  * Replaces all individual navbar components with a single, configurable one
  */
 
+// Campaign categories - defined outside component to prevent re-creation
+const CATEGORIES = {
+  "Tech & Innovation": [
+    "Audio",
+    "Tools", 
+    "Education",
+    "Energy & Green Tech",
+    "Fashion & Wearables",
+    "Food & Beverages",
+    "Health & Fitness",
+    "Home",
+    "Phones & Accessories",
+    "Business & Finance",
+    "Transportation",
+    "Travel & Outdoors",
+  ],
+  "Creative Works": [
+    "Art",
+    "Comics",
+    "Dance & Theater",
+    "Film",
+    "Music",
+    "Photography",
+    "Podcasts, Blogs & Vlogs",
+    "Tabletop Games", 
+    "Video Games",
+    "TV series & Shows",
+    "Writing & Publishing",
+  ],
+  "Community Projects": [
+    "Culture",
+    "Environment",
+    "Human Rights",
+    "Local Businesses",
+    "Wellness",
+  ],
+};
+
+// Flatten categories once
+const ALL_CATEGORIES = Object.values(CATEGORIES).flat();
+
 const Navbars = ({ 
   variant = 'default', // 'default', 'dashboard', 'profile', 'admin', 'display', 'campaigns'
   showCreateButton = true,
@@ -58,47 +99,6 @@ const Navbars = ({
       fullName: user?.fullName
     });
   }, [user?.profileImageUrl, user?.profileImageTimestamp]);
-
-  // Campaign categories for search suggestions
-  const categories = {
-    "Tech & Innovation": [
-      "Audio",
-      "Tools", 
-      "Education",
-      "Energy & Green Tech",
-      "Fashion & Wearables",
-      "Food & Beverages",
-      "Health & Fitness",
-      "Home",
-      "Phones & Accessories",
-      "Business & Finance",
-      "Transportation",
-      "Travel & Outdoors",
-    ],
-    "Creative Works": [
-      "Art",
-      "Comics",
-      "Dance & Theater",
-      "Film",
-      "Music",
-      "Photography",
-      "Podcasts, Blogs & Vlogs",
-      "Tabletop Games", 
-      "Video Games",
-      "TV series & Shows",
-      "Writing & Publishing",
-    ],
-    "Community Projects": [
-      "Culture",
-      "Environment",
-      "Human Rights",
-      "Local Businesses",
-      "Wellness",
-    ],
-  };
-
-  // Flatten categories for search
-  const allCategories = Object.values(categories).flat();
   
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -163,7 +163,7 @@ const Navbars = ({
     const suggestions = [];
     
     // Add matching categories
-    allCategories.forEach(category => {
+    ALL_CATEGORIES.forEach(category => {
       if (category.toLowerCase().includes(query)) {
         suggestions.push({
           type: 'category',
@@ -317,107 +317,110 @@ const Navbars = ({
   };
 
   // Search component - Memoized to prevent re-renders
-  const SearchBar = React.memo(({ isMobile = false }) => (
-    <div className={`relative ${isMobile ? 'w-full' : 'flex-1 max-w-2xl mx-4 lg:mx-8'}`} ref={isMobile ? null : searchRef}>
-      <form onSubmit={handleSearch} className="relative">
-        <div className="relative">
-          <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={handleSearchInputChange}
-            onFocus={() => setShowSearchSuggestions(searchQuery.length > 0)}
-            placeholder="Search campaigns, founders, categories, or use founder:, location:, goal:, tag:"
-            className={`w-full pl-9 sm:pl-12 pr-9 sm:pr-12 ${isMobile ? 'py-2.5' : 'py-2 sm:py-3'} border border-gray-300 rounded-full 
-                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
-                     bg-white shadow-sm text-gray-900 placeholder-gray-500 text-sm sm:text-base`}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-          )}
-        </div>
-      </form>
+  const SearchBar = React.useMemo(() => {
+    const Component = ({ isMobile = false }) => (
+      <div className={`relative ${isMobile ? 'w-full' : 'flex-1 max-w-2xl mx-4 lg:mx-8'}`} ref={isMobile ? null : searchRef}>
+        <form onSubmit={handleSearch} className="relative">
+          <div className="relative">
+            <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              onFocus={() => setShowSearchSuggestions(searchQuery.length > 0)}
+              placeholder="Search campaigns, founders, categories, or use founder:, location:, goal:, tag:"
+              className={`w-full pl-9 sm:pl-12 pr-9 sm:pr-12 ${isMobile ? 'py-2.5' : 'py-2 sm:py-3'} border border-gray-300 rounded-full 
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
+                       bg-white shadow-sm text-gray-900 placeholder-gray-500 text-sm sm:text-base`}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            )}
+          </div>
+        </form>
 
-      {/* Search Suggestions Dropdown */}
-      {showSearchSuggestions && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
-          {filteredSuggestions.length > 0 ? (
-            <div className="py-2">
-              <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                Search Suggestions
-              </div>
-              {filteredSuggestions.map((suggestion, index) => {
-                const IconComp = suggestion.IconComponent;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-start space-x-3 transition-colors"
-                  >
-                    <IconComp className="h-5 w-5 text-primary-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900">
-                        {suggestion.label}
+        {/* Search Suggestions Dropdown */}
+        {showSearchSuggestions && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+            {filteredSuggestions.length > 0 ? (
+              <div className="py-2">
+                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Search Suggestions
+                </div>
+                {filteredSuggestions.map((suggestion, index) => {
+                  const IconComp = suggestion.IconComponent;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-start space-x-3 transition-colors"
+                    >
+                      <IconComp className="h-5 w-5 text-primary-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900">
+                          {suggestion.label}
+                        </div>
+                        {suggestion.type === 'category' && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            Browse campaigns in this category
+                          </div>
+                        )}
+                        {suggestion.type === 'searchType' && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            Type "{suggestion.text}" followed by your search term
+                          </div>
+                        )}
+                        {suggestion.type === 'term' && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            Search for campaigns related to {suggestion.text.toLowerCase()}
+                          </div>
+                        )}
                       </div>
-                      {suggestion.type === 'category' && (
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          Browse campaigns in this category
-                        </div>
-                      )}
-                      {suggestion.type === 'searchType' && (
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          Type "{suggestion.text}" followed by your search term
-                        </div>
-                      )}
-                      {suggestion.type === 'term' && (
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          Search for campaigns related to {suggestion.text.toLowerCase()}
-                        </div>
-                      )}
+                    </button>
+                  );
+                })}
+                <div className="px-4 py-3 border-t border-gray-100 mt-2">
+                  <div className="text-xs text-gray-600 space-y-1.5">
+                    <div className="flex items-center space-x-2 font-semibold text-primary-700">
+                      <Lightbulb className="h-4 w-4" />
+                      <span>Search Tips:</span>
                     </div>
-                  </button>
-                );
-              })}
-              <div className="px-4 py-3 border-t border-gray-100 mt-2">
-                <div className="text-xs text-gray-600 space-y-1.5">
-                  <div className="flex items-center space-x-2 font-semibold text-primary-700">
-                    <Lightbulb className="h-4 w-4" />
-                    <span>Search Tips:</span>
+                    <p className="flex items-start space-x-2">
+                      <User className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                      <span>Type <span className="font-mono bg-gray-100 px-1 rounded">founder:John</span> to search by founder name</span>
+                    </p>
+                    <p className="flex items-start space-x-2">
+                      <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                      <span>Type <span className="font-mono bg-gray-100 px-1 rounded">location:Kenya</span> to search by location</span>
+                    </p>
+                    <p className="flex items-start space-x-2">
+                      <DollarSign className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                      <span>Type <span className="font-mono bg-gray-100 px-1 rounded">goal:50000</span> to find campaigns by funding goal</span>
+                    </p>
+                    <p className="flex items-start space-x-2">
+                      <Tag className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                      <span>Type <span className="font-mono bg-gray-100 px-1 rounded">tag:innovation</span> to search by keywords</span>
+                    </p>
                   </div>
-                  <p className="flex items-start space-x-2">
-                    <User className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
-                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">founder:John</span> to search by founder name</span>
-                  </p>
-                  <p className="flex items-start space-x-2">
-                    <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
-                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">location:Kenya</span> to search by location</span>
-                  </p>
-                  <p className="flex items-start space-x-2">
-                    <DollarSign className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
-                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">goal:50000</span> to find campaigns by funding goal</span>
-                  </p>
-                  <p className="flex items-start space-x-2">
-                    <Tag className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
-                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">tag:innovation</span> to search by keywords</span>
-                  </p>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="px-4 py-3 text-sm text-gray-500">
-              No suggestions found. Press Enter to search for "{searchQuery}"
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  ));
+            ) : (
+              <div className="px-4 py-3 text-sm text-gray-500">
+                No suggestions found. Press Enter to search for "{searchQuery}"
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+    return Component;
+  }, [searchQuery, showSearchSuggestions, filteredSuggestions, handleSearch, handleSearchInputChange, handleSuggestionClick, clearSearch]);
 
   // Profile dropdown component
   const ProfileDropdown = () => {
