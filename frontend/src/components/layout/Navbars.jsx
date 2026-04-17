@@ -151,9 +151,17 @@ const Navbars = ({
 
   const handleSuggestionClick = (suggestion) => {
     console.log('💡 Navbar: Suggestion clicked:', suggestion);
-    setSearchQuery(suggestion);
+    
+    // If it's a prefix suggestion, just add it to the search box
+    if (suggestion.isPrefix) {
+      setSearchQuery(suggestion.text);
+      setShowSearchSuggestions(true);
+      return;
+    }
+    
+    setSearchQuery(suggestion.text);
     setShowSearchSuggestions(false);
-    const searchUrl = `/dashboard?search=${encodeURIComponent(suggestion)}`;
+    const searchUrl = `/dashboard?search=${encodeURIComponent(suggestion.text)}`;
     console.log('  - Navigating to:', searchUrl);
     navigate(searchUrl);
   };
@@ -176,24 +184,49 @@ const Navbars = ({
         suggestions.push({
           type: 'category',
           text: category,
-          label: `Category: ${category}`
+          label: `Category: ${category}`,
+          icon: '📁'
+        });
+      }
+    });
+
+    // Add search type suggestions
+    const searchTypes = [
+      { prefix: 'founder:', label: 'Search by founder name', icon: '👤' },
+      { prefix: 'location:', label: 'Search by location', icon: '📍' },
+      { prefix: 'goal:', label: 'Search by funding goal', icon: '💰' },
+      { prefix: 'tag:', label: 'Search by keyword/tag', icon: '🏷️' }
+    ];
+
+    searchTypes.forEach(({ prefix, label, icon }) => {
+      if (prefix.includes(query) || label.toLowerCase().includes(query)) {
+        suggestions.push({
+          type: 'searchType',
+          text: prefix,
+          label: label,
+          icon: icon,
+          isPrefix: true
         });
       }
     });
 
     // Add popular search terms
-    const popularTerms = ['Technology', 'Healthcare', 'Fintech', 'AI', 'Startup', 'Innovation'];
+    const popularTerms = [
+      'Technology', 'Healthcare', 'Fintech', 'AI', 'Startup', 
+      'Innovation', 'Agriculture', 'Education', 'Renewable Energy'
+    ];
     popularTerms.forEach(term => {
       if (term.toLowerCase().includes(query) && !suggestions.some(s => s.text === term)) {
         suggestions.push({
           type: 'term',
           text: term,
-          label: term
+          label: term,
+          icon: '🔍'
         });
       }
     });
 
-    return suggestions.slice(0, 6); // Limit to 6 suggestions
+    return suggestions.slice(0, 8); // Limit to 8 suggestions
   };
 
   // User type checks
@@ -288,7 +321,7 @@ const Navbars = ({
             value={searchQuery}
             onChange={handleSearchInputChange}
             onFocus={() => setShowSearchSuggestions(searchQuery.length > 0)}
-            placeholder="Search campaigns..."
+            placeholder="Search campaigns, founders, categories, or use founder:, location:, goal:, tag:"
             className={`w-full pl-9 sm:pl-12 pr-9 sm:pr-12 ${isMobile ? 'py-2.5' : 'py-2 sm:py-3'} border border-gray-300 rounded-full 
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
                      bg-white shadow-sm text-gray-900 placeholder-gray-500 text-sm sm:text-base`}
@@ -307,28 +340,50 @@ const Navbars = ({
 
       {/* Search Suggestions Dropdown */}
       {showSearchSuggestions && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-64 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
           {getFilteredSuggestions().length > 0 ? (
             <div className="py-2">
+              <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Search Suggestions
+              </div>
               {getFilteredSuggestions().map((suggestion, index) => (
                 <button
                   key={index}
-                  onClick={() => handleSuggestionClick(suggestion.text)}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-3"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-start space-x-3 transition-colors"
                 >
-                  <Search className="h-4 w-4 text-gray-400" />
-                  <div>
+                  <span className="text-xl mt-0.5 flex-shrink-0">{suggestion.icon}</span>
+                  <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-gray-900">
                       {suggestion.label}
                     </div>
                     {suggestion.type === 'category' && (
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 mt-0.5">
                         Browse campaigns in this category
+                      </div>
+                    )}
+                    {suggestion.type === 'searchType' && (
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        Type "{suggestion.text}" followed by your search term
+                      </div>
+                    )}
+                    {suggestion.type === 'term' && (
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        Search for campaigns related to {suggestion.text.toLowerCase()}
                       </div>
                     )}
                   </div>
                 </button>
               ))}
+              <div className="px-4 py-3 border-t border-gray-100 mt-2">
+                <div className="text-xs text-gray-600 space-y-1">
+                  <p className="font-semibold">💡 Search Tips:</p>
+                  <p>• Type <span className="font-mono bg-gray-100 px-1 rounded">founder:John</span> to search by founder name</p>
+                  <p>• Type <span className="font-mono bg-gray-100 px-1 rounded">location:Kenya</span> to search by location</p>
+                  <p>• Type <span className="font-mono bg-gray-100 px-1 rounded">goal:50000</span> to find campaigns by funding goal</p>
+                  <p>• Type <span className="font-mono bg-gray-100 px-1 rounded">tag:innovation</span> to search by keywords</p>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="px-4 py-3 text-sm text-gray-500">
