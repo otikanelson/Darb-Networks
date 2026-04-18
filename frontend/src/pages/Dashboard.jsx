@@ -106,6 +106,7 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFilter, setSelectedFilter] = useState("All Campaigns");
+  const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("Date Posted");
   const [searchTerm, setSearchTerm] = useState("");
@@ -146,13 +147,14 @@ const Dashboard = () => {
     setSearchTerm(searchParams.get("search") || "");
     setSelectedCategory(searchParams.get("category") || "All Categories");
     setSelectedFilter(searchParams.get("filter") || "All Campaigns");
+    setSelectedLocation(searchParams.get("location") || "All Locations");
   }, [searchParams]);
 
   useEffect(() => { loadCampaigns(); }, []);
 
-  useEffect(() => { applyFilters(); }, [campaigns, selectedCategory, selectedFilter, searchTerm, sortBy]);
+  useEffect(() => { applyFilters(); }, [campaigns, selectedCategory, selectedFilter, selectedLocation, searchTerm, sortBy]);
 
-  useEffect(() => { setCurrentPage(1); }, [selectedCategory, selectedFilter, searchTerm, sortBy]);
+  useEffect(() => { setCurrentPage(1); }, [selectedCategory, selectedFilter, selectedLocation, searchTerm, sortBy]);
 
   const loadCampaigns = async () => {
     try {
@@ -175,7 +177,26 @@ const Dashboard = () => {
     let f = [...campaigns];
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
-      f = f.filter(c => [c.title, c.description, c.category, c.founder_name, c.location].some(v => v?.toLowerCase().includes(q)));
+      
+      // Parse advanced search syntax
+      if (q.startsWith('founder:')) {
+        const founderName = q.replace('founder:', '').trim();
+        f = f.filter(c => c.founder_name?.toLowerCase().includes(founderName));
+      } else if (q.startsWith('location:')) {
+        const location = q.replace('location:', '').trim();
+        f = f.filter(c => c.location?.toLowerCase().includes(location));
+      } else if (q.startsWith('goal:')) {
+        const goalAmount = parseFloat(q.replace('goal:', '').trim());
+        if (!isNaN(goalAmount)) {
+          f = f.filter(c => (c.target_amount || 0) >= goalAmount);
+        }
+      } else if (q.startsWith('tag:')) {
+        const tag = q.replace('tag:', '').trim();
+        f = f.filter(c => [c.title, c.description, c.category].some(v => v?.toLowerCase().includes(tag)));
+      } else {
+        // Default search across multiple fields
+        f = f.filter(c => [c.title, c.description, c.category, c.founder_name, c.location].some(v => v?.toLowerCase().includes(q)));
+      }
     }
     if (selectedCategory !== "All Categories") {
       if (Object.keys(categories).includes(selectedCategory)) {
@@ -184,6 +205,9 @@ const Dashboard = () => {
       } else {
         f = f.filter(c => c.category === selectedCategory);
       }
+    }
+    if (selectedLocation !== "All Locations") {
+      f = f.filter(c => c.location?.toLowerCase() === selectedLocation.toLowerCase());
     }
     switch (selectedFilter) {
       case "Goal Reached": f = f.filter(c => (c.current_amount||0) >= (c.target_amount||1)); break;
@@ -209,8 +233,11 @@ const Dashboard = () => {
   };
 
   const clearAll = () => {
-    setSearchTerm(""); setSelectedCategory("All Categories"); setSelectedFilter("All Campaigns");
-    updateURL({ search: null, category: null, filter: null });
+    setSearchTerm(""); 
+    setSelectedCategory("All Categories"); 
+    setSelectedFilter("All Campaigns");
+    setSelectedLocation("All Locations");
+    updateURL({ search: null, category: null, filter: null, location: null });
   };
 
   const fmt = (n) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n || 0);
@@ -218,7 +245,7 @@ const Dashboard = () => {
 
   const paginated = filteredCampaigns.slice((currentPage - 1) * limit, currentPage * limit);
   const totalPages = Math.ceil(filteredCount / limit);
-  const hasFilters = searchTerm || selectedCategory !== "All Categories" || selectedFilter !== "All Campaigns";
+  const hasFilters = searchTerm || selectedCategory !== "All Categories" || selectedFilter !== "All Campaigns" || selectedLocation !== "All Locations";
 
   const handleFavoriteToggle = async (id) => { try { return await CampaignService.toggleFavorite(id); } catch { return false; } };
   const handleViewClick = async (id) => { try { await CampaignService.trackView(id); } catch {} };
