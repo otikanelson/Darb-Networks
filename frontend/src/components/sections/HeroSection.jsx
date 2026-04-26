@@ -101,7 +101,7 @@ const HeroSection = () => {
         <img
           src={backgroundImage}
           alt=""
-          className="w-full h-full object-cover opacity-20"
+          className="w-full h-full object-cover opacity-50"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900/95 to-primary-950/80" />
         {/* Decorative blobs — subtle slow pulse */}
@@ -134,7 +134,7 @@ const HeroSection = () => {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 w-full">
-        <div className="max-w-3xl">
+        <div className="max-w-3xl min-h-[400px] sm:min-h-[250px] md:min-h-[300px] flex flex-col justify-center">
           <AnimatePresence mode="wait">
             {!showCarousel ? (
               // Original Hero Content
