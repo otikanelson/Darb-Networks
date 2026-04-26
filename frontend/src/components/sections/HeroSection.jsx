@@ -83,9 +83,15 @@ const HeroSection = () => {
     return text.length > limit ? text.substring(0, limit) + '...' : text;
   };
 
+  // Truncate title to 60 characters
+  const truncateTitle = (text, limit = 60) => {
+    if (!text) return '';
+    return text.length > limit ? text.substring(0, limit) + '...' : text;
+  };
+
   // Get background image - use campaign image if available, otherwise use default
-  const backgroundImage = showCarousel && currentCampaign?.image_url 
-    ? currentCampaign.image_url 
+  const backgroundImage = showCarousel && currentCampaign?.main_image_url 
+    ? currentCampaign.main_image_url 
     : 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?q=80&w=869&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
   return (
@@ -216,7 +222,7 @@ const HeroSection = () => {
                       >
                         {/* Headline - Smaller for carousel */}
                         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-[1.2] sm:leading-[1.1] mb-3 sm:mb-4">
-                          {currentCampaign?.title}
+                          {truncateTitle(currentCampaign?.title, 60)}
                         </h1>
 
                         {/* Description - Smaller with truncation */}
