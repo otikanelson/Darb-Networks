@@ -1,10 +1,11 @@
-﻿import React from 'react';
-import { ChevronRight, Play } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, Play, ChevronLeft, Pause } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CustomNav } from '../../hooks/CustomNavigation';
 import { useAuth } from '../../context/AuthContext';
 import CountrySelector from '../ui/CountrySelector';
 import WavingFlag from '../ui/WavingFlag';
+import CampaignService from '../../services/CampaignService';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -15,6 +16,56 @@ const fadeUp = (delay = 0) => ({
 const HeroSection = () => {
   const navigate = CustomNav();
   const { user } = useAuth();
+  const [campaigns, setCampaigns] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showCarousel, setShowCarousel] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch featured campaigns
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        setLoading(true);
+        const data = await CampaignService.getFeaturedCampaigns(10);
+        setCampaigns(data);
+      } catch (e) {
+        console.error('Error fetching featured campaigns:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCampaigns();
+  }, []);
+
+  // Transition to carousel after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowCarousel(true);
+      setIsPlaying(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Auto-scroll every 3 seconds when carousel is active
+  useEffect(() => {
+    if (!isPlaying || !showCarousel || campaigns.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % campaigns.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, showCarousel, campaigns.length]);
+
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + campaigns.length) % campaigns.length);
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % campaigns.length);
+  };
 
   const handleCampaignClick = () => {
     if (user?.userType?.toLowerCase() === 'founder') {
@@ -23,6 +74,8 @@ const HeroSection = () => {
       navigate('/register');
     }
   };
+
+  const currentCampaign = campaigns[currentIndex];
 
   return (
     <div className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center overflow-hidden bg-gray-950">
@@ -65,43 +118,184 @@ const HeroSection = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 w-full">
         <div className="max-w-3xl">
-          {/* Badge */}
-          <motion.div {...fadeUp(0)} className="inline-flex items-center space-x-2 bg-primary-900 border border-primary-500/25 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-6 sm:mb-8">
-            <span className="w-2 h-2 bg-primary-400 rounded-full animate-pulse" />
-            <span className="text-primary-100 text-xs sm:text-sm font-medium">Africa's leading startup funding platform</span>
-          </motion.div>
+          <AnimatePresence mode="wait">
+            {!showCarousel ? (
+              // Original Hero Content
+              <motion.div
+                key="original-hero"
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                {/* Badge */}
+                <motion.div {...fadeUp(0)} className="inline-flex items-center space-x-2 bg-primary-900 border border-primary-500/25 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-6 sm:mb-8">
+                  <span className="w-2 h-2 bg-primary-400 rounded-full animate-pulse" />
+                  <span className="text-primary-100 text-xs sm:text-sm font-medium">Africa's leading startup funding platform</span>
+                </motion.div>
 
-          {/* Headline */}
-          <motion.h1 {...fadeUp(0.1)} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] sm:leading-[1.05] mb-4 sm:mb-6">
-            Fund your startup
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-secondary-400 to-tertiary-300">
-              with confidence.
-            </span>
-          </motion.h1>
+                {/* Headline */}
+                <motion.h1 {...fadeUp(0.1)} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] sm:leading-[1.05] mb-4 sm:mb-6">
+                  Fund your startup
+                  <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-secondary-400 to-tertiary-300">
+                    with confidence.
+                  </span>
+                </motion.h1>
 
-          {/* Subheadline */}
-          <motion.p {...fadeUp(0.2)} className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed mb-8 sm:mb-10 max-w-xl">
-            Connect with verified investors across the continent, showcase your innovation, and get the funding you need to grow.
-          </motion.p>
+                {/* Subheadline */}
+                <motion.p {...fadeUp(0.2)} className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed mb-8 sm:mb-10 max-w-xl">
+                  Connect with verified investors across the continent, showcase your innovation, and get the funding you need to grow.
+                </motion.p>
 
-          {/* CTAs */}
-          <motion.div {...fadeUp(0.3)} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <button
-              onClick={handleCampaignClick}
-              className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 sm:px-8 py-3 sm:py-4 rounded-full flex items-center justify-center space-x-2 transition-all transform hover:scale-105 shadow-lg shadow-primary-500/25 text-sm sm:text-base"
-            >
-              <span>Start Your Campaign</span>
-              <ChevronRight size={18} className="sm:w-5 sm:h-5" />
-            </button>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="bg-white/8 backdrop-blur-sm hover:bg-secondary-600/20 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-full border border-secondary-400/30 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base"
-            >
-              <Play size={14} className="sm:w-4 sm:h-4 fill-white" />
-              <span>Explore Startups</span>
-            </button>
-          </motion.div>
+                {/* CTAs */}
+                <motion.div {...fadeUp(0.3)} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <button
+                    onClick={handleCampaignClick}
+                    className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 sm:px-8 py-3 sm:py-4 rounded-full flex items-center justify-center space-x-2 transition-all transform hover:scale-105 shadow-lg shadow-primary-500/25 text-sm sm:text-base"
+                  >
+                    <span>Start Your Campaign</span>
+                    <ChevronRight size={18} className="sm:w-5 sm:h-5" />
+                  </button>
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="bg-white/8 backdrop-blur-sm hover:bg-secondary-600/20 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-full border border-secondary-400/30 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base"
+                  >
+                    <Play size={14} className="sm:w-4 sm:h-4 fill-white" />
+                    <span>Explore Startups</span>
+                  </button>
+                </motion.div>
+              </motion.div>
+            ) : (
+              // Carousel Content
+              <motion.div
+                key="carousel"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+              >
+                {loading ? (
+                  <div className="flex justify-center items-center h-96">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent" />
+                  </div>
+                ) : campaigns.length === 0 ? (
+                  <div className="text-center">
+                    <p className="text-gray-300 text-lg">No campaigns available</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Badge */}
+                    <motion.div 
+                      className="inline-flex items-center space-x-2 bg-primary-900 border border-primary-500/25 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-6 sm:mb-8"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <span className="w-2 h-2 bg-primary-400 rounded-full animate-pulse" />
+                      <span className="text-primary-100 text-xs sm:text-sm font-medium">Featured Campaigns</span>
+                    </motion.div>
+
+                    {/* Animated Campaign Content */}
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentIndex}
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -100 }}
+                        transition={{ duration: 0.6, ease: 'easeInOut' }}
+                      >
+                        {/* Headline */}
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] sm:leading-[1.05] mb-4 sm:mb-6">
+                          {currentCampaign?.title}
+                        </h1>
+
+                        {/* Description */}
+                        <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed mb-8 sm:mb-10 max-w-xl">
+                          {currentCampaign?.description}
+                        </p>
+                      </motion.div>
+                    </AnimatePresence>
+
+                    {/* CTAs */}
+                    <motion.div 
+                      className="flex flex-col sm:flex-row gap-3 sm:gap-4"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                      <button
+                        onClick={() => navigate(`/campaign/${currentCampaign?.id}`)}
+                        className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 sm:px-8 py-3 sm:py-4 rounded-full flex items-center justify-center space-x-2 transition-all transform hover:scale-105 shadow-lg shadow-primary-500/25 text-sm sm:text-base"
+                      >
+                        <span>View Campaign</span>
+                        <ChevronRight size={18} className="sm:w-5 sm:h-5" />
+                      </button>
+                      <button
+                        onClick={() => navigate('/dashboard')}
+                        className="bg-white/8 backdrop-blur-sm hover:bg-secondary-600/20 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-full border border-secondary-400/30 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base"
+                      >
+                        <span>Explore More</span>
+                      </button>
+                    </motion.div>
+
+                    {/* Navigation Controls - Bottom */}
+                    <motion.div 
+                      className="flex items-center gap-3 mt-12 sm:mt-16"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      {/* Previous Button */}
+                      <button
+                        onClick={handlePrevious}
+                        className="p-2 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20 hover:border-white/40"
+                        aria-label="Previous campaign"
+                      >
+                        <ChevronLeft size={20} className="sm:w-6 sm:h-6" />
+                      </button>
+
+                      {/* Next Button */}
+                      <button
+                        onClick={handleNext}
+                        className="p-2 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20 hover:border-white/40"
+                        aria-label="Next campaign"
+                      >
+                        <ChevronRight size={20} className="sm:w-6 sm:h-6" />
+                      </button>
+
+                      {/* Play/Pause Button */}
+                      <button
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        className="p-2 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20 hover:border-white/40"
+                        aria-label={isPlaying ? 'Pause' : 'Play'}
+                      >
+                        {isPlaying ? (
+                          <Pause size={20} className="sm:w-6 sm:h-6" />
+                        ) : (
+                          <Play size={20} className="sm:w-6 sm:h-6 fill-white" />
+                        )}
+                      </button>
+
+                      {/* Indicator Dots */}
+                      <div className="flex gap-2 ml-4">
+                        {campaigns.map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setCurrentIndex(index)}
+                            className={`h-2 rounded-full transition-all ${
+                              index === currentIndex
+                                ? 'bg-primary-400 w-6'
+                                : 'bg-white/30 w-2 hover:bg-white/50'
+                            }`}
+                            aria-label={`Go to campaign ${index + 1}`}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
