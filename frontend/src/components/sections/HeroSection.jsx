@@ -77,12 +77,23 @@ const HeroSection = () => {
 
   const currentCampaign = campaigns[currentIndex];
 
+  // Truncate description to 150 characters
+  const truncateDescription = (text, limit = 150) => {
+    if (!text) return '';
+    return text.length > limit ? text.substring(0, limit) + '...' : text;
+  };
+
+  // Get background image - use campaign image if available, otherwise use default
+  const backgroundImage = showCarousel && currentCampaign?.image_url 
+    ? currentCampaign.image_url 
+    : 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?q=80&w=869&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+
   return (
     <div className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center overflow-hidden bg-gray-950">
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1573164574572-cb89e39749b4?q=80&w=869&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          src={backgroundImage}
           alt=""
           className="w-full h-full object-cover opacity-20"
         />
@@ -203,14 +214,14 @@ const HeroSection = () => {
                         exit={{ opacity: 0, x: -100 }}
                         transition={{ duration: 0.6, ease: 'easeInOut' }}
                       >
-                        {/* Headline */}
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] sm:leading-[1.05] mb-4 sm:mb-6">
+                        {/* Headline - Smaller for carousel */}
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-[1.2] sm:leading-[1.1] mb-3 sm:mb-4">
                           {currentCampaign?.title}
                         </h1>
 
-                        {/* Description */}
-                        <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed mb-8 sm:mb-10 max-w-xl">
-                          {currentCampaign?.description}
+                        {/* Description - Smaller with truncation */}
+                        <p className="text-sm sm:text-base md:text-lg text-gray-300 leading-relaxed mb-6 sm:mb-8 max-w-2xl">
+                          {truncateDescription(currentCampaign?.description, 150)}
                         </p>
                       </motion.div>
                     </AnimatePresence>
