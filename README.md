@@ -253,7 +253,7 @@ The sample data includes test accounts for each user type:
 - **Access**: Full platform administration
 
 #### Founder Account
-- **Email**: `otikanelson29`
+- **Email**: `otikanelson29@gmail.com`
 - **Password**: `292025`
 - **Access**: Create and manage campaigns
 

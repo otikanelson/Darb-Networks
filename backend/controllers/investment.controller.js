@@ -78,7 +78,7 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
     if (amount < campaign.minimum_investment) {
       return res.status(400).send({
         success: false,
-        message: `Minimum investment amount is â‚¦${campaign.minimum_investment.toLocaleString()}`
+        message: `Minimum investment amount is ₦${campaign.minimum_investment.toLocaleString()}`
       });
     }
 
@@ -270,28 +270,22 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).send({
         success: false,
         message: 'Payment verification failed',
-        error: verification.error,
         data: {
-          investmentId: investment.id,
-          status: newStatus
+          status: newStatus,
+          details: verification.message
         }
       });
     }
 
-    // Payment successful - update investment
+    // Payment successful - update investment and campaign
     await db.sequelize.query(
       `UPDATE investments 
-       SET payment_status = 'completed',
+       SET payment_status = 'completed', 
            confirmed_at = NOW(),
-           payment_gateway_id = ?,
-           payment_gateway_response = ?
+           transaction_id = ?
        WHERE payment_reference = ?`,
       {
-        replacements: [
-          verification.data.reference,
-          JSON.stringify(verification.data),
-          paymentReference
-        ],
+        replacements: [verification.data.id || paymentReference, paymentReference],
         type: db.sequelize.QueryTypes.UPDATE
       }
     );
@@ -326,8 +320,7 @@ exports.verifyPayment = async (req, res) => {
         campaignId: investment.campaign_id,
         amount: investment.amount,
         status: 'completed',
-        confirmedAt: new Date(),
-        payment: verification.data
+        confirmedAt: new Date()
       }
     });
 
@@ -341,38 +334,82 @@ exports.verifyPayment = async (req, res) => {
 };
 
 /**
- * Handle Paystack webhook
+ * Webhook handler for Paystack
  */
 exports.handlePaystackWebhook = async (req, res) => {
   try {
     const signature = req.headers['x-paystack-signature'];
     const payload = JSON.stringify(req.body);
 
-    if (!signature) {
+    // Verify webhook signature
+    const webhookResult = await PaystackService.processWebhook(payload, signature);
+
+    if (!webhookResult.success) {
       return res.status(400).send({
         success: false,
-        message: 'No signature provided'
+        message: 'Invalid webhook signature'
       });
     }
 
-    const result = await PaystackService.processWebhook(payload, signature);
+    // Handle different event types
+    const event = payload.event;
+    const data = payload.data;
 
-    if (result.success) {
-      res.status(200).send({
-        success: true,
-        message: result.message || 'Webhook processed successfully'
-      });
-    } else {
-      res.status(400).send({
-        success: false,
-        message: result.error
-      });
+    if (event === 'charge.success') {
+      const paymentReference = data.reference;
+      
+      // Get investment
+      const [investment] = await db.sequelize.query(
+        `SELECT i.*, c.title as campaign_title, c.founder_id,
+                u.fullName as investor_name
+         FROM investments i
+         JOIN campaigns c ON i.campaign_id = c.id
+         JOIN users u ON i.investor_id = u.id
+         WHERE i.payment_reference = ?`,
+        {
+          replacements: [paymentReference],
+          type: db.sequelize.QueryTypes.SELECT
+        }
+      );
+
+      if (investment && investment.payment_status !== 'completed') {
+        // Update investment
+        await db.sequelize.query(
+          `UPDATE investments 
+           SET payment_status = 'completed', 
+               confirmed_at = NOW(),
+               transaction_id = ?
+           WHERE payment_reference = ?`,
+          {
+            replacements: [data.id, paymentReference],
+            type: db.sequelize.QueryTypes.UPDATE
+          }
+        );
+
+        // Update campaign
+        await db.sequelize.query(
+          `UPDATE campaigns 
+           SET current_amount = current_amount + ?,
+               investor_count = investor_count + 1
+           WHERE id = ?`,
+          {
+            replacements: [investment.amount, investment.campaign_id],
+            type: db.sequelize.QueryTypes.UPDATE
+          }
+        );
+
+        // Create notifications
+        await exports.createInvestmentNotifications(investment);
+      }
     }
+
+    res.status(200).send({ success: true });
 
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Webhook processing failed'
+      message: 'Error processing webhook',
+      error: error.message
     });
   }
 };
@@ -386,18 +423,9 @@ exports.getPaymentStatus = async (req, res) => {
     const userId = req.userId;
 
     const [investment] = await db.sequelize.query(
-      `SELECT 
-        i.id,
-        i.amount,
-        i.payment_status,
-        i.payment_reference,
-        i.confirmed_at,
-        i.investment_date,
-        c.title as campaign_title,
-        c.id as campaign_id
-       FROM investments i
-       JOIN campaigns c ON i.campaign_id = c.id
-       WHERE i.payment_reference = ? AND i.investor_id = ?`,
+      `SELECT payment_status, amount, confirmed_at 
+       FROM investments 
+       WHERE payment_reference = ? AND investor_id = ?`,
       {
         replacements: [paymentReference, userId],
         type: db.sequelize.QueryTypes.SELECT
@@ -413,13 +441,18 @@ exports.getPaymentStatus = async (req, res) => {
 
     res.status(200).send({
       success: true,
-      data: investment
+      data: {
+        status: investment.payment_status,
+        amount: investment.amount,
+        confirmedAt: investment.confirmed_at
+      }
     });
 
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching payment status'
+      message: 'Error fetching payment status',
+      error: error.message
     });
   }
 };
@@ -427,7 +460,7 @@ exports.getPaymentStatus = async (req, res) => {
 // ================= INVESTMENT HISTORY & ANALYTICS =================
 
 /**
- * Get user's investment history
+ * Get investor's investment history
  */
 exports.getMyInvestments = async (req, res) => {
   try {
@@ -435,9 +468,9 @@ exports.getMyInvestments = async (req, res) => {
     const { status, page = 1, limit = 10 } = req.query;
 
     let whereClause = 'WHERE i.investor_id = ?';
-    let replacements = [userId];
+    let replacements = [investorId];
 
-    if (status && status !== 'all') {
+    if (status !== 'all') {
       whereClause += ' AND i.payment_status = ?';
       replacements.push(status);
     }
@@ -445,29 +478,16 @@ exports.getMyInvestments = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const investments = await db.sequelize.query(
-      `SELECT 
-        i.id,
-        i.amount,
-        i.payment_status,
-        i.payment_reference,
-        i.investment_date,
-        i.confirmed_at,
-        i.investor_message,
-        i.total_repaid,
-        i.repayment_status,
-        i.payment_method,
-        c.id as campaign_id,
-        c.title as campaign_title,
-        c.category,
-        c.main_image_url,
-        c.status as campaign_status,
-        u.fullName as founder_name,
-        u.companyName as founder_company
+      `SELECT i.*, 
+              c.title as campaign_title,
+              c.main_image_url as campaign_image,
+              c.category as campaign_category,
+              u.fullName as founder_name
        FROM investments i
        JOIN campaigns c ON i.campaign_id = c.id
        JOIN users u ON c.founder_id = u.id
        ${whereClause}
-       ORDER BY i.investment_date DESC
+       ORDER BY i.created_at DESC
        LIMIT ? OFFSET ?`,
       {
         replacements: [...replacements, parseInt(limit), parseInt(offset)],
@@ -484,17 +504,16 @@ exports.getMyInvestments = async (req, res) => {
       }
     );
 
-    // Get summary
-    const [summary] = await db.sequelize.query(
+    // Get summary stats
+    const [stats] = await db.sequelize.query(
       `SELECT 
-        COUNT(*) as total_investments,
-        SUM(CASE WHEN payment_status = 'completed' THEN amount ELSE 0 END) as total_invested,
-        SUM(total_repaid) as total_repaid,
-        COUNT(DISTINCT campaign_id) as campaigns_invested
-       FROM investments 
+         COUNT(*) as total_investments,
+         SUM(CASE WHEN payment_status = 'completed' THEN amount ELSE 0 END) as total_invested,
+         COUNT(DISTINCT campaign_id) as campaigns_invested
+       FROM investments
        WHERE investor_id = ?`,
       {
-        replacements: [userId],
+        replacements: [investorId],
         type: db.sequelize.QueryTypes.SELECT
       }
     );
@@ -508,24 +527,23 @@ exports.getMyInvestments = async (req, res) => {
         limit: parseInt(limit),
         pages: Math.ceil(countResult.total / limit)
       },
-      summary: summary
+      stats: stats
     });
 
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching investment history',
+      message: 'Error fetching investments',
       error: error.message
     });
   }
 };
 
 /**
- * Get campaign investors (founder view)
+ * Get investors for a campaign (founder only)
  */
 exports.getCampaignInvestors = async (req, res) => {
   try {
-    const founderId = req.userId;
     const { campaignId } = req.params;
 
     // Verify campaign ownership
@@ -544,50 +562,34 @@ exports.getCampaignInvestors = async (req, res) => {
       });
     }
 
-    // Get investors using founder_investment_history view if available
-    let investors;
-    try {
-      investors = await db.sequelize.query(
-        `SELECT * FROM founder_investment_history 
-         WHERE campaign_id = ? 
-         ORDER BY confirmed_at DESC`,
-        {
-          replacements: [campaignId],
-          type: db.sequelize.QueryTypes.SELECT
-        }
-      );
-    } catch (viewError) {
-      // Fallback if view doesn't exist
-      investors = await db.sequelize.query(
-        `SELECT 
-          i.id as investment_id,
-          i.investor_id,
-          i.amount as investment_amount,
-          i.payment_status,
-          i.confirmed_at,
-          u.fullName as investor_name,
-          u.email as investor_email,
-          u.companyName as investor_company
-         FROM investments i
-         JOIN users u ON i.investor_id = u.id
-         WHERE i.campaign_id = ? AND i.payment_status = 'completed'
-         ORDER BY i.confirmed_at DESC`,
-        {
-          replacements: [campaignId],
-          type: db.sequelize.QueryTypes.SELECT
-        }
-      );
-    }
+    const offset = (page - 1) * limit;
 
-    // Get campaign summary
-    const [campaignSummary] = await db.sequelize.query(
+    // Get investors
+    const investors = await db.sequelize.query(
       `SELECT 
-        total_investments,
-        investor_count,
-        target_amount,
-        (total_investments / target_amount * 100) as funding_percentage
-       FROM campaigns 
-       WHERE id = ?`,
+         u.id,
+         u.fullName,
+         u.email,
+         u.profileImageUrl,
+         i.amount,
+         i.confirmed_at,
+         i.investor_message
+       FROM investments i
+       JOIN users u ON i.investor_id = u.id
+       WHERE i.campaign_id = ? AND i.payment_status = 'completed'
+       ORDER BY i.confirmed_at DESC
+       LIMIT ? OFFSET ?`,
+      {
+        replacements: [campaignId, parseInt(limit), parseInt(offset)],
+        type: db.sequelize.QueryTypes.SELECT
+      }
+    );
+
+    // Get total count
+    const [countResult] = await db.sequelize.query(
+      `SELECT COUNT(*) as total 
+       FROM investments 
+       WHERE campaign_id = ? AND payment_status = 'completed'`,
       {
         replacements: [campaignId],
         type: db.sequelize.QueryTypes.SELECT
@@ -596,32 +598,31 @@ exports.getCampaignInvestors = async (req, res) => {
 
     res.status(200).send({
       success: true,
-      data: {
-        campaign: {
-          id: campaign.id,
-          title: campaign.title,
-          summary: campaignSummary
-        },
-        investors: investors
+      data: investors,
+      pagination: {
+        total: countResult.total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(countResult.total / limit)
       }
     });
 
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching campaign investors',
+      message: 'Error fetching investors',
       error: error.message
     });
   }
 };
 
 /**
- * Get investment analytics for campaign
+ * Get investment analytics for a campaign
  */
 exports.getCampaignInvestmentAnalytics = async (req, res) => {
   try {
-    const founderId = req.userId;
     const { campaignId } = req.params;
+    const founderId = req.userId;
 
     // Verify campaign ownership
     const [campaign] = await db.sequelize.query(
@@ -639,22 +640,24 @@ exports.getCampaignInvestmentAnalytics = async (req, res) => {
       });
     }
 
-    // Get basic analytics
+    // Get analytics
     const [analytics] = await db.sequelize.query(
       `SELECT 
-        COUNT(*) as total_investments,
-        SUM(CASE WHEN payment_status = 'completed' THEN amount ELSE 0 END) as total_invested,
-        AVG(CASE WHEN payment_status = 'completed' THEN amount ELSE NULL END) as average_investment,
-        COUNT(DISTINCT investor_id) as unique_investors
+         COUNT(*) as total_investments,
+         COUNT(DISTINCT investor_id) as unique_investors,
+         SUM(amount) as total_raised,
+         AVG(amount) as average_investment,
+         MIN(amount) as min_investment,
+         MAX(amount) as max_investment
        FROM investments 
-       WHERE campaign_id = ?`,
+       WHERE campaign_id = ? AND payment_status = 'completed'`,
       {
         replacements: [campaignId],
         type: db.sequelize.QueryTypes.SELECT
       }
     );
 
-    // Get daily trends
+    // Get investment trends (last 30 days)
     const trends = await db.sequelize.query(
       `SELECT 
         DATE(confirmed_at) as date,
@@ -871,8 +874,8 @@ exports.createInvestmentNotifications = async (investment) => {
         replacements: [
           investment.id,
           investment.investor_id,
-          'Investment Confirmed! ðŸŽ‰',
-          `Your investment of â‚¦${investment.amount.toLocaleString()} in "${investment.campaign_title}" has been confirmed.`
+          'Investment Confirmed!',
+          `Your investment of ₦${investment.amount.toLocaleString()} in "${investment.campaign_title}" has been confirmed.`
         ],
         type: db.sequelize.QueryTypes.INSERT
       }
@@ -887,8 +890,8 @@ exports.createInvestmentNotifications = async (investment) => {
         replacements: [
           investment.id,
           investment.founder_id,
-          'New Investment Received! ðŸ’°',
-          `${investment.investor_name} invested â‚¦${investment.amount.toLocaleString()} in your campaign "${investment.campaign_title}".`
+          'New Investment Received!',
+          `${investment.investor_name} invested ₦${investment.amount.toLocaleString()} in your campaign "${investment.campaign_title}".`
         ],
         type: db.sequelize.QueryTypes.INSERT
       }
