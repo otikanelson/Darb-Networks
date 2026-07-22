@@ -70,11 +70,6 @@ const HeroSection = () => {
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % campaigns.length);
   };
-  const [campaigns, setCampaigns] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showCarousel, setShowCarousel] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   // Fetch featured campaigns
   useEffect(() => {
@@ -113,14 +108,6 @@ const HeroSection = () => {
     return () => clearInterval(interval);
   }, [isPlaying, showCarousel, campaigns.length]);
 
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + campaigns.length) % campaigns.length);
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % campaigns.length);
-  };
-
   const handleCampaignClick = () => {
     if (user?.userType?.toLowerCase() === 'founder') {
       navigate('/pages/CreateCampaign');
@@ -154,7 +141,6 @@ const HeroSection = () => {
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <img
-          src={backgroundImage}
           src={backgroundImage}
           alt=""
           className="w-full h-full object-cover opacity-100"
