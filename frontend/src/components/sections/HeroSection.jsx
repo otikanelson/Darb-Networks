@@ -1,14 +1,10 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { ChevronRight, Play, ChevronLeft, Pause } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import React, { useState, useEffect } from 'react';
-import { ChevronRight, Play, ChevronLeft, Pause } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { CustomNav } from '../../hooks/CustomNavigation';
 import { useAuth } from '../../context/AuthContext';
 import CountrySelector from '../ui/CountrySelector';
 import WavingFlag from '../ui/WavingFlag';
-import CampaignService from '../../services/CampaignService';
 import CampaignService from '../../services/CampaignService';
 
 const fadeUp = (delay = 0) => ({
@@ -201,19 +197,7 @@ const HeroSection = () => {
                     with confidence.
                   </span>
                 </motion.h1>
-                {/* Headline */}
-                <motion.h1 {...fadeUp(0.1)} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] sm:leading-[1.05] mb-4 sm:mb-6">
-                  Fund your startup
-                  <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-secondary-400 to-tertiary-300">
-                    with confidence.
-                  </span>
-                </motion.h1>
 
-                {/* Subheadline */}
-                <motion.p {...fadeUp(0.2)} className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed mb-8 sm:mb-10 max-w-xl">
-                  Connect with verified investors across the continent, showcase your innovation, and get the funding you need to grow.
-                </motion.p>
                 {/* Subheadline */}
                 <motion.p {...fadeUp(0.2)} className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed mb-8 sm:mb-10 max-w-xl">
                   Connect with verified investors across the continent, showcase your innovation, and get the funding you need to grow.
