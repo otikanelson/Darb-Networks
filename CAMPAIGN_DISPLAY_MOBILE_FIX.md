@@ -85,7 +85,7 @@ Fixed the CampaignDisplay page for full mobile responsiveness and enabled proper
   {carouselImages.map((_, idx) => (
     <button
       onClick={() => setCurrentImageIndex(idx)}
-      className={`h-1.5 sm:h-2 rounded-full transition-all ${
+      className={`h-1.5 sm:h-2   transition-all ${
         idx === currentImageIndex 
           ? 'w-6 sm:w-8 bg-white' 
           : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75'

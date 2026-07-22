@@ -163,16 +163,16 @@ const InvestmentModal = ({
           
           {/* Progress Indicator */}
           <div className="flex items-center mt-4 space-x-2">
-            <div className={`h-2 flex-1 rounded-full ${
+            <div className={`h-2 flex-1   ${
               ['input', 'confirm', 'processing', 'success'].includes(step) ? 'bg-primary-500' : 'bg-gray-200'
             }`} />
-            <div className={`h-2 flex-1 rounded-full ${
+            <div className={`h-2 flex-1   ${
               ['confirm', 'processing', 'success'].includes(step) ? 'bg-primary-500' : 'bg-gray-200'
             }`} />
-            <div className={`h-2 flex-1 rounded-full ${
+            <div className={`h-2 flex-1   ${
               ['processing', 'success'].includes(step) ? 'bg-primary-500' : 'bg-gray-200'
             }`} />
-            <div className={`h-2 flex-1 rounded-full ${
+            <div className={`h-2 flex-1   ${
               step === 'success' ? 'bg-primary-500' : 'bg-gray-200'
             }`} />
           </div>

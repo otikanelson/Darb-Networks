@@ -2,7 +2,7 @@
 // Run with: node test-create-campaign.js
 
 // Configuration
-const API_URL = 'http://localhost:5001/api';
+const API_URL = 'http://localhost:5000/api';
 const TEST_EMAIL = 'somtootika@gmail.com';
 const TEST_PASSWORD = 'RAD$on2005';
 

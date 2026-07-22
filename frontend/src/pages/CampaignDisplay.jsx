@@ -95,17 +95,17 @@ const Gallery = ({ images }) => {
       {open && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setOpen(false)}>
           <button onClick={(e) => { e.stopPropagation(); prev(); }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full">
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3  ">
             <ChevronLeft className="h-6 w-6" />
           </button>
           <img src={images[idx]} alt="" className="max-h-[85vh] max-w-[90vw] object-contain rounded-xl"
             onClick={(e) => e.stopPropagation()} />
           <button onClick={(e) => { e.stopPropagation(); next(); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full">
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3  ">
             <ChevronRight className="h-6 w-6" />
           </button>
           <button onClick={() => setOpen(false)}
-            className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full">
+            className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-2  ">
             <X className="h-5 w-5" />
           </button>
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
@@ -440,7 +440,7 @@ const CampaignDisplay = () => {
                     >
                       <div className="flex items-start gap-4">
                         {/* Step indicator */}
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5 ${
+                        <div className={`w-8 h-8   flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5 ${
                           isCompleted ? 'bg-primary-600 text-white' :
                           isActive    ? 'bg-blue-600 text-white' :
                                         'bg-gray-100 text-gray-500'
@@ -451,7 +451,7 @@ const CampaignDisplay = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
                             <h4 className="font-semibold text-gray-900">{m.title}</h4>
-                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                            <span className={`text-xs font-semibold px-2.5 py-1   ${
                               isCompleted ? 'bg-primary-100 text-primary-700' :
                               isActive    ? 'bg-blue-100 text-blue-700' :
                                             'bg-gray-100 text-gray-500'
@@ -467,9 +467,9 @@ const CampaignDisplay = () => {
                           {/* Funding bar */}
                           {m.targetAmount > 0 && (
                             <div className="mb-3">
-                              <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                              <div className="w-full bg-gray-200   h-1.5 overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full transition-all duration-700 ${isCompleted ? 'bg-primary-500' : 'bg-blue-500'}`}
+                                  className={`h-full   transition-all duration-700 ${isCompleted ? 'bg-primary-500' : 'bg-blue-500'}`}
                                   style={{ width: `${pctFunded}%` }}
                                 />
                               </div>
@@ -524,8 +524,8 @@ const CampaignDisplay = () => {
         <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-8">
           <div className="max-w-7xl mx-auto">
             <div className="flex gap-2 mb-3">
-              <div className="h-6 w-20 bg-gray-300 rounded-full" />
-              <div className="h-6 w-24 bg-gray-300 rounded-full" />
+              <div className="h-6 w-20 bg-gray-300  " />
+              <div className="h-6 w-24 bg-gray-300  " />
             </div>
             <div className="h-10 bg-gray-300 rounded-lg w-3/4 mb-3" />
             <div className="flex gap-4">
@@ -572,7 +572,7 @@ const CampaignDisplay = () => {
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="h-10 bg-gray-100 rounded w-2/3 mb-2 animate-pulse" />
               <div className="h-4 bg-gray-100 rounded w-1/2 mb-4 animate-pulse" />
-              <div className="h-2.5 bg-gray-100 rounded-full mb-5 animate-pulse" />
+              <div className="h-2.5 bg-gray-100   mb-5 animate-pulse" />
               
               <div className="grid grid-cols-3 gap-2 mb-5 py-4 border-y border-gray-50">
                 <div className="text-center">
@@ -601,7 +601,7 @@ const CampaignDisplay = () => {
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <div className="h-3 bg-gray-100 rounded w-32 mb-4 animate-pulse" />
               <div className="flex items-start gap-3">
-                <div className="h-14 w-14 rounded-full bg-gray-100 animate-pulse" />
+                <div className="h-14 w-14   bg-gray-100 animate-pulse" />
                 <div className="flex-1 space-y-2">
                   <div className="h-5 bg-gray-100 rounded w-32 animate-pulse" />
                   <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
@@ -666,14 +666,14 @@ const CampaignDisplay = () => {
           <>
             <button 
               onClick={prevImage}
-              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3 rounded-full transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3   transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
               aria-label="Previous image"
             >
               <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
             <button 
               onClick={nextImage}
-              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3 rounded-full transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3   transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
               aria-label="Next image"
             >
               <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -685,7 +685,7 @@ const CampaignDisplay = () => {
                 <button
                   key={idx}
                   onClick={() => setCurrentImageIndex(idx)}
-                  className={`h-1.5 sm:h-2 rounded-full transition-all ${
+                  className={`h-1.5 sm:h-2   transition-all ${
                     idx === currentImageIndex 
                       ? 'w-6 sm:w-8 bg-white' 
                       : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75'
@@ -699,7 +699,7 @@ const CampaignDisplay = () => {
 
         {/* Back Button */}
         <button onClick={() => navigate(-1)}
-          className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-white/20 backdrop-blur-sm text-white p-1.5 sm:p-2 rounded-full hover:bg-white/30 transition z-10">
+          className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-white/20 backdrop-blur-sm text-white p-1.5 sm:p-2   hover:bg-white/30 transition z-10">
           <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
 
@@ -707,21 +707,21 @@ const CampaignDisplay = () => {
         <div className="absolute bottom-0 left-0 right-0 px-3 sm:px-4 md:px-8 pb-4 sm:pb-6 md:pb-8">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-              <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm text-white rounded-full text-xs font-medium border border-white/20">
+              <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm text-white   text-xs font-medium border border-white/20">
                 {campaign.category}
               </span>
               {campaign.isFeatured && (
-                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-yellow-400/90 text-yellow-900 rounded-full text-xs font-semibold">
+                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-yellow-400/90 text-yellow-900   text-xs font-semibold">
                   <Star className="h-3 w-3" /> Featured
                 </span>
               )}
               {campaign.isUrgent && (
-                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-500/90 text-white rounded-full text-xs font-semibold">
+                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-500/90 text-white   text-xs font-semibold">
                   <Zap className="h-3 w-3" /> Urgent
                 </span>
               )}
               {progress >= 100 && (
-                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-primary-500/90 text-white rounded-full text-xs font-semibold">
+                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-primary-500/90 text-white   text-xs font-semibold">
                   <CheckCircle className="h-3 w-3" /> Fully Funded
                 </span>
               )}
@@ -810,8 +810,8 @@ const CampaignDisplay = () => {
                 raised of <span className="font-semibold text-gray-800">{fmt(campaign.targetAmount)}</span> goal
               </p>
 
-              <div className="w-full bg-gray-100 rounded-full h-2 sm:h-2.5 mb-1 overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-700"
+              <div className="w-full bg-gray-100   h-2 sm:h-2.5 mb-1 overflow-hidden">
+                <div className="h-full   bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-700"
                   style={{ width: `${progress}%` }} />
               </div>
               <p className="text-xs text-gray-400 mb-4 sm:mb-5">{Math.round(progress)}% funded</p>
@@ -865,7 +865,7 @@ const CampaignDisplay = () => {
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Campaign Creator</p>
               <div className="flex items-start gap-3">
-                <div className="h-14 w-14 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center border border-gray-200">
+                <div className="h-14 w-14   bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center border border-gray-200">
                   {avatarUrl() ? (
                     <img src={avatarUrl()} alt={campaign.creator?.fullName} className="h-full w-full object-cover"
                       onError={(e) => { e.target.style.display = "none"; }} />
@@ -951,7 +951,7 @@ const CampaignDisplay = () => {
             </div>
             <button
               onClick={() => setShowInvestmentModal(true)}
-              className="flex-shrink-0 flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2.5 rounded-full transition-all hover:scale-105 shadow-md shadow-primary-200"
+              className="flex-shrink-0 flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2.5   transition-all hover:scale-105 shadow-md shadow-primary-200"
             >
               <DollarSign className="h-4 w-4" />
               Invest Now

@@ -55,7 +55,7 @@ const SplitCTA = () => {
             </div>
             <button
               onClick={handleCampaignClick}
-              className="mt-6 sm:mt-8 self-start inline-flex items-center space-x-2 bg-primary-500 hover:bg-primary-400 text-white font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-full transition-all transform hover:scale-105 text-sm sm:text-base"
+              className="mt-6 sm:mt-8 self-start inline-flex items-center space-x-2 bg-primary-500 hover:bg-primary-400 text-white font-bold px-6 sm:px-7 py-3 sm:py-3.5   transition-all transform hover:scale-105 text-sm sm:text-base"
             >
               <span>Launch Your Campaign</span>
               <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -86,7 +86,7 @@ const SplitCTA = () => {
             </div>
             <button
               onClick={() => navigate('/dashboard')}
-              className="mt-6 sm:mt-8 self-start inline-flex items-center space-x-2 bg-white hover:bg-primary-50 text-primary-700 font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-full transition-all transform hover:scale-105 text-sm sm:text-base"
+              className="mt-6 sm:mt-8 self-start inline-flex items-center space-x-2 bg-white hover:bg-primary-50 text-primary-700 font-bold px-6 sm:px-7 py-3 sm:py-3.5   transition-all transform hover:scale-105 text-sm sm:text-base"
             >
               <span>Explore Startups</span>
               <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />

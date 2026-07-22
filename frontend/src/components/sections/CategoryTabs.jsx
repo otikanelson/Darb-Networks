@@ -86,7 +86,7 @@ const CategoryTabs = () => {
           {canScrollLeft && (
             <button
               onClick={scrollLeft}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-gray-50 text-gray-700 p-2 rounded-full shadow-md border border-gray-200 transition-all"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-gray-50 text-gray-700 p-2   shadow-md border border-gray-200 transition-all"
               aria-label="Scroll left"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -97,7 +97,7 @@ const CategoryTabs = () => {
           {canScrollRight && (
             <button
               onClick={scrollRight}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-gray-50 text-gray-700 p-2 rounded-full shadow-md border border-gray-200 transition-all"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white hover:bg-gray-50 text-gray-700 p-2   shadow-md border border-gray-200 transition-all"
               aria-label="Scroll right"
             >
               <ChevronRight className="h-5 w-5" />
@@ -127,10 +127,10 @@ const CategoryTabs = () => {
                 <button
                   key={category.value || 'all'}
                   onClick={() => handleCategoryClick(category.value)}
-                  className="flex-none group flex items-center space-x-2 px-5 py-2.5 rounded-full border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all duration-200 bg-white"
+                  className="flex-none group flex items-center space-x-3 px-6 py-3.5 rounded-xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all duration-200 bg-white shadow-sm hover:shadow-md"
                 >
-                  <Icon className="h-4 w-4 text-gray-600 group-hover:text-primary-600 transition-colors" />
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-primary-700 whitespace-nowrap">
+                  <Icon className="h-5 w-5 text-gray-600 group-hover:text-primary-600 transition-colors" />
+                  <span className="text-base font-semibold text-gray-700 group-hover:text-primary-700 whitespace-nowrap">
                     {category.name}
                   </span>
                 </button>

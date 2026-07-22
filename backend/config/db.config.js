@@ -8,13 +8,17 @@ module.exports = {
   DB: process.env.DB_NAME,
   dialect: "mysql",
   
-  // Aiven requires SSL - always enable when DB_SSL is set
+  // TiDB/Aiven requires SSL - always enable when DB_SSL is set
   dialectOptions: {
     ssl: (process.env.DB_SSL === 'true' || process.env.NODE_ENV === 'production') ? {
       require: true,
-      rejectUnauthorized: false
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2'
     } : undefined,
-    connectTimeout: 60000
+    connectTimeout: 60000,
+    // TiDB specific settings
+    dateStrings: true,
+    typeCast: true
   },
   
   pool: {

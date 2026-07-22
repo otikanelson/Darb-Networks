@@ -23,13 +23,36 @@ const CATEGORIES = [
   'Culture','Environment','Human Rights','Local Businesses','Wellness',
 ];
 
+const COUNTRIES = [
+  'Nigeria',
+  'Kenya',
+  'Ghana',
+  'South Africa',
+  'Egypt',
+  'Rwanda',
+  'Tanzania',
+  'Uganda',
+  'Senegal',
+  'Ivory Coast',
+  'Morocco',
+  'Ethiopia',
+  'Tunisia',
+  'Algeria',
+  'Cameroon',
+  'Zambia',
+  'Zimbabwe',
+  'Mauritius',
+  'Botswana',
+  'Namibia'
+];
+
 const STEPS = [
   {
     id: 'basics',
     label: 'Basics',
     title: 'Start with the essentials',
     description: 'Give your campaign a name, pick a category, and write a short pitch that hooks investors in the first sentence.',
-    fields: ['title','category','location','description'],
+    fields: ['title','category','location','country','description'],
   },
   {
     id: 'problem',
@@ -132,7 +155,7 @@ const ImageUploadZone = ({ value, onChange, onRemove, multiple = false, compact 
         <div className="relative inline-block group">
           <img src={src(value)} alt="" className="h-48 w-auto max-w-full rounded-2xl object-cover border border-gray-100 shadow-sm" />
           <button type="button" onClick={onRemove}
-            className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition hover:bg-red-600">
+            className="absolute top-2 right-2 bg-black/60 text-white   p-1.5 opacity-0 group-hover:opacity-100 transition hover:bg-red-600">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -143,7 +166,7 @@ const ImageUploadZone = ({ value, onChange, onRemove, multiple = false, compact 
             <div key={i} className="relative group">
               <img src={src(item)} alt="" className="h-24 w-24 rounded-xl object-cover border border-gray-100" />
               <button type="button" onClick={() => onRemove(i)}
-                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition hover:bg-red-600">
+                className="absolute top-1 right-1 bg-black/60 text-white   p-1 opacity-0 group-hover:opacity-100 transition hover:bg-red-600">
                 <X className="h-3 w-3" />
               </button>
             </div>
@@ -209,6 +232,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
     description: initialData.description || '',
     category: initialData.category || '',
     location: initialData.location || '',
+    country: initialData.country || country || 'Nigeria',
     problemStatement: initialData.problemStatement || '',
     solution: initialData.solution || '',
     marketAnalysis: initialData.marketAnalysis || '',
@@ -277,7 +301,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
 
   const payload = (isDraft) => ({
     title: form.title, description: form.description,
-    category: form.category, location: form.location,
+    category: form.category, location: form.location, country: form.country,
     problemStatement: form.problemStatement, solution: form.solution,
     marketAnalysis: form.marketAnalysis, competitiveAdvantage: form.competitiveAdvantage,
     businessPlan: form.businessPlan, financialProjections: form.financialProjections,
@@ -425,14 +449,23 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
               <Err msg={errors.category} />
             </div>
             <div>
-              <Label required>Location</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-300" />
-                <input value={form.location} onChange={e => set('location', e.target.value)}
-                  className={inp(errors.location) + ' pl-10'} placeholder="Lagos, Nigeria" />
-              </div>
-              <Err msg={errors.location} />
+              <Label required>Country</Label>
+              <select value={form.country} onChange={e => set('country', e.target.value)} className={inp(errors.country)}>
+                <option value="">Select country…</option>
+                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <Err msg={errors.country} />
             </div>
+          </div>
+
+          <div>
+            <Label required>City/Location</Label>
+            <div className="relative">
+              <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-300" />
+              <input value={form.location} onChange={e => set('location', e.target.value)}
+                className={inp(errors.location) + ' pl-10'} placeholder="e.g. Lagos, Nairobi, Accra" />
+            </div>
+            <Err msg={errors.location} />
           </div>
 
           <div>
@@ -732,7 +765,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
                   onClick={() => { if (i < step) { setStep(i); window.scrollTo({ top: 0 }); } }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all
                     ${active ? 'bg-primary-50 text-primary-800' : done ? 'text-gray-600 hover:bg-gray-50 cursor-pointer' : 'text-gray-300 cursor-default'}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all
+                  <div className={`w-5 h-5   flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all
                     ${done ? 'bg-primary-500 text-white' : active ? 'bg-primary-700 text-white' : 'bg-gray-100 text-gray-300'}`}>
                     {done ? <Check className="h-3 w-3" /> : i + 1}
                   </div>
@@ -746,7 +779,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
           <div className="mt-8 pt-6 border-t border-gray-100">
             <button type="button" onClick={() => save(true)} disabled={saving}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition disabled:opacity-40">
-              {saving ? <span className="h-3.5 w-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              {saving ? <span className="h-3.5 w-3.5 border-2 border-gray-400 border-t-transparent   animate-spin" /> : <Save className="h-3.5 w-3.5" />}
               Save draft
             </button>
           </div>
@@ -757,8 +790,8 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
           {/* mobile step bar */}
           <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 sticky top-1 z-40">
             <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{step + 1}/{STEPS.length}</span>
-            <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-              <div className="bg-primary-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
+            <div className="flex-1 bg-gray-100   h-1.5 overflow-hidden">
+              <div className="bg-primary-500 h-full   transition-all" style={{ width: `${pct}%` }} />
             </div>
             <span className="text-xs font-semibold text-gray-600 whitespace-nowrap">{s.label}</span>
           </div>
@@ -795,7 +828,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
                 {/* mobile save draft */}
                 <button type="button" onClick={() => save(true)} disabled={saving}
                   className="lg:hidden flex items-center gap-1.5 px-4 py-3 rounded-xl border border-gray-200 text-gray-500 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 transition">
-                  {saving ? <span className="h-3.5 w-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                  {saving ? <span className="h-3.5 w-3.5 border-2 border-gray-400 border-t-transparent   animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                   Draft
                 </button>
 
@@ -803,7 +836,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
                   <button type="button" onClick={() => save(false)} disabled={submitting || saving}
                     className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 disabled:opacity-50 transition shadow-sm text-sm">
                     {submitting
-                      ? <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ? <span className="h-4 w-4 border-2 border-white border-t-transparent   animate-spin" />
                       : <Send className="h-4 w-4" />}
                     {mode === 'edit' ? 'Submit for Approval' : 'Submit Campaign'}
                   </button>

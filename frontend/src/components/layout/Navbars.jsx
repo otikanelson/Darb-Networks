@@ -22,7 +22,9 @@ import {
   DollarSign,
   Tag,
   TrendingUp,
-  Lightbulb
+  Lightbulb,
+  LogIn,
+  UserPlus
 } from 'lucide-react';
 
 // Campaign categories - defined outside component to prevent re-creation
@@ -137,7 +139,7 @@ const SearchBar = React.memo(({
   }, [searchQuery]);
 
   return (
-    <div className={`relative ${isMobile ? 'w-full' : 'flex-1 max-w-2xl mx-4 lg:mx-8'}`} ref={isMobile ? null : searchRef}>
+    <div className={`relative ${isMobile ? 'w-full' : 'flex-1 max-w-2xl mx-4 lg:mx-8'}`} ref={searchRef}>
       <form onSubmit={onSearch} className="relative">
         <div className="relative">
           <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
@@ -146,10 +148,10 @@ const SearchBar = React.memo(({
             value={searchQuery}
             onChange={onSearchQueryChange}
             onFocus={() => onShowSuggestions(searchQuery.length > 0)}
-            placeholder="Search campaigns, founders, categories, or use founder:, location:, goal:, tag:"
-            className={`w-full pl-9 sm:pl-12 pr-9 sm:pr-12 ${isMobile ? 'py-2.5' : 'py-2 sm:py-3'} border border-gray-300 rounded-full 
+            placeholder="Search campaigns, founders..."
+            className={`w-full pl-9 sm:pl-12 pr-9 sm:pr-12 ${isMobile ? 'py-2 sm:py-2.5' : 'py-2 sm:py-3'} border border-gray-300 rounded-lg 
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
-                     bg-white shadow-sm text-gray-900 placeholder-gray-500 text-sm sm:text-base`}
+                     bg-white shadow-sm text-gray-900 placeholder-gray-500 text-xs sm:text-base`}
           />
           {searchQuery && (
             <button
@@ -164,75 +166,76 @@ const SearchBar = React.memo(({
       </form>
 
       {/* Search Suggestions Dropdown */}
-      {showSuggestions && (
+      {showSuggestions && filteredSuggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
-          {filteredSuggestions.length > 0 ? (
-            <div className="py-2">
-              <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                Search Suggestions
-              </div>
-              {filteredSuggestions.map((suggestion, index) => {
-                const IconComp = suggestion.IconComponent;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => onSuggestionClick(suggestion)}
-                    className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-start space-x-3 transition-colors"
-                  >
-                    <IconComp className="h-5 w-5 text-primary-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900">
-                        {suggestion.label}
-                      </div>
-                      {suggestion.type === 'category' && (
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          Browse campaigns in this category
-                        </div>
-                      )}
-                      {suggestion.type === 'searchType' && (
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          Type "{suggestion.text}" followed by your search term
-                        </div>
-                      )}
-                      {suggestion.type === 'term' && (
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          Search for campaigns related to {suggestion.text.toLowerCase()}
-                        </div>
-                      )}
+          <div className="py-2">
+            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Search Suggestions
+            </div>
+            {filteredSuggestions.map((suggestion, index) => {
+              const IconComp = suggestion.IconComponent;
+              return (
+                <button
+                  key={index}
+                  onClick={() => onSuggestionClick(suggestion)}
+                  className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-start space-x-3 transition-colors"
+                >
+                  <IconComp className="h-5 w-5 text-primary-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900">
+                      {suggestion.label}
                     </div>
-                  </button>
-                );
-              })}
-              <div className="px-4 py-3 border-t border-gray-100 mt-2">
-                <div className="text-xs text-gray-600 space-y-1.5">
-                  <div className="flex items-center space-x-2 font-semibold text-primary-700">
-                    <Lightbulb className="h-4 w-4" />
-                    <span>Search Tips:</span>
+                    {suggestion.type === 'category' && (
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        Browse campaigns in this category
+                      </div>
+                    )}
+                    {suggestion.type === 'searchType' && (
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        Type "{suggestion.text}" followed by your search term
+                      </div>
+                    )}
+                    {suggestion.type === 'term' && (
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        Search for campaigns related to {suggestion.text.toLowerCase()}
+                      </div>
+                    )}
                   </div>
-                  <p className="flex items-start space-x-2">
-                    <User className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
-                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">founder:John</span> to search by founder name</span>
-                  </p>
-                  <p className="flex items-start space-x-2">
-                    <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
-                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">location:Kenya</span> to search by location</span>
-                  </p>
-                  <p className="flex items-start space-x-2">
-                    <DollarSign className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
-                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">goal:50000</span> to find campaigns by funding goal</span>
-                  </p>
-                  <p className="flex items-start space-x-2">
-                    <Tag className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
-                    <span>Type <span className="font-mono bg-gray-100 px-1 rounded">tag:innovation</span> to search by keywords</span>
-                  </p>
+                </button>
+              );
+            })}
+            <div className="px-4 py-3 border-t border-gray-100 mt-2">
+              <div className="text-xs text-gray-600 space-y-1.5">
+                <div className="flex items-center space-x-2 font-semibold text-primary-700">
+                  <Lightbulb className="h-4 w-4" />
+                  <span>Search Tips:</span>
                 </div>
+                <p className="flex items-start space-x-2">
+                  <User className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                  <span>Type <span className="font-mono bg-gray-100 px-1 rounded">founder:John</span></span>
+                </p>
+                <p className="flex items-start space-x-2">
+                  <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                  <span>Type <span className="font-mono bg-gray-100 px-1 rounded">location:Kenya</span></span>
+                </p>
+                <p className="flex items-start space-x-2">
+                  <DollarSign className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                  <span>Type <span className="font-mono bg-gray-100 px-1 rounded">goal:50000</span></span>
+                </p>
+                <p className="flex items-start space-x-2">
+                  <Tag className="h-3 w-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                  <span>Type <span className="font-mono bg-gray-100 px-1 rounded">tag:innovation</span></span>
+                </p>
               </div>
             </div>
-          ) : (
-            <div className="px-4 py-3 text-sm text-gray-500">
-              No suggestions found. Press Enter to search for "{searchQuery}"
-            </div>
-          )}
+          </div>
+        </div>
+      )}
+      {showSuggestions && filteredSuggestions.length === 0 && searchQuery && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+          <div className="px-4 py-3 text-sm text-gray-500">
+            No suggestions found. Press Enter to search for "{searchQuery}"
+          </div>
         </div>
       )}
     </div>
@@ -240,11 +243,11 @@ const SearchBar = React.memo(({
 });
 
 const Navbars = ({ 
-  variant = 'default', // 'default', 'dashboard', 'profile', 'admin', 'display', 'campaigns'
+  variant = 'default', 
   showCreateButton = true,
   showNavLinks = true,
   showProfileDropdown = true,
-  showSearch = false, // New prop for search functionality
+  showSearch = false, 
   customNavLinks = null,
   className = ''
 }) => {
@@ -252,12 +255,12 @@ const Navbars = ({
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
-  const mobileMenuRef = useRef(null);
+  const mobileSearchRef = useRef(null);
 
   // Debug: Log when user context changes
   useEffect(() => {
@@ -277,8 +280,8 @@ const Navbars = ({
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSearchSuggestions(false);
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
-        setIsMobileMenuOpen(false);
+      if (mobileSearchRef.current && !mobileSearchRef.current.contains(event.target)) {
+        setShowSearchSuggestions(false);
       }
     };
     
@@ -288,16 +291,29 @@ const Navbars = ({
     };
   }, []);
 
-  // Close mobile menu on route change
+  // Close sidebar on route change
   useEffect(() => {
-    setIsMobileMenuOpen(false);
+    setIsSidebarOpen(false);
   }, [location.pathname]);
+
+  // Prevent background scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isSidebarOpen]);
 
   const handleLogout = async () => {
     try {
       console.log('🚪 Navbar: Logging out...');
       await logout();
       console.log('✅ Navbar: Logout successful, navigating to home');
+      setIsSidebarOpen(false);
       navigate('/');
     } catch (error) {
       console.error('❌ Navbar: Error logging out:', error);
@@ -311,6 +327,7 @@ const Navbars = ({
     if (searchQuery.trim()) {
       const searchUrl = `/dashboard?search=${encodeURIComponent(searchQuery.trim())}`;
       console.log('  - Navigating to:', searchUrl);
+      setIsSidebarOpen(false);
       navigate(searchUrl);
       setSearchQuery('');
       setShowSearchSuggestions(false);
@@ -326,7 +343,6 @@ const Navbars = ({
   const handleSuggestionClick = React.useCallback((suggestion) => {
     console.log('💡 Navbar: Suggestion clicked:', suggestion);
     
-    // If it's a prefix suggestion, just add it to the search box
     if (suggestion.isPrefix) {
       setSearchQuery(suggestion.text);
       setShowSearchSuggestions(true);
@@ -335,6 +351,7 @@ const Navbars = ({
     
     setSearchQuery(suggestion.text);
     setShowSearchSuggestions(false);
+    setIsSidebarOpen(false);
     const searchUrl = `/dashboard?search=${encodeURIComponent(suggestion.text)}`;
     console.log('  - Navigating to:', searchUrl);
     navigate(searchUrl);
@@ -355,7 +372,6 @@ const Navbars = ({
     if (customNavLinks) return customNavLinks;
     
     if (!isAuthenticated()) {
-      // Public navigation for non-authenticated users
       return [
         { to: '/register', label: 'For Investors' },
         { to: '/about', label: 'Success Stories' },
@@ -363,22 +379,18 @@ const Navbars = ({
       ];
     }
 
-    // Base authenticated links - ADD Dashboard and My Campaigns for default (home) variant
     const baseLinks = [];
 
-    // Add variant-specific links
     switch (variant) {
       case 'default':
-        // HOME PAGE - show Dashboard and My Campaigns for authenticated users
         baseLinks.push({ to: '/dashboard', label: 'Dashboard' });
-      if (user?.userType !== 'admin') {
-        baseLinks.push({ to: '/my-campaigns', label: 'My Campaigns' });
-      }
-      break;
+        if (user?.userType !== 'admin') {
+          baseLinks.push({ to: '/my-campaigns', label: 'My Campaigns' });
+        }
+        break;
 
       case 'dashboard':
         baseLinks.push({ to: '/', label: 'Home' });
-        // no self-link to /dashboard
         if (isFounder) {
           baseLinks.push({ to: '/my-campaigns', label: 'My Campaigns' });
         } else if (isInvestor) {
@@ -419,59 +431,37 @@ const Navbars = ({
         break;
 
       default:
-        // Fallback
         break;
     }
 
     return baseLinks;
   };
 
+  // Helper function to build profile image
+  const getProfileImageUrl = () => {
+    if (!user?.profileImageUrl) return null;
+    const baseUrl = buildImageUrl(user.profileImageUrl);
+    const cacheBuster = user.profileImageTimestamp ? `?t=${user.profileImageTimestamp}` : '';
+    return cacheBuster ? `${baseUrl}${cacheBuster}` : baseUrl;
+  };
+
+  const profileImageUrl = getProfileImageUrl();
+
   // Profile dropdown component
   const ProfileDropdown = () => {
-    // Add cache-busting timestamp to profile image URL
-    const getProfileImageUrl = () => {
-      console.log('🖼️ ProfileDropdown: Building profile image URL');
-      console.log('  - user.profileImageUrl:', user?.profileImageUrl);
-      console.log('  - user.profileImageTimestamp:', user?.profileImageTimestamp);
-      
-      if (!user?.profileImageUrl) {
-        console.log('  ❌ No profile image URL found');
-        return null;
-      }
-      
-      const baseUrl = buildImageUrl(user.profileImageUrl);
-      console.log('  - baseUrl:', baseUrl);
-      
-      const cacheBuster = user.profileImageTimestamp ? `?t=${user.profileImageTimestamp}` : '';
-      console.log('  - cacheBuster:', cacheBuster);
-      
-      const finalUrl = cacheBuster ? `${baseUrl}${cacheBuster}` : baseUrl;
-      console.log('  ✅ Final URL:', finalUrl);
-      
-      return finalUrl;
-    };
-
-    const profileImageUrl = getProfileImageUrl();
-
     return (
       <div className="ml-3 relative" ref={dropdownRef}>
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          className="flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 rounded-full"
         >
-          <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300">
+          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300">
             {profileImageUrl ? (
               <img 
                 src={profileImageUrl} 
                 alt="Profile" 
                 className="h-full w-full object-cover"
                 key={profileImageUrl}
-                onLoad={() => console.log('Γ£à Navbar: Profile image loaded successfully')}
-                onError={(e) => {
-                  console.error('Γ¥î Navbar: Profile image failed to load:', profileImageUrl);
-                  e.target.style.display = 'none';
-                  e.target.parentNode.querySelector('.fallback-initials').style.display = 'flex';
-                }}
               />
             ) : null}
             
@@ -484,286 +474,22 @@ const Navbars = ({
           <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
         </button>
 
-      {isDropdownOpen && (
-        <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-sm font-medium text-gray-900">{user?.displayName || user?.fullName}</p>
-            <p className="text-sm font-medium text-gray-500 truncate">{user?.email}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Type: {user?.userType === 'founder' ? 'Founder' : user?.userType === 'investor' ? 'Investor' : 'Admin'}
-            </p>
-          </div>
-          
-          <Link
-            to="/profile"
-            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-            onClick={() => setIsDropdownOpen(false)}
-          >
-            <User className="mr-3 h-4 w-4 text-gray-500" />
-            Profile
-          </Link>
-
-          {/* Conditionally render My Favorites and My Campaigns */}
-          {user?.userType !== 'admin' && (
-            <>
-              <Link
-                to="/my-campaigns"
-                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                onClick={() => setIsDropdownOpen(false)}
-              >
-                <Heart className="mr-3 h-4 w-4 text-gray-500" />
-                My Favorites
-              </Link>
-              <Link
-                to="/my-campaigns"
-                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                onClick={() => setIsDropdownOpen(false)}
-              >
-                <FileText className="mr-3 h-4 w-4 text-gray-500" />
-                My Campaigns
-              </Link>
-            </>
-          )}
-
-          <button
-            onClick={() => {
-              setIsDropdownOpen(false);
-              handleLogout();
-            }}
-            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-          >
-            <LogOut className="mr-3 h-4 w-4 text-gray-500" />
-            Sign out
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-  const navLinks = getNavLinks();
-
-  return (
-    <nav className={`bg-white border-b border-gray-200 ${className}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Left: Logo */}
-          <div className="flex items-center flex-shrink-0">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <img 
-                src="/assets/Logo.png" 
-                alt="Logo" 
-                className="h-10 sm:h-12 md:h-14 w-auto"
-              />
-            </Link>
-          </div>
-
-          {/* Center: Search Bar (desktop only when showSearch is true) */}
-          {showSearch && (
-            <div className="hidden md:flex flex-1">
-              <SearchBar 
-                searchQuery={searchQuery}
-                onSearchQueryChange={handleSearchInputChange}
-                onSearch={handleSearch}
-                onClearSearch={clearSearch}
-                showSuggestions={showSearchSuggestions}
-                onShowSuggestions={setShowSearchSuggestions}
-                onSuggestionClick={handleSuggestionClick}
-                searchRef={searchRef}
-              />
+        {isDropdownOpen && (
+          <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <p className="text-sm font-medium text-gray-900">{user?.displayName || user?.fullName}</p>
+              <p className="text-sm font-medium text-gray-500 truncate">{user?.email}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Type: {user?.userType === 'founder' ? 'Founder' : user?.userType === 'investor' ? 'Investor' : 'Admin'}
+              </p>
             </div>
-          )}
-
-          {/* Center/Right: Navigation Links (desktop) */}
-          {showNavLinks && navLinks.length > 0 && (
-            <div className={`hidden lg:flex lg:space-x-2 xl:space-x-3 ${showSearch ? 'lg:ml-4' : 'lg:ml-8'}`}>
-              {(showSearch ? navLinks.slice(0, 2) : navLinks).map((link, index) => (
-                <Link 
-                  key={index}
-                  to={link.to} 
-                  className="px-2 xl:px-3 py-2 font-bold text-gray-500 hover:text-purple-700 text-sm whitespace-nowrap"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {/* Right: Actions */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {isAuthenticated() ? (
-              <>
-                {/* Create Campaign Button - Only show for Founders (hidden on small mobile) */}
-                {showCreateButton && isFounder && (
-                  <Link
-                    to="/pages/CreateCampaign"
-                    className="hidden sm:flex items-center px-3 sm:px-4 py-2 bg-primary-700 text-white rounded-full 
-                             hover:bg-primary-600 transition-colors text-xs sm:text-sm font-medium"
-                  >
-                    <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" />
-                    <span className="hidden sm:inline">New Campaign</span>
-                  </Link>
-                )}
-
-                {/* Profile Dropdown (desktop) */}
-                <div className="hidden md:block">
-                  {showProfileDropdown && <ProfileDropdown />}
-                </div>
-
-                {/* Mobile Menu Button (authenticated) */}
-                <button
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
-                >
-                  <Menu className="h-6 w-6" />
-                </button>
-              </>
-            ) : (
-              // Logged out view
-              <>
-                {variant === 'default' ? (
-                  // Home page style
-                  <>
-                    <div className="hidden sm:flex items-center space-x-3">
-                      <Link 
-                        to="/login" 
-                        className="text-sm text-gray-500 hover:text-purple-700 font-bold"
-                      >
-                        Login
-                      </Link>
-                      <span className="text-gray-500 font-bold">/</span>
-                      <Link 
-                        to="/Register" 
-                        className="text-sm text-gray-500 hover:text-purple-700 font-bold"
-                      >
-                        SignUp
-                      </Link>
-                      <button 
-                        onClick={() => navigate('/Register')}
-                        className="bg-primary-700 text-white font-bold px-4 lg:px-6 py-2 rounded-full flex items-center space-x-2 hover:bg-primary-600 transition-colors text-sm"
-                      >
-                        <span className="hidden lg:inline">Join Campaign</span>
-                        <span className="lg:hidden">Join</span>
-                        <ChevronRight size={16} />
-                      </button>
-                    </div>
-                    {/* Mobile buttons */}
-                    <div className="flex sm:hidden items-center space-x-2">
-                      <Link 
-                        to="/login" 
-                        className="text-xs text-gray-500 hover:text-purple-700 font-bold px-2 py-1"
-                      >
-                        Login
-                      </Link>
-                      <button 
-                        onClick={() => navigate('/Register')}
-                        className="bg-primary-700 text-white font-bold px-3 py-1.5 rounded-full text-xs hover:bg-primary-600 transition-colors"
-                      >
-                        Sign Up
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  // Standard login/signup for other variants
-                  <>
-                    <div className="hidden sm:flex items-center space-x-3">
-                      <Link to="/login" className="text-gray-500 hover:text-gray-900 font-medium text-sm">
-                        Log in
-                      </Link>
-                      <Link to="/register" className="bg-primary-700 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm font-medium">
-                        Sign up
-                      </Link>
-                    </div>
-                    {/* Mobile buttons */}
-                    <div className="flex sm:hidden items-center space-x-2">
-                      <Link to="/login" className="text-xs text-gray-500 hover:text-gray-900 font-medium px-2 py-1">
-                        Log in
-                      </Link>
-                      <Link to="/register" className="bg-primary-700 text-white px-3 py-1.5 rounded-md hover:bg-purple-700 transition-colors text-xs font-medium">
-                        Sign up
-                      </Link>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Search Bar (when showSearch is true) */}
-        {showSearch && (
-          <div className="md:hidden pb-3">
-            <SearchBar 
-              isMobile={true}
-              searchQuery={searchQuery}
-              onSearchQueryChange={handleSearchInputChange}
-              onSearch={handleSearch}
-              onClearSearch={clearSearch}
-              showSuggestions={showSearchSuggestions}
-              onShowSuggestions={setShowSearchSuggestions}
-              onSuggestionClick={handleSuggestionClick}
-              searchRef={searchRef}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Mobile Menu (authenticated users) */}
-      {isAuthenticated() && isMobileMenuOpen && (
-        <div 
-          ref={mobileMenuRef}
-          className="md:hidden border-t border-gray-200 bg-white shadow-lg"
-        >
-          <div className="px-4 pt-2 pb-3 space-y-1">
-            {/* Profile Section */}
-            <div className="flex items-center px-3 py-3 border-b border-gray-100 mb-2">
-              <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300 flex-shrink-0">
-                {user?.profileImageUrl ? (
-                  <img 
-                    src={buildImageUrl(user.profileImageUrl)} 
-                    alt="Profile" 
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-gray-600 font-medium text-sm">
-                    {user?.displayName?.charAt(0) || user?.fullName?.charAt(0) || 'U'}
-                  </span>
-                )}
-              </div>
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{user?.displayName || user?.fullName}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-              </div>
-            </div>
-
-            {/* Navigation Links */}
-            {navLinks.map((link, index) => (
-              <Link
-                key={index}
-                to={link.to}
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              >
-                {link.label}
-              </Link>
-            ))}
-
-            {/* Create Campaign (mobile - founders only) */}
-            {showCreateButton && isFounder && (
-              <Link
-                to="/pages/CreateCampaign"
-                className="flex items-center px-3 py-2 rounded-md text-base font-medium text-primary-700 hover:bg-primary-50"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                New Campaign
-              </Link>
-            )}
-
-            {/* Profile Links */}
+            
             <Link
               to="/profile"
-              className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+              onClick={() => setIsDropdownOpen(false)}
             >
-              <User className="h-5 w-5 mr-2 text-gray-500" />
+              <User className="mr-3 h-4 w-4 text-gray-500" />
               Profile
             </Link>
 
@@ -771,33 +497,350 @@ const Navbars = ({
               <>
                 <Link
                   to="/my-campaigns"
-                  className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  onClick={() => setIsDropdownOpen(false)}
                 >
-                  <Heart className="h-5 w-5 mr-2 text-gray-500" />
+                  <Heart className="mr-3 h-4 w-4 text-gray-500" />
                   My Favorites
                 </Link>
                 <Link
                   to="/my-campaigns"
-                  className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  onClick={() => setIsDropdownOpen(false)}
                 >
-                  <FileText className="h-5 w-5 mr-2 text-gray-500" />
+                  <FileText className="mr-3 h-4 w-4 text-gray-500" />
                   My Campaigns
                 </Link>
               </>
             )}
 
-            {/* Logout */}
             <button
-              onClick={handleLogout}
-              className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+              onClick={() => {
+                setIsDropdownOpen(false);
+                handleLogout();
+              }}
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
             >
-              <LogOut className="h-5 w-5 mr-2" />
+              <LogOut className="mr-3 h-4 w-4 text-gray-500" />
               Sign out
             </button>
           </div>
+        )}
+      </div>
+    );
+  };
+
+  const navLinks = getNavLinks();
+
+  return (
+    <>
+      <nav className={`bg-white border-b border-gray-200 relative z-30 ${className}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Left: Logo Only */}
+            <div className="flex items-center">
+              <Link to="/" className="flex-shrink-0 flex items-center">
+                <img 
+                  src="/assets/Logo.png" 
+                  alt="Logo" 
+                  className="h-9 sm:h-12 md:h-14 w-auto"
+                />
+              </Link>
+            </div>
+
+            {/* Center: Search Bar (desktop only when showSearch is true) */}
+            {showSearch && (
+              <div className="hidden md:flex flex-1">
+                <SearchBar 
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={handleSearchInputChange}
+                  onSearch={handleSearch}
+                  onClearSearch={clearSearch}
+                  showSuggestions={showSearchSuggestions}
+                  onShowSuggestions={setShowSearchSuggestions}
+                  onSuggestionClick={handleSuggestionClick}
+                  searchRef={searchRef}
+                />
+              </div>
+            )}
+
+            {/* Center/Right: Navigation Links (desktop) */}
+            {showNavLinks && navLinks.length > 0 && (
+              <div className={`hidden lg:flex lg:space-x-2 xl:space-x-3 ${showSearch ? 'lg:ml-4' : 'lg:ml-8'}`}>
+                {(showSearch ? navLinks.slice(0, 2) : navLinks).map((link, index) => (
+                  <Link 
+                    key={index}
+                    to={link.to} 
+                    className="px-2 xl:px-3 py-2 font-bold text-gray-500 hover:text-purple-700 text-sm whitespace-nowrap"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* Right: Actions */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {isAuthenticated() ? (
+                <>
+                  {/* Create Campaign Button - Only show for Founders */}
+                  {showCreateButton && isFounder && (
+                    <Link
+                      to="/pages/CreateCampaign"
+                      className="hidden sm:flex items-center px-3 sm:px-4 py-2 bg-primary-700 text-white rounded-md hover:bg-primary-600 transition-colors text-xs sm:text-sm font-medium"
+                    >
+                      <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">New Campaign</span>
+                    </Link>
+                  )}
+
+                  {/* Profile Dropdown (desktop) */}
+                  <div className="hidden md:block">
+                    {showProfileDropdown && <ProfileDropdown />}
+                  </div>
+                  
+                  {/* Mobile Burger Menu Button */}
+                  <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    aria-label="Open Navigation Sidebar"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </button>
+                </>
+              ) : (
+                // Logged out Desktop & Mobile View
+                <>
+                  <div className="hidden sm:flex items-center space-x-3">
+                    <Link 
+                      to="/login" 
+                      className="text-sm text-gray-500 hover:text-purple-700 font-bold"
+                    >
+                      Login
+                    </Link>
+                    <span className="text-gray-500 font-bold">/</span>
+                    <Link 
+                      to="/register" 
+                      className="text-sm text-gray-500 hover:text-purple-700 font-bold"
+                    >
+                      SignUp
+                    </Link>
+                    <button 
+                      onClick={() => navigate('/register')}
+                      className="bg-primary-700 text-white font-bold px-4 lg:px-6 py-2 rounded-md flex items-center space-x-2 hover:bg-primary-600 transition-colors text-sm"
+                    >
+                      <span className="hidden lg:inline">Join Campaign</span>
+                      <span className="lg:hidden">Join</span>
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                  
+                  {/* Mobile Burger Menu Button for logged out users */}
+                  <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    aria-label="Open Navigation Sidebar"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      )}
-    </nav>
+      </nav>
+
+      {/* ── MOBILE SIDEBAR OVERLAY & PANEL (RIGHT SLIDE) ── */}
+      <div 
+        className={`fixed inset-0 z-50 transition-opacity duration-300 md:hidden ${
+          isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        {/* Semi-transparent backdrop */}
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+
+        {/* Sliding Sidebar - Positioned on the Right Side */}
+        <aside 
+          className={`fixed top-0 right-0 bottom-0 w-[82%] max-w-sm bg-white shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-in-out transform ${
+            isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          {/* Top Header: Logo Left, Close Button Right */}
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <Link to="/" onClick={() => setIsSidebarOpen(false)}>
+              <img src="/assets/Logo.png" alt="Logo" className="h-8 w-auto" />
+            </Link>
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-2 rounded-full text-gray-500 hover:text-gray-800 hover:bg-gray-100 focus:outline-none"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Sidebar Body */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+            {/* Mobile Search inside Sidebar */}
+            {showSearch && (
+              <div>
+                <SearchBar 
+                  isMobile={true}
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={handleSearchInputChange}
+                  onSearch={handleSearch}
+                  onClearSearch={clearSearch}
+                  showSuggestions={showSearchSuggestions}
+                  onShowSuggestions={setShowSearchSuggestions}
+                  onSuggestionClick={handleSuggestionClick}
+                  searchRef={mobileSearchRef}
+                />
+              </div>
+            )}
+
+            {/* Authenticated User Header Card */}
+            {isAuthenticated() ? (
+              <div className="flex items-center p-3 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-300 flex-shrink-0">
+                  {profileImageUrl ? (
+                    <img 
+                      src={profileImageUrl} 
+                      alt="Profile" 
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-gray-600 font-semibold text-base">
+                      {user?.displayName?.charAt(0) || user?.fullName?.charAt(0) || 'U'}
+                    </span>
+                  )}
+                </div>
+                <div className="ml-3 min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{user?.displayName || user?.fullName}</p>
+                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                  <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-700 rounded-full capitalize">
+                    {user?.userType || 'User'}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Action Button for Founders */}
+            {isAuthenticated() && showCreateButton && isFounder && (
+              <Link
+                to="/pages/CreateCampaign"
+                onClick={() => setIsSidebarOpen(false)}
+                className="flex items-center justify-center w-full px-4 py-2.5 bg-primary-700 text-white rounded-lg font-medium text-sm hover:bg-primary-600 transition-colors shadow-sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Campaign
+              </Link>
+            )}
+
+            {/* Main Navigation */}
+            <div>
+              <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider mb-2 px-2">
+                Navigation
+              </p>
+              <div className="space-y-1">
+                <Link
+                  to="/"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-700 hover:bg-purple-50 transition-colors"
+                >
+                  <Home className="h-4 w-4 mr-3 text-gray-400" />
+                  Home
+                </Link>
+                {navLinks.map((link, index) => (
+                  <Link
+                    key={index}
+                    to={link.to}
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-700 hover:bg-purple-50 transition-colors"
+                  >
+                    <Folder className="h-4 w-4 mr-3 text-gray-400" />
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Authenticated User Menu Links */}
+            {isAuthenticated() && (
+              <div>
+                <p className="text-xs font-semibold uppercase text-gray-400 tracking-wider mb-2 px-2">
+                  Account Options
+                </p>
+                <div className="space-y-1">
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-700 hover:bg-purple-50 transition-colors"
+                  >
+                    <User className="h-4 w-4 mr-3 text-gray-400" />
+                    Profile Settings
+                  </Link>
+
+                  {user?.userType !== 'admin' && (
+                    <>
+                      <Link
+                        to="/my-campaigns"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-700 hover:bg-purple-50 transition-colors"
+                      >
+                        <Heart className="h-4 w-4 mr-3 text-gray-400" />
+                        My Favorites
+                      </Link>
+                      <Link
+                        to="/my-campaigns"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-700 hover:bg-purple-50 transition-colors"
+                      >
+                        <FileText className="h-4 w-4 mr-3 text-gray-400" />
+                        My Campaigns
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer Area / Auth Controls */}
+          <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+            {isAuthenticated() ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <Link
+                  to="/login"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  <LogIn className="h-4 w-4 mr-2 text-gray-500" />
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-white bg-primary-700 rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
+    </>
   );
 };
 

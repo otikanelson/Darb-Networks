@@ -21,7 +21,7 @@ const StatCard = ({ value, change, comparison }) => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="absolute -top-2 left-[70%] w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold"
+              className="absolute -top-2 left-[70%] w-8 h-8 bg-purple-600   flex items-center justify-center text-white font-bold"
             >
               ${value.replace('$', '').replace('M+', '')}M
             </motion.div>
@@ -124,7 +124,7 @@ const StatCard = ({ value, change, comparison }) => {
           </div>
         </div>
         
-        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+        <div className={`h-10 w-10   flex items-center justify-center ${
           comparison.toLowerCase() === 'total funded' ? 'bg-purple-100 text-purple-600' :
           comparison.toLowerCase() === 'startups funded' ? 'bg-primary-100 text-primary-700' :
           comparison.toLowerCase() === 'active investors' ? 'bg-primary-100 text-primary-700' : 

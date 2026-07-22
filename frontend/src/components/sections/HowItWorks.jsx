@@ -66,7 +66,7 @@ const HowItWorks = () => {
                 <div className={`w-20 h-20 rounded-2xl ${color} flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300`}>
                   <Icon className="h-9 w-9" />
                 </div>
-                <span className="absolute -top-2 -right-2 w-7 h-7 bg-gray-900 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 w-7 h-7 bg-gray-900 text-white text-xs font-bold   flex items-center justify-center">
                   {step}
                 </span>
               </div>
@@ -86,7 +86,7 @@ const HowItWorks = () => {
         >
           <button
             onClick={() => navigate('/register')}
-            className="inline-flex items-center space-x-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold px-8 py-4 rounded-full transition-all transform hover:scale-105"
+            className="inline-flex items-center space-x-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold px-8 py-4   transition-all transform hover:scale-105"
           >
             <span>Get Started Free</span>
             <ArrowRight className="h-5 w-5" />

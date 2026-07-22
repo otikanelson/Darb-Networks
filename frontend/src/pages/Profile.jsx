@@ -46,7 +46,7 @@ const StrengthBar = ({ score }) => {
     <div className="mt-2">
       <div className="flex gap-1 mb-1">
         {[1,2,3,4,5].map(i => (
-          <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= score ? colors[score-1] : 'bg-gray-200'}`} />
+          <div key={i} className={`h-1.5 flex-1   transition-all ${i <= score ? colors[score-1] : 'bg-gray-200'}`} />
         ))}
       </div>
       {score > 0 && <p className={`text-xs ${score < 3 ? 'text-red-500' : score < 5 ? 'text-yellow-600' : 'text-primary-600'}`}>{labels[score-1]}</p>}
@@ -526,7 +526,7 @@ const Profile = () => {
   if (loading && !profileData.email) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-700 border-t-transparent"></div>
+        <div className="animate-spin   h-12 w-12 border-4 border-primary-700 border-t-transparent"></div>
       </div>
     );
   }
@@ -568,7 +568,7 @@ const Profile = () => {
               {/* Profile Image Section */}
               <div className="flex flex-col items-center mb-6">
                 <div className="relative mb-4">
-                  <div className="h-32 w-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-4 border-white shadow-lg">
+                  <div className="h-32 w-32   overflow-hidden bg-gray-200 flex items-center justify-center border-4 border-white shadow-lg">
                     {imagePreview ? (
                       <>
                         <img
@@ -608,7 +608,7 @@ const Profile = () => {
 
                   {/* Upload Controls */}
                   <div className="absolute bottom-0 right-0 flex space-x-1">
-                    <label className="bg-primary-700 text-white p-2 rounded-full cursor-pointer hover:bg-primary-800 transition-colors shadow-md">
+                    <label className="bg-primary-700 text-white p-2   cursor-pointer hover:bg-primary-800 transition-colors shadow-md">
                       <Camera className="h-4 w-4" />
                       <input
                         type="file"
@@ -621,7 +621,7 @@ const Profile = () => {
                     {imagePreview && (
                       <button
                         onClick={deleteProfileImage}
-                        className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors shadow-md"
+                        className="bg-red-600 text-white p-2   hover:bg-red-700 transition-colors shadow-md"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -638,7 +638,7 @@ const Profile = () => {
                   >
                     {imageUploading ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        <div className="animate-spin rounded-full  h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
                         Uploading...
                       </>
                     ) : (
@@ -670,7 +670,7 @@ const Profile = () => {
                 </h2>
                 <p className="text-gray-500 mb-2">{profileData.email}</p>
 
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 mb-4">
+                <div className="inline-flex items-center px-3 py-1   text-sm font-medium bg-gray-100 text-gray-800 mb-4">
                   {profileData.userType === "founder"
                     ? "Founder"
                     : profileData.userType === "investor"

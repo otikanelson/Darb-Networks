@@ -26,8 +26,8 @@ const StatusBadge = ({ status }) => {
   const s = STATUS_STYLES[status] || STATUS_STYLES.draft;
   const Icon = s.icon;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${s.bg}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1   text-xs font-semibold ${s.bg}`}>
+      <span className={`w-1.5 h-1.5   ${s.dot}`} />
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
@@ -186,7 +186,7 @@ const MyCampaigns = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <UnifiedNavbar variant="dashboard" />
+      <UnifiedNavbar variant="campaigns" />
 
       {/* ── Hero banner ── */}
       <div className="relative overflow-hidden bg-gray-900 h-52">
@@ -194,7 +194,7 @@ const MyCampaigns = () => {
         <motion.div
           animate={{ y: [0, -12, 0], opacity: [0.12, 0.22, 0.12] }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-6 right-24 w-56 h-56 bg-primary-500 rounded-full blur-3xl pointer-events-none"
+          className="absolute top-6 right-24 w-56 h-56 bg-primary-500   blur-3xl pointer-events-none"
         />
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 h-full flex items-center justify-between">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.55 }}>
@@ -215,13 +215,13 @@ const MyCampaigns = () => {
             className="flex items-center gap-3"
           >
             <button onClick={() => loadAll(true)} disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-full border border-white/20 transition-all disabled:opacity-50">
+              className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-medium   border border-white/20 transition-all disabled:opacity-50">
               <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
               {refreshing ? "Refreshing…" : "Refresh"}
             </button>
             {isFounder && (
               <button onClick={() => navigate("/pages/CreateCampaign")}
-                className="flex items-center gap-2 px-5 py-2.5 bg-primary-500 hover:bg-primary-400 text-white text-sm font-bold rounded-full transition-all hover:scale-105 shadow-lg shadow-primary-900/30">
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary-500 hover:bg-primary-400 text-white text-sm font-bold   transition-all hover:scale-105 shadow-lg shadow-primary-900/30">
                 <Plus className="h-4 w-4" /> New Campaign
               </button>
             )}
@@ -254,7 +254,7 @@ const MyCampaigns = () => {
             const active = activeTab === tab.id;
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2   text-sm font-medium transition-all ${
                   active
                     ? "bg-primary-600 text-white shadow-md shadow-primary-200"
                     : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300 hover:text-primary-700"
@@ -263,7 +263,7 @@ const MyCampaigns = () => {
                 <Icon className="h-3.5 w-3.5" />
                 {tab.label}
                 {tab.count > 0 && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${active ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"}`}>
+                  <span className={`text-xs px-1.5 py-0.5   font-semibold ${active ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"}`}>
                     {tab.count}
                   </span>
                 )}
@@ -275,7 +275,7 @@ const MyCampaigns = () => {
         {/* ── Content ── */}
         {loading ? (
           <div className="flex justify-center py-24">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent" />
+            <div className="animate-spin rounded-full  h-12 w-12 border-4 border-primary-600 border-t-transparent" />
           </div>
         ) : campaigns.length > 0 ? (
           <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -299,12 +299,12 @@ const MyCampaigns = () => {
                   {isFounder && ["draft", "rejected"].includes(campaign.status) && (
                     <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       <button onClick={e => { e.stopPropagation(); navigate(`/edit-campaign/${campaign.id}`); }}
-                        className="p-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors" title="Edit">
+                        className="p-2 bg-blue-600 text-white   shadow-lg hover:bg-blue-700 transition-colors" title="Edit">
                         <Edit className="h-4 w-4" />
                       </button>
                       {campaign.status === "draft" && (
                         <button onClick={e => { e.stopPropagation(); handleDelete(campaign.id, campaign.title); }}
-                          className="p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors" title="Delete">
+                          className="p-2 bg-red-600 text-white   shadow-lg hover:bg-red-700 transition-colors" title="Delete">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       )}
@@ -335,7 +335,7 @@ const MyCampaigns = () => {
             <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">{empty.msg}</p>
             {empty.cta && (
               <button onClick={() => navigate(empty.to)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-full transition-all hover:scale-105">
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold   transition-all hover:scale-105">
                 {empty.to?.includes("Create") && <Plus className="h-4 w-4" />}
                 {empty.cta}
               </button>

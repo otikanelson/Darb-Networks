@@ -77,7 +77,7 @@ const Login = () => {
               "The platform made it incredibly easy to connect with investors who truly understood our vision. We secured funding within weeks!"
             </p>
             <div className="flex items-center mt-4">
-              <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold mr-3">
+              <div className="h-10 w-10   bg-primary-500 flex items-center justify-center text-white font-semibold mr-3">
                 OA
               </div>
               <div>

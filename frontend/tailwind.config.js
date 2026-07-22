@@ -75,7 +75,8 @@ export default {
         },
       },
       fontFamily: {
-        'inter': ['inter', 'sans-serif'],
+        'sans': ['DM Sans', 'sans-serif'],
+        'dm-sans': ['DM Sans', 'sans-serif'],
       },
     },
   },

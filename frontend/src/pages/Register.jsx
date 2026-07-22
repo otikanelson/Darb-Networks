@@ -48,7 +48,7 @@ const StrengthBar = ({ score }) => {
     <div className="mt-2">
       <div className="flex gap-1 mb-1">
         {[1,2,3,4,5].map(i => (
-          <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= score ? colors[score-1] : 'bg-gray-200'}`} />
+          <div key={i} className={`h-1.5 flex-1   transition-all ${i <= score ? colors[score-1] : 'bg-gray-200'}`} />
         ))}
       </div>
       {score > 0 && <p className={`text-xs ${score < 3 ? 'text-red-500' : score < 5 ? 'text-yellow-600' : 'text-primary-600'}`}>{labels[score-1]}</p>}
@@ -469,7 +469,7 @@ const RegisterForm = () => {
               "I've invested in three startups through this platform, and the milestone-based funding gives me confidence that my investments are being put to good use."
             </p>
             <div className="flex items-center mt-4">
-              <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold mr-3">JO</div>
+              <div className="h-10 w-10   bg-primary-500 flex items-center justify-center text-white font-semibold mr-3">JO</div>
               <div>
                 <p className="text-white font-medium">Johnson Oladele</p>
                 <p className="text-primary-200 text-sm">Angel Investor</p>
@@ -498,7 +498,7 @@ const RegisterForm = () => {
               </div>
               <div className="relative flex justify-between">
                 {[1, 2, 3].map(n => (
-                  <div key={n} className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                  <div key={n} className={`w-10 h-10   flex items-center justify-center border-2 transition-all duration-300 ${
                     step >= n ? 'bg-primary-500 text-white border-primary-500' : 'bg-white border-gray-300 text-gray-500'
                   }`}>{n}</div>
                 ))}

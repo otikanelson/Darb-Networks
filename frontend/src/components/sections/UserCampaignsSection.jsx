@@ -43,8 +43,8 @@ const CompactCard = ({ campaign, onClick }) => {
         </h4>
         {/* Mini progress */}
         <div className="mt-2 flex items-center gap-2">
-          <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-primary-400 rounded-full" style={{ width: `${pct}%` }} />
+          <div className="flex-1 h-1 bg-white/20   overflow-hidden">
+            <div className="h-full bg-primary-400  " style={{ width: `${pct}%` }} />
           </div>
           <span className="text-xs text-primary-300 font-medium flex-shrink-0">{pct}%</span>
         </div>
@@ -85,7 +85,7 @@ const HeroCard = ({ campaign, onClick }) => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
       {/* Featured badge */}
-      <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-yellow-400/90 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">
+      <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-yellow-400/90 text-yellow-900 text-xs font-bold px-3 py-1  ">
         <Star className="h-3 w-3 fill-current" /> FEATURED
       </div>
 
@@ -103,14 +103,14 @@ const HeroCard = ({ campaign, onClick }) => {
             <span>{fmt(campaign.current_amount)} raised</span>
             <span className="text-primary-400 font-semibold">{pct}%</span>
           </div>
-          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-primary-400 to-primary-300 rounded-full" style={{ width: `${pct}%` }} />
+          <div className="h-1.5 bg-white/20   overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-primary-400 to-primary-300  " style={{ width: `${pct}%` }} />
           </div>
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-primary-500/30 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-7 h-7   bg-primary-500/30 flex items-center justify-center text-white text-xs font-bold">
               {(campaign.founder_name || 'A').charAt(0).toUpperCase()}
             </div>
             <span className="text-sm text-gray-300">{campaign.founder_name || 'Anonymous'}</span>
@@ -198,7 +198,7 @@ const UserCampaignsSection = () => {
           <div className="text-center py-24">
             <p className="text-gray-400 text-lg mb-6">No featured campaigns yet.</p>
             <button onClick={() => navigate('/dashboard')}
-              className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3 rounded-full inline-flex items-center gap-2">
+              className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3   inline-flex items-center gap-2">
               <span>Browse All Startups</span><ArrowRight className="h-5 w-5" />
             </button>
           </div>
@@ -246,7 +246,7 @@ const UserCampaignsSection = () => {
                   onClick={() => navigate('/dashboard')}
                   className="flex flex-col items-center justify-center gap-3 bg-primary-600/20 hover:bg-primary-600/30 border border-primary-500/30 rounded-2xl p-6 cursor-pointer transition-colors group"
                 >
-                  <div className="w-10 h-10 rounded-full bg-primary-500/20 flex items-center justify-center">
+                  <div className="w-10 h-10   bg-primary-500/20 flex items-center justify-center">
                     <ArrowRight className="h-5 w-5 text-primary-400 group-hover:translate-x-1 transition-transform" />
                   </div>
                   <p className="text-primary-300 font-semibold text-sm text-center">Explore more startups</p>
@@ -259,7 +259,7 @@ const UserCampaignsSection = () => {
         {/* Mobile CTA */}
         <div className="text-center mt-10 md:hidden">
           <button onClick={() => navigate('/dashboard')}
-            className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3 rounded-full inline-flex items-center gap-2">
+            className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3   inline-flex items-center gap-2">
             <span>View All Campaigns</span><ArrowRight className="h-5 w-5" />
           </button>
         </div>

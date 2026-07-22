@@ -59,7 +59,7 @@ const Testimonials = () => (
               <p className="text-gray-700 leading-relaxed text-[15px]">"{quote}"</p>
             </div>
             <div className="flex items-center mt-8 space-x-3">
-              <div className={`w-11 h-11 rounded-full ${avatarBg} flex items-center justify-center font-bold text-sm flex-shrink-0`}>
+              <div className={`w-11 h-11   ${avatarBg} flex items-center justify-center font-bold text-sm flex-shrink-0`}>
                 {avatar}
               </div>
               <div>

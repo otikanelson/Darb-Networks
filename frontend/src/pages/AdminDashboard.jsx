@@ -538,7 +538,7 @@ const CampaignReviewCard = ({
                 {campaign.title}
               </h3>
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                className={`inline-flex items-center px-2.5 py-0.5   text-xs font-medium ${getStatusColor(
                   campaign.status
                 )}`}
               >
@@ -546,7 +546,7 @@ const CampaignReviewCard = ({
                 <span className="ml-1 capitalize">{campaign.status}</span>
               </span>
               {campaign.is_featured && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                <span className="inline-flex items-center px-2.5 py-0.5   text-xs font-medium bg-yellow-100 text-yellow-800">
                   <Star className="h-3 w-3 mr-1" />
                   Featured
                 </span>

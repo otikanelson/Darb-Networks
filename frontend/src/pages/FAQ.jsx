@@ -407,7 +407,7 @@ const FAQ = () => {
             <button
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2   text-sm font-medium transition-all duration-200 ${
                 activeCategory === category.id
                   ? "bg-primary-600 text-white shadow-md"
                   : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
@@ -433,7 +433,7 @@ const FAQ = () => {
             ))
           ) : (
             <div className="py-16 text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-100">
+              <div className="mx-auto flex items-center justify-center h-16 w-16   bg-gray-100">
                 <AlertCircle className="h-8 w-8 text-gray-400" />
               </div>
               <h3 className="mt-4 text-lg font-medium text-gray-900">

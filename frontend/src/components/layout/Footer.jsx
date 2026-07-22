@@ -52,7 +52,7 @@ const Footer = () => {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="h-9 w-9 rounded-full bg-white/5 hover:bg-primary-700 flex items-center justify-center transition-colors"
+                  className="h-9 w-9   bg-white/5 hover:bg-primary-700 flex items-center justify-center transition-colors"
                 >
                   <img src={icon} alt={label} className="h-4 w-4 brightness-0 invert" />
                 </a>

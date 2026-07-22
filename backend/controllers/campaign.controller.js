@@ -76,6 +76,7 @@ const createCampaign = async (req, res) => {
       description,
       category,
       location,
+      country,
       targetAmount,
       minimumInvestment,
       maximumInvestment,
@@ -99,7 +100,7 @@ const createCampaign = async (req, res) => {
     // Validation for required fields (skip for drafts)
     if (!isDraft) {
       console.log('✅ Validating required fields (not a draft)');
-      const requiredFields = ['title', 'description', 'category', 'location', 'targetAmount', 'minimumInvestment'];
+      const requiredFields = ['title', 'description', 'category', 'location', 'country', 'targetAmount', 'minimumInvestment'];
       for (const field of requiredFields) {
         if (!req.body[field]) {
           console.log(`❌ Missing required field: ${field}`);
@@ -132,6 +133,7 @@ const createCampaign = async (req, res) => {
       description || '',
       category || '',
       location || '',
+      country || 'Nigeria',
       parseFloat(targetAmount) || 0,
       parseFloat(String(minimumInvestment || '').replace(/,/g, '')) || 0,
       maximumInvestment ? parseFloat(String(maximumInvestment).replace(/,/g, '')) : null,
@@ -158,11 +160,11 @@ const createCampaign = async (req, res) => {
     console.log('⚙️ Executing INSERT query...');
     const [result] = await db.sequelize.query(
       `INSERT INTO campaigns 
-       (title, description, category, location, target_amount, minimum_investment, maximum_investment,
+       (title, description, category, location, country, target_amount, minimum_investment, maximum_investment,
         problem_statement, solution, business_plan, market_analysis, competitive_advantage,
         financial_projections, team_information, risks_and_challenges,
         video_url, documents, end_date, duration_days, founder_id, status, submitted_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       {
         replacements: values,
         type: db.sequelize.QueryTypes.INSERT,
@@ -558,6 +560,7 @@ const updateCampaign = async (req, res) => {
       description: 'description',
       category: 'category',
       location: 'location',
+      country: 'country',
       targetAmount: 'target_amount',
       minimumInvestment: 'minimum_investment',
       maximumInvestment: 'maximum_investment',
@@ -897,10 +900,16 @@ const getMyCampaigns = async (req, res) => {
 // Get all approved campaigns (for dashboard)
 const getAllCampaigns = async (req, res) => {
   try {
-    const { category, status, search, page = 1, limit = 12, featured } = req.query;
+    const { category, status, search, page = 1, limit = 12, featured, country } = req.query;
     
     let whereClause = "WHERE status = 'approved'";
     let replacements = [];
+    
+    // Filter by country if provided
+    if (country) {
+      whereClause += " AND country = ?";
+      replacements.push(country);
+    }
     
     if (category && category !== 'All Categories') {
       whereClause += " AND category = ?";
@@ -937,6 +946,7 @@ const getAllCampaigns = async (req, res) => {
         description: campaign.description,
         category: campaign.category,
         location: campaign.location,
+        country: campaign.country,
         target_amount: campaign.target_amount,
         current_amount: campaign.current_amount,
         minimum_investment: campaign.minimum_investment,

@@ -153,9 +153,9 @@ const CampaignAnalytics = ({ campaignId, isOwner = false }) => {
                     {new Date(day.date).toLocaleDateString()}
                   </span>
                   <div className="flex items-center">
-                    <div className="w-20 bg-gray-200 rounded-full h-2 mr-3">
+                    <div className="w-20 bg-gray-200   h-2 mr-3">
                       <div 
-                        className="bg-blue-600 h-2 rounded-full"
+                        className="bg-blue-600 h-2  "
                         style={{ 
                           width: `${Math.min((day.views / Math.max(...analytics.viewsOverTime.map(d => d.views))) * 100, 100)}%` 
                         }}
@@ -186,9 +186,9 @@ const CampaignAnalytics = ({ campaignId, isOwner = false }) => {
                     {new Date(day.date).toLocaleDateString()}
                   </span>
                   <div className="flex items-center">
-                    <div className="w-20 bg-gray-200 rounded-full h-2 mr-3">
+                    <div className="w-20 bg-gray-200   h-2 mr-3">
                       <div 
-                        className="bg-red-600 h-2 rounded-full"
+                        className="bg-red-600 h-2  "
                         style={{ 
                           width: `${Math.min((day.favorites / Math.max(...analytics.favoritesOverTime.map(d => d.favorites))) * 100, 100)}%` 
                         }}
@@ -238,19 +238,19 @@ const CampaignAnalytics = ({ campaignId, isOwner = false }) => {
         <div className="space-y-2 text-sm text-gray-600">
           {analytics.overall.view_count < 100 && (
             <div className="flex items-start">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-2 flex-shrink-0"></div>
+              <div className="w-2 h-2 bg-blue-500   mt-2 mr-2 flex-shrink-0"></div>
               <span>Share your campaign on social media to increase visibility</span>
             </div>
           )}
           {analytics.overall.favorite_count < 10 && (
             <div className="flex items-start">
-              <div className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-2 flex-shrink-0"></div>
+              <div className="w-2 h-2 bg-red-500   mt-2 mr-2 flex-shrink-0"></div>
               <span>Encourage supporters to save your campaign for later</span>
             </div>
           )}
           {analytics.overall.funding_percentage < 25 && (
             <div className="flex items-start">
-              <div className="w-2 h-2 bg-primary-500 rounded-full mt-2 mr-2 flex-shrink-0"></div>
+              <div className="w-2 h-2 bg-primary-500   mt-2 mr-2 flex-shrink-0"></div>
               <span>Consider reaching out to your network for initial funding</span>
             </div>
           )}

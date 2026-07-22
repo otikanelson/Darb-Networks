@@ -9,7 +9,7 @@ import CampaignCard from "../components/ui/CampaignCard";
 import CampaignService from "../services/CampaignService";
 import { CustomNav } from "../hooks/CustomNavigation";
 import {
-  Search, Grid, List, ChevronDown, CheckCircle, Filter,
+  Search, Grid, List, ChevronDown, Text, CheckCircle, Filter,
   Eye, Heart, PenLine, DollarSign, FileText, ArrowUpDown,
   X, SlidersHorizontal, MapPin, Building, Star, Sparkles,
   TrendingUp, Plus, ChevronLeft, ChevronRight,
@@ -22,14 +22,14 @@ const CampaignSkeleton = () => (
     <div className="h-48 bg-gradient-to-r from-gray-100 to-gray-200 w-full" />
     <div className="p-5 space-y-3">
       <div className="flex justify-between">
-        <div className="h-5 bg-gray-100 rounded-full w-1/4" />
-        <div className="h-4 bg-gray-100 rounded-full w-1/5" />
+        <div className="h-5 bg-gray-100   w-1/4" />
+        <div className="h-4 bg-gray-100   w-1/5" />
       </div>
       <div className="h-6 bg-gray-100 rounded w-3/4" />
       <div className="h-4 bg-gray-100 rounded w-full" />
-      <div className="h-2 bg-gray-100 rounded-full" />
+      <div className="h-2 bg-gray-100  " />
       <div className="grid grid-cols-3 gap-3 pt-1">
-        {[0,1,2].map(i => <div key={i} className="h-8 bg-gray-100 rounded" />)}
+        {[0, 1, 2].map(i => <div key={i} className="h-8 bg-gray-100 rounded" />)}
       </div>
     </div>
   </div>
@@ -60,7 +60,7 @@ const ListCard = ({ campaign, navigate, buildImageUrl, formatCurrency, calcPct }
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           onError={e => { e.target.src = "/assets/placeholder-campaign.jpg"; }} />
         {campaign.is_featured && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full">
+          <div className="absolute top-2 left-2 flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5  ">
             <Star className="h-3 w-3 fill-current" /> Featured
           </div>
         )}
@@ -68,7 +68,7 @@ const ListCard = ({ campaign, navigate, buildImageUrl, formatCurrency, calcPct }
       <div className="flex-1 p-5">
         <div className="flex items-start justify-between gap-3 mb-2">
           <div>
-            <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{campaign.category}</span>
+            <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5  ">{campaign.category}</span>
             <h3 className="text-lg font-bold text-gray-900 mt-1.5 line-clamp-1">{campaign.title}</h3>
             <div className="flex items-center text-xs text-gray-400 mt-0.5 gap-1">
               <MapPin className="h-3 w-3" />{campaign.location}
@@ -80,8 +80,8 @@ const ListCard = ({ campaign, navigate, buildImageUrl, formatCurrency, calcPct }
           </div>
         </div>
         <p className="text-sm text-gray-500 line-clamp-2 mb-3">{campaign.description}</p>
-        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
-          <motion.div className="h-full bg-gradient-to-r from-primary-500 to-primary-400 rounded-full"
+        <div className="h-1.5 bg-gray-100   overflow-hidden mb-2">
+          <motion.div className="h-full bg-gradient-to-r from-primary-500 to-primary-400  "
             initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: "easeOut" }} />
         </div>
         <div className="flex items-center justify-between text-xs text-gray-500">
@@ -124,16 +124,16 @@ const Dashboard = () => {
   const isInvestor = user?.userType?.toLowerCase() === "investor";
 
   const categories = {
-    "Tech & Innovation": ["Audio","Tools","Education","Energy & Green Tech","Fashion & Wearables","Food & Beverages","Health & Fitness","Home","Phones & Accessories","Business & Finance","Transportation","Travel & Outdoors"],
-    "Creative Works": ["Art","Comics","Dance & Theater","Film","Music","Photography","Podcasts, Blogs & Vlogs","Tabletop Games","Video Games","TV series & Shows","Writing & Publishing"],
-    "Community Projects": ["Culture","Environment","Human Rights","Local Businesses","Wellness"],
+    "Tech & Innovation": ["Audio", "Tools", "Education", "Energy & Green Tech", "Fashion & Wearables", "Food & Beverages", "Health & Fitness", "Home", "Phones & Accessories", "Business & Finance", "Transportation", "Travel & Outdoors"],
+    "Creative Works": ["Art", "Comics", "Dance & Theater", "Film", "Music", "Photography", "Podcasts, Blogs & Vlogs", "Tabletop Games", "Video Games", "TV series & Shows", "Writing & Publishing"],
+    "Community Projects": ["Culture", "Environment", "Human Rights", "Local Businesses", "Wellness"],
   };
 
   const filterOptions = [
-    { id: "all",           label: "All Campaigns", icon: null },
-    { id: "featured",      label: "Featured",      icon: <Star className="h-3.5 w-3.5" /> },
-    { id: "goal-reached",  label: "Goal Reached",  icon: <CheckCircle className="h-3.5 w-3.5" /> },
-    { id: "active",        label: "Active",        icon: <TrendingUp className="h-3.5 w-3.5" /> },
+    { id: "all", label: "All Campaigns", icon: <Text className="h-3.5 w-3.5" /> },
+    { id: "featured", label: "Featured", icon: <Star className="h-3.5 w-3.5" /> },
+    { id: "goal-reached", label: "Goal Reached", icon: <CheckCircle className="h-3.5 w-3.5" /> },
+    { id: "active", label: "Active", icon: <TrendingUp className="h-3.5 w-3.5" /> },
   ];
 
   // Close sort dropdown on outside click
@@ -177,7 +177,7 @@ const Dashboard = () => {
     let f = [...campaigns];
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
-      
+
       // Parse advanced search syntax
       if (q.startsWith('founder:')) {
         const founderName = q.replace('founder:', '').trim();
@@ -210,14 +210,14 @@ const Dashboard = () => {
       f = f.filter(c => c.location?.toLowerCase() === selectedLocation.toLowerCase());
     }
     switch (selectedFilter) {
-      case "Goal Reached": f = f.filter(c => (c.current_amount||0) >= (c.target_amount||1)); break;
-      case "Active":       f = f.filter(c => c.status === "approved" && (c.current_amount||0) < (c.target_amount||1)); break;
-      case "Featured":     f = f.filter(c => c.is_featured || c.isFeatured); break;
+      case "Goal Reached": f = f.filter(c => (c.current_amount || 0) >= (c.target_amount || 1)); break;
+      case "Active": f = f.filter(c => c.status === "approved" && (c.current_amount || 0) < (c.target_amount || 1)); break;
+      case "Featured": f = f.filter(c => c.is_featured || c.isFeatured); break;
     }
     switch (sortBy) {
-      case "Most Funded": f.sort((a,b) => (b.current_amount||0) - (a.current_amount||0)); break;
-      case "End Date":    f.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)); break;
-      default:            f.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+      case "Most Funded": f.sort((a, b) => (b.current_amount || 0) - (a.current_amount || 0)); break;
+      case "End Date": f.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); break;
+      default: f.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
     setFilteredCampaigns(f);
     setFilteredCount(f.length);
@@ -233,8 +233,8 @@ const Dashboard = () => {
   };
 
   const clearAll = () => {
-    setSearchTerm(""); 
-    setSelectedCategory("All Categories"); 
+    setSearchTerm("");
+    setSelectedCategory("All Categories");
     setSelectedFilter("All Campaigns");
     setSelectedLocation("All Locations");
     updateURL({ search: null, category: null, filter: null, location: null });
@@ -248,17 +248,17 @@ const Dashboard = () => {
   const hasFilters = searchTerm || selectedCategory !== "All Categories" || selectedFilter !== "All Campaigns" || selectedLocation !== "All Locations";
 
   const handleFavoriteToggle = async (id) => { try { return await CampaignService.toggleFavorite(id); } catch { return false; } };
-  const handleViewClick = async (id) => { try { await CampaignService.trackView(id); } catch {} };
+  const handleViewClick = async (id) => { try { await CampaignService.trackView(id); } catch { } };
 
   // ── Sidebar category filter ─────────────────────────────────────────────────
   const groupIcons = {
     "Tech & Innovation": <Zap className="h-4 w-4" />,
-    "Creative Works":    <Palette className="h-4 w-4" />,
-    "Community Projects":<Users className="h-4 w-4" />,
+    "Creative Works": <Palette className="h-4 w-4" />,
+    "Community Projects": <Users className="h-4 w-4" />,
   };
 
   const CategoryFilter = () => (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       {/* Header */}
       <div className="px-5 pt-5 pb-3 border-b border-gray-50">
         <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider flex items-center gap-2">
@@ -267,15 +267,14 @@ const Dashboard = () => {
       </div>
 
       {/* Scrollable list */}
-      <div className="overflow-y-auto max-h-[calc(100vh-280px)] px-3 py-3 space-y-0.5">
+      <div className="overflow-y-auto max-h-[calc(100vh)] px-3 py-3 space-y-0.5">
         {/* All */}
         <button
           onClick={() => { setSelectedCategory("All Categories"); updateURL({ category: null }); }}
-          className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center gap-2.5 transition-all ${
-            selectedCategory === "All Categories"
+          className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center gap-2.5 transition-all ${selectedCategory === "All Categories"
               ? "bg-primary-600 text-white font-semibold shadow-sm shadow-primary-200"
               : "text-gray-600 hover:bg-gray-50"
-          }`}
+            }`}
         >
           <LayoutGrid className="h-3.5 w-3.5 flex-shrink-0" />
           All Categories
@@ -294,11 +293,10 @@ const Dashboard = () => {
                   updateURL({ category: group });
                   setCategoryMenuOpen(p => p === group ? null : group);
                 }}
-                className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center justify-between gap-2 transition-all ${
-                  isGroupActive
+                className={`w-full text-left text-sm px-3 py-2 rounded-xl flex items-center justify-between gap-2 transition-all ${isGroupActive
                     ? "text-primary-700 font-semibold bg-primary-50"
                     : "text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <span className="flex items-center gap-2.5">
                   <span className={`flex-shrink-0 ${isGroupActive ? "text-primary-600" : "text-gray-400"}`}>
@@ -323,14 +321,13 @@ const Dashboard = () => {
                         <button
                           key={cat}
                           onClick={() => { setSelectedCategory(cat); updateURL({ category: cat }); }}
-                          className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-2 ${
-                            selectedCategory === cat
+                          className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-2 ${selectedCategory === cat
                               ? "text-primary-700 font-semibold bg-primary-50"
                               : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-                          }`}
+                            }`}
                         >
                           {selectedCategory === cat && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary-500 flex-shrink-0" />
+                            <span className="w-1.5 h-1.5   bg-primary-500 flex-shrink-0" />
                           )}
                           {cat}
                         </button>
@@ -351,7 +348,7 @@ const Dashboard = () => {
     if (totalPages <= 1) return null;
     return (
       <div className="flex justify-center items-center gap-2 mt-10">
-        <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage === 1}
+        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
           className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-40 hover:border-primary-400 hover:text-primary-600 transition-colors">
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -366,7 +363,7 @@ const Dashboard = () => {
             </button>
           );
         })}
-        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage === totalPages}
+        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
           className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-40 hover:border-primary-400 hover:text-primary-600 transition-colors">
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -386,9 +383,9 @@ const Dashboard = () => {
 
         {/* Floating orbs - hidden on mobile */}
         <motion.div animate={{ y: [0, -14, 0], opacity: [0.15, 0.25, 0.15] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="hidden md:block absolute top-8 right-32 w-48 h-48 bg-primary-500 rounded-full blur-3xl pointer-events-none" />
+          className="hidden md:block absolute top-8 right-32 w-48 h-48 bg-primary-500   blur-3xl pointer-events-none" />
         <motion.div animate={{ y: [0, 12, 0], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="hidden md:block absolute bottom-0 right-64 w-32 h-32 bg-emerald-400 rounded-full blur-2xl pointer-events-none" />
+          className="hidden md:block absolute bottom-0 right-64 w-32 h-32 bg-emerald-400   blur-2xl pointer-events-none" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
           <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
@@ -432,14 +429,13 @@ const Dashboard = () => {
               {filterOptions.map(opt => (
                 <button key={opt.id}
                   onClick={() => { setSelectedFilter(opt.label); updateURL({ filter: opt.label }); }}
-                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                    selectedFilter === opt.label
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2   text-xs sm:text-sm font-medium transition-all ${selectedFilter === opt.label
                       ? "bg-primary-600 text-white shadow-md shadow-primary-200"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}>
+                    }`}>
                   {opt.icon}<span className="hidden xs:inline">{opt.label}</span>
                   {selectedFilter === opt.label && filteredCount > 0 && (
-                    <span className="bg-white/25 text-white text-xs px-1.5 py-0.5 rounded-full">{filteredCount}</span>
+                    <span className="bg-white/25 text-white text-xs px-1.5 py-0.5  ">{filteredCount}</span>
                   )}
                 </button>
               ))}
@@ -493,17 +489,17 @@ const Dashboard = () => {
               className="flex flex-wrap items-center gap-2 mb-5 overflow-hidden">
               <span className="text-xs text-gray-500 font-medium">Filters:</span>
               {searchTerm && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                <span className="inline-flex items-center gap-1 px-3 py-1   text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                   "{searchTerm}" <button onClick={() => { setSearchTerm(""); updateURL({ search: null }); }}><X className="h-3 w-3" /></button>
                 </span>
               )}
               {selectedCategory !== "All Categories" && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                <span className="inline-flex items-center gap-1 px-3 py-1   text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
                   {selectedCategory} <button onClick={() => { setSelectedCategory("All Categories"); updateURL({ category: null }); }}><X className="h-3 w-3" /></button>
                 </span>
               )}
               {selectedFilter !== "All Campaigns" && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-primary-50 text-primary-700 border border-primary-100">
+                <span className="inline-flex items-center gap-1 px-3 py-1   text-xs font-medium bg-primary-50 text-primary-700 border border-primary-100">
                   {selectedFilter} <button onClick={() => { setSelectedFilter("All Campaigns"); updateURL({ filter: null }); }}><X className="h-3 w-3" /></button>
                 </span>
               )}
@@ -520,32 +516,32 @@ const Dashboard = () => {
             <div className="sticky top-8 space-y-4">
               <CategoryFilter />
 
-            {isAuthenticated() && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wider">Quick Links</h3>
-                <div className="space-y-1">
-                  {[
-                    { to: "/my-campaigns?tab=favorites", icon: <Heart className="h-4 w-4" />, label: "Favorites" },
-                    ...(isFounder ? [
-                      { to: "/my-campaigns?tab=created", icon: <PenLine className="h-4 w-4" />, label: "My Campaigns" },
-                      { to: "/my-campaigns?tab=drafts",  icon: <FileText className="h-4 w-4" />, label: "Drafts" },
-                    ] : []),
-                    ...(isInvestor ? [
-                      { to: "/my-campaigns?tab=funded", icon: <DollarSign className="h-4 w-4" />, label: "Funded Projects" },
-                    ] : []),
-                  ].map(({ to, icon, label }) => (
-                    <Link key={to} to={to}
-                      className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-xl transition-colors">
-                      {icon}{label}
-                    </Link>
-                  ))}
+              {isAuthenticated() && (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wider">Quick Links</h3>
+                  <div className="space-y-1">
+                    {[
+                      { to: "/my-campaigns?tab=favorites", icon: <Heart className="h-4 w-4" />, label: "Favorites" },
+                      ...(isFounder ? [
+                        { to: "/my-campaigns?tab=created", icon: <PenLine className="h-4 w-4" />, label: "My Campaigns" },
+                        { to: "/my-campaigns?tab=drafts", icon: <FileText className="h-4 w-4" />, label: "Drafts" },
+                      ] : []),
+                      ...(isInvestor ? [
+                        { to: "/my-campaigns?tab=funded", icon: <DollarSign className="h-4 w-4" />, label: "Funded Projects" },
+                      ] : []),
+                    ].map(({ to, icon, label }) => (
+                      <Link key={to} to={to}
+                        className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-xl transition-colors">
+                        {icon}{label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             </div>{/* end sticky */}
           </motion.div>
 
-          {/* Campaign grid / list */}
+          {/* ── Campaign grid / list ── */}
           <div className="flex-1 min-w-0">
             {/* Result count */}
             {!loading && (
@@ -557,7 +553,8 @@ const Dashboard = () => {
             )}
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              /* Updated for 2 columns on mobile: grid-cols-2 */
+              <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-5">
                 {[...Array(6)].map((_, i) => <CampaignSkeleton key={i} />)}
               </div>
             ) : error ? (
@@ -583,7 +580,8 @@ const Dashboard = () => {
                 )}
               </motion.div>
             ) : viewMode === "grid" ? (
-              <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              /* Updated for 2 columns on mobile: grid-cols-2 */
+              <motion.div layout className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-5">
                 <AnimatePresence mode="popLayout">
                   {paginated.map((campaign, i) => (
                     <motion.div key={campaign.id} layout
@@ -598,8 +596,7 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <AnimatePresence mode="popLayout">
                   {paginated.map((campaign, i) => (
-                    <ListCard key={campaign.id} campaign={campaign} navigate={navigate}
-                      buildImageUrl={buildImageUrl} formatCurrency={fmt} calcPct={calcPct} />
+                    <ListCard key={campaign.id} campaign={campaign} navigate={navigate} buildImageUrl={buildImageUrl} formatCurrency={fmt} calcPct={calcPct} />
                   ))}
                 </AnimatePresence>
               </div>
