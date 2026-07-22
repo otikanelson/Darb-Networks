@@ -899,19 +899,19 @@ const getMyCampaigns = async (req, res) => {
 // Get all approved campaigns (public)
 const getAllCampaigns = async (req, res) => {
   try {
-    const { category, status, search, page = 1, limit = 12, featured, country } = req.query;
+    const { category, status, search, page = 1, limit = 12, featured, country, location, minAmount, maxAmount, sortBy } = req.query;
     
     let whereConditions = ["c.status = 'approved'"];
     let replacements = [];
     
     // Filter by country if provided
     if (country) {
-      whereClause += " AND country = ?";
+      whereConditions.push('c.country = ?');
       replacements.push(country);
     }
     
     if (category && category !== 'All Categories') {
-      whereClause += " AND category = ?";
+      whereConditions.push('c.category = ?');
       replacements.push(category);
     }
     
@@ -942,12 +942,21 @@ const getAllCampaigns = async (req, res) => {
     if (sortBy === 'popular') {
       orderClause = 'c.view_count DESC, c.favorite_count DESC';
     } else if (sortBy === 'funded') {
-      orderClause = 'c.current_amount DESC';
+      orderClause = 'COALESCE(cs.total_raised, 0) DESC';
     } else if (sortBy === 'ending_soon') {
-      orderClause = 'c.createdAt ASC'; // oldest first
+      orderClause = 'c.end_date ASC';
     }
     
     const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [countResult] = await db.sequelize.query(
+      `SELECT COUNT(*) as total FROM campaigns c WHERE ${whereClause}`,
+      {
+        replacements: replacements,
+        type: db.sequelize.QueryTypes.SELECT
+      }
+    );
     
     const campaigns = await db.sequelize.query(
       `SELECT c.*, u.fullName as founder_name,
@@ -963,30 +972,6 @@ const getAllCampaigns = async (req, res) => {
         type: db.sequelize.QueryTypes.SELECT
       }
     );
-
-    const formattedCampaigns = campaigns.map(campaign => {
-
-      return {
-        id: campaign.id,
-        title: campaign.title,
-        description: campaign.description,
-        category: campaign.category,
-        location: campaign.location,
-        country: campaign.country,
-        target_amount: campaign.target_amount,
-        current_amount: campaign.current_amount,
-        minimum_investment: campaign.minimum_investment,
-        main_image_url: campaign.main_image_url,
-        view_count: campaign.view_count,
-        favorite_count: campaign.favorite_count,
-        is_featured: campaign.is_featured,
-        founder_name: campaign.founder_name,
-        founder_company: campaign.founder_company,
-        founder_avatar: campaign.founder_avatar,
-        founder_email: campaign.founder_email,
-        created_at: campaign.created_at
-      };
-    });
 
     res.status(200).send({
       success: true,
@@ -1258,14 +1243,19 @@ const getCampaignForEdit = async (req, res) => {
 // Get featured campaigns
 const getFeaturedCampaigns = async (req, res) => {
   try {
-    const { id } = req.params;
-    const founderId = req.userId;
+    const limit = parseInt(req.query.limit) || 10;
 
-    // Get campaign details with ownership verification
-    const [campaign] = await db.sequelize.query(
-      `SELECT * FROM campaign_details WHERE id = ? AND founder_id = ?`,
+    const campaigns = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name,
+              u.companyName as founder_company,
+              u.profileImageUrl as founder_avatar
+       FROM campaigns c 
+       JOIN users u ON c.founder_id = u.id 
+       WHERE c.status = 'approved'
+       ORDER BY c.createdAt DESC
+       LIMIT ?`,
       {
-        replacements: [parseInt(limit)],
+        replacements: [limit],
         type: db.sequelize.QueryTypes.SELECT
       }
     );

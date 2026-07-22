@@ -256,14 +256,6 @@ const UserCampaignsSection = () => {
           </div>
         )}
 
-        {/* Mobile CTA */}
-        <div className="text-center mt-10 md:hidden">
-          <button onClick={() => navigate('/dashboard')}
-            className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3   inline-flex items-center gap-2">
-            <span>View All Campaigns</span><ArrowRight className="h-5 w-5" />
-          </button>
-        </div>
-
         {/* Sign-in nudge for guests */}
         {!isAuthenticated() && campaigns.length > 0 && (
           <motion.div
