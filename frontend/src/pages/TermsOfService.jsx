@@ -172,7 +172,7 @@ const TermsOfService = () => {
       content: [
         "For questions about these Terms of Service, please contact us:",
         [
-          "Email: legal@darbnetwork.com",
+          "Email: legaldarbnetwork@gmail.com",
           "Phone: +234 915 621 9654",
           "Address: Lagos, Nigeria",
         ],

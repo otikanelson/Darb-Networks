@@ -24,7 +24,8 @@ import {
   TrendingUp,
   Lightbulb,
   LogIn,
-  UserPlus
+  UserPlus,
+  Bookmark,
 } from 'lucide-react';
 
 // Campaign categories - defined outside component to prevent re-creation
@@ -261,6 +262,21 @@ const Navbars = ({
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
+
+  // FAQ bookmark sliver — reads from localStorage
+  const [bookmarkSliver, setBookmarkSliver] = useState(null);
+  const [sliverDismissed, setSliverDismissed] = useState(false);
+
+  useEffect(() => {
+    const sync = () => {
+      const ids = JSON.parse(localStorage.getItem('faqBookmarks') || '[]');
+      setBookmarkSliver(ids.length > 0 ? ids.length : null);
+    };
+    sync();
+    // Re-sync when another tab writes to localStorage
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
 
   // Debug: Log when user context changes
   useEffect(() => {
@@ -534,7 +550,11 @@ const Navbars = ({
 
   return (
     <>
-      <nav className={`bg-white border-b border-gray-200 relative z-30 ${className}`}>
+      {/* Spacer so fixed navbar doesn't overlap page content */}
+      <div className={`${bookmarkSliver && !sliverDismissed ? 'h-[calc(4rem+2rem)]' : 'h-16'} transition-all duration-300`} />
+
+      <div className="fixed top-0 left-0 right-0 z-30">
+        <nav className={`bg-white border-b border-gray-200 ${className}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Left: Logo Only */}
@@ -649,6 +669,29 @@ const Navbars = ({
           </div>
         </div>
       </nav>
+
+      {/* FAQ bookmark sliver — appears just below navbar when there are saved bookmarks */}
+      {bookmarkSliver && !sliverDismissed && (
+        <div className="bg-primary-600/95 backdrop-blur-sm px-4 py-1.5 flex items-center justify-between">
+          <Link
+            to="/faq"
+            className="flex items-center gap-2 text-primary-600 hover:text-black/90 transition-colors text-xs font-medium"
+          >
+            <Bookmark className="h-3 w-3 flex-shrink-0" />
+            <span>
+              You have {bookmarkSliver} bookmarked FAQ{bookmarkSliver > 1 ? 's' : ''} — view them
+            </span>
+          </Link>
+          <button
+            onClick={() => setSliverDismissed(true)}
+            className="ml-4 text-white/60 hover:text-white transition-colors flex-shrink-0"
+            aria-label="Dismiss"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+      </div>
 
       {/* ── MOBILE SIDEBAR OVERLAY & PANEL (RIGHT SLIDE) ── */}
       <div 

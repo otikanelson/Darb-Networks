@@ -1,4 +1,3 @@
-// src/pages/FAQ.jsx
 import React, { useState, useRef, useEffect } from "react";
 import {
   ChevronDown,
@@ -16,11 +15,17 @@ import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
 import { CustomNav } from "../hooks/CustomNavigation";
 
-// FAQ Item Component with improved interaction
+// FAQ Item Component
 const FAQItem = ({ question, answer, isOpen, onClick, id }) => {
   const contentRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+
+  // Sync initial bookmark state from localStorage
+  useEffect(() => {
+    const bookmarks = JSON.parse(localStorage.getItem("faqBookmarks") || "[]");
+    setBookmarked(bookmarks.includes(id));
+  }, [id]);
 
   // Copy answer to clipboard
   const copyToClipboard = (e) => {
@@ -33,32 +38,30 @@ const FAQItem = ({ question, answer, isOpen, onClick, id }) => {
   // Toggle bookmark
   const toggleBookmark = (e) => {
     e.stopPropagation();
-    setBookmarked(!bookmarked);
+    const nextBookmarked = !bookmarked;
+    setBookmarked(nextBookmarked);
 
-    // Save bookmarks to localStorage
     const bookmarks = JSON.parse(localStorage.getItem("faqBookmarks") || "[]");
-    if (!bookmarked) {
-      localStorage.setItem("faqBookmarks", JSON.stringify([...bookmarks, id]));
-    } else {
-      localStorage.setItem(
-        "faqBookmarks",
-        JSON.stringify(bookmarks.filter((item) => item !== id))
-      );
-    }
+    const updated = nextBookmarked
+      ? [...bookmarks, id]
+      : bookmarks.filter((item) => item !== id);
+      
+    localStorage.setItem("faqBookmarks", JSON.stringify(updated));
+    window.dispatchEvent(new Event("storage"));
   };
 
   // Share FAQ
   const shareFAQ = (e) => {
     e.stopPropagation();
+    const shareUrl = `${window.location.origin}/faq#faq-${id}`;
     if (navigator.share) {
       navigator.share({
         title: "FAQ: " + question,
         text: `${question}\n\n${answer}`,
-        url: window.location.href + "#faq-" + id,
+        url: shareUrl,
       });
     } else {
-      // Fallback
-      navigator.clipboard.writeText(window.location.href + "#faq-" + id);
+      navigator.clipboard.writeText(shareUrl);
       alert("Link copied to clipboard!");
     }
   };
@@ -66,7 +69,9 @@ const FAQItem = ({ question, answer, isOpen, onClick, id }) => {
   return (
     <div
       id={`faq-${id}`}
-      className="border-b border-gray-200 transition-all duration-200 hover:bg-gray-50"
+      className={`border-b border-gray-200 transition-all duration-300 ${
+        isOpen ? "bg-purple-50/50 ring-2 ring-primary-500/20" : "hover:bg-gray-50"
+      }`}
     >
       <button
         className="w-full flex justify-between items-center py-6 px-4 md:px-6 text-left focus:outline-none group"
@@ -86,17 +91,11 @@ const FAQItem = ({ question, answer, isOpen, onClick, id }) => {
         <div
           ref={contentRef}
           className="pb-6 px-4 md:px-6 text-gray-600 text-lg leading-relaxed"
-          style={{
-            maxHeight: isOpen ? `${contentRef.current?.scrollHeight}px` : "0",
-            overflow: "hidden",
-            transition: "max-height 0.3s ease-in-out",
-          }}
         >
           <div className="prose prose-lg max-w-none">
             <p>{answer}</p>
           </div>
 
-          {/* Action buttons */}
           <div className="flex gap-4 mt-4 pt-4 border-t border-gray-200">
             <button
               onClick={copyToClipboard}
@@ -145,12 +144,6 @@ const FAQItem = ({ question, answer, isOpen, onClick, id }) => {
 };
 
 const FAQ = () => {
-  // Scroll to top on mount
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
-  // State
   const [openQuestionId, setOpenQuestionId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredFAQs, setFilteredFAQs] = useState([]);
@@ -163,9 +156,7 @@ const FAQ = () => {
 
   const navigate = CustomNav();
 
-  // FAQ data with categories
   const faqData = [
-    // Original FAQs
     {
       id: 1,
       category: "general",
@@ -201,8 +192,6 @@ const FAQ = () => {
       answer:
         "Yes, you can set up recurring donations on a monthly, quarterly, or annual basis. This option is available during the donation process.",
     },
-
-    // New FAQs for Nigerian P2P lending
     {
       id: 6,
       category: "process",
@@ -278,7 +267,6 @@ const FAQ = () => {
     },
   ];
 
-  // Categories for filtering
   const categories = [
     { id: "all", label: "All Questions" },
     { id: "general", label: "General" },
@@ -290,13 +278,12 @@ const FAQ = () => {
     { id: "legal", label: "Legal" },
   ];
 
-  // Filtering logic
-  React.useEffect(() => {
+  // Search & category filtering logic
+  useEffect(() => {
     const filtered = faqData.filter((faq) => {
       const matchesSearch =
         faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
         faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
-
       const matchesCategory =
         activeCategory === "all" || faq.category === activeCategory;
 
@@ -306,49 +293,52 @@ const FAQ = () => {
     setFilteredFAQs(filtered);
   }, [searchTerm, activeCategory]);
 
-  // Handle opening/closing questions
+  // Read URL Hash on load/hash change to automatically open & scroll to bookmarked question
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith("#faq-")) {
+        const targetId = parseInt(hash.replace("#faq-", ""), 10);
+        if (!isNaN(targetId)) {
+          setOpenQuestionId(targetId);
+          setTimeout(() => {
+            const element = document.getElementById(`faq-${targetId}`);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }, 150);
+        }
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
   const toggleQuestion = (id) => {
     setOpenQuestionId(openQuestionId === id ? null : id);
   };
 
-  // Handle search
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  const handleSearch = (e) => setSearchTerm(e.target.value);
+  const clearSearch = () => setSearchTerm("");
 
-  // Clear search
-  const clearSearch = () => {
-    setSearchTerm("");
-  };
-
-  // Handle new question submission
   const handleSubmitQuestion = (e) => {
     e.preventDefault();
-
-    // Form validation
     if (!newQuestion.trim()) {
       setSubmitError("Please enter your question");
       return;
     }
-
     if (!userEmail.trim() || !/^\S+@\S+\.\S+$/.test(userEmail)) {
       setSubmitError("Please enter a valid email address");
       return;
     }
-
-    // Here you would typically send the question to your backend
-    // For now, we'll just simulate success
-    console.log("Submitting question:", {
-      question: newQuestion,
-      email: userEmail,
-    });
 
     setSubmitSuccess(true);
     setNewQuestion("");
     setUserEmail("");
     setSubmitError("");
 
-    // Reset success message after a delay
     setTimeout(() => {
       setSubmitSuccess(false);
       setShowAskForm(false);
@@ -407,7 +397,7 @@ const FAQ = () => {
             <button
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
-              className={`px-4 py-2   text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
                 activeCategory === category.id
                   ? "bg-primary-600 text-white shadow-md"
                   : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
@@ -433,7 +423,7 @@ const FAQ = () => {
             ))
           ) : (
             <div className="py-16 text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16   bg-gray-100">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 bg-gray-100">
                 <AlertCircle className="h-8 w-8 text-gray-400" />
               </div>
               <h3 className="mt-4 text-lg font-medium text-gray-900">
@@ -455,7 +445,7 @@ const FAQ = () => {
           )}
         </div>
 
-        {/* Ask a Question Section */}
+        {/* Ask Question Form */}
         <div className="mt-16 bg-gray-50 rounded-xl p-8 border border-gray-200">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">

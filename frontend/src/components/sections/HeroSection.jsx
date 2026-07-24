@@ -172,7 +172,7 @@ const HeroSection = () => {
       </div>
 
       {/* Container padding adjusted for full screen height */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 py-24 sm:py-32 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 sm:py-24 w-full">
         {/* Inner block height adjusted to fit increased space */}
         <div className="max-w-3xl min-h-[500px] flex flex-col justify-center">
           <AnimatePresence mode="wait">

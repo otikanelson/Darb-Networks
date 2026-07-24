@@ -80,7 +80,7 @@ const PrivacyPolicy = () => {
       content: [
         "If you have any questions about this Privacy Policy, please contact us at:",
         [
-          "Email: legal@darbnetwork.com",
+          "Email: legaldarbnetwork@gmail.com",
           "Phone: +234 915 621 9654",
           "Address: Lagos, Nigeria",
         ],

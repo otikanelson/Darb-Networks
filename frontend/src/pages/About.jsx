@@ -132,10 +132,10 @@ const About = () => {
             </h3>
             <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">For general inquiries:</p>
             <a
-              href="mailto:legal@darbnetwork.com"
+              href="mailto:legaldarbnetwork@gmail.com"
               className="text-sm sm:text-base text-purple-700 hover:text-purple-800 break-all"
             >
-              legal@darbnetwork.com
+              legaldarbnetwork@gmail.com
             </a>
           </div>
           <div className="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-100">
