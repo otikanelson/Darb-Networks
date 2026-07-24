@@ -16,10 +16,10 @@ import {
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 const STATUS_STYLES = {
-  draft:     { bg: "bg-gray-100 text-gray-700",    dot: "bg-gray-400",   icon: FileText },
-  submitted: { bg: "bg-amber-100 text-amber-700",  dot: "bg-amber-400",  icon: Clock },
-  approved:  { bg: "bg-primary-100 text-primary-700",  dot: "bg-primary-500",  icon: CheckCircle },
-  rejected:  { bg: "bg-red-100 text-red-700",      dot: "bg-red-500",    icon: XCircle },
+  draft: { bg: "bg-gray-100 text-gray-700", dot: "bg-gray-400", icon: FileText },
+  submitted: { bg: "bg-amber-100 text-amber-700", dot: "bg-amber-400", icon: Clock },
+  approved: { bg: "bg-primary-100 text-primary-700", dot: "bg-primary-500", icon: CheckCircle },
+  rejected: { bg: "bg-red-100 text-red-700", dot: "bg-red-500", icon: XCircle },
 };
 
 const StatusBadge = ({ status }) => {
@@ -64,7 +64,7 @@ const MyCampaigns = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const isFounder  = user?.userType?.toLowerCase() === "founder";
+  const isFounder = user?.userType?.toLowerCase() === "founder";
   const isInvestor = user?.userType?.toLowerCase() === "investor";
 
   useEffect(() => {
@@ -73,7 +73,7 @@ const MyCampaigns = () => {
 
   useEffect(() => {
     if (location.state?.tab) { setActiveTab(location.state.tab); window.history.replaceState({}, document.title); }
-    else if (isFounder)  setActiveTab("created");
+    else if (isFounder) setActiveTab("created");
     else if (isInvestor) setActiveTab("funded");
   }, [location, user]);
 
@@ -126,14 +126,14 @@ const MyCampaigns = () => {
 
   // ── tabs ──────────────────────────────────────────────────────────────────
   const TABS = [
-    { id: "viewed",    label: "Recently Viewed", icon: Eye,          count: campaignData.viewed?.length },
-    { id: "favorites", label: "Favorites",       icon: Heart,        count: campaignData.favorites?.length },
+    { id: "viewed", label: "Recently Viewed", icon: Eye, count: campaignData.viewed?.length },
+    { id: "favorites", label: "Favorites", icon: Heart, count: campaignData.favorites?.length },
     ...(isFounder ? [
-      { id: "created",   label: "All Campaigns",  icon: LayoutGrid,   count: campaignData.created?.all?.length },
-      { id: "drafts",    label: "Drafts",          icon: FileText,     count: campaignData.created?.drafts?.length },
-      { id: "submitted", label: "Under Review",    icon: Clock,        count: campaignData.created?.submitted?.length },
-      { id: "approved",  label: "Published",       icon: CheckCircle,  count: campaignData.created?.approved?.length },
-      { id: "rejected",  label: "Rejected",        icon: XCircle,      count: campaignData.created?.rejected?.length },
+      { id: "created", label: "All Campaigns", icon: LayoutGrid, count: campaignData.created?.all?.length },
+      { id: "drafts", label: "Drafts", icon: FileText, count: campaignData.created?.drafts?.length },
+      { id: "submitted", label: "Under Review", icon: Clock, count: campaignData.created?.submitted?.length },
+      { id: "approved", label: "Published", icon: CheckCircle, count: campaignData.created?.approved?.length },
+      { id: "rejected", label: "Rejected", icon: XCircle, count: campaignData.created?.rejected?.length },
     ] : []),
     ...(isInvestor ? [
       { id: "funded", label: "Funded", icon: DollarSign, count: campaignData.funded?.length },
@@ -142,42 +142,42 @@ const MyCampaigns = () => {
 
   const getActiveCampaigns = () => {
     switch (activeTab) {
-      case "viewed":    return campaignData.viewed;
+      case "viewed": return campaignData.viewed;
       case "favorites": return campaignData.favorites;
-      case "created":   return campaignData.created?.all || [];
-      case "drafts":    return campaignData.created?.drafts || [];
+      case "created": return campaignData.created?.all || [];
+      case "drafts": return campaignData.created?.drafts || [];
       case "submitted": return campaignData.created?.submitted || [];
-      case "approved":  return campaignData.created?.approved || [];
-      case "rejected":  return campaignData.created?.rejected || [];
-      case "funded":    return campaignData.funded;
-      default:          return [];
+      case "approved": return campaignData.created?.approved || [];
+      case "rejected": return campaignData.created?.rejected || [];
+      case "funded": return campaignData.funded;
+      default: return [];
     }
   };
 
   const EMPTY = {
-    viewed:    { icon: Eye,          title: "No viewed campaigns yet",    msg: "Browse campaigns to keep track of ones you've seen.",        cta: "Browse Campaigns",  to: "/dashboard" },
-    favorites: { icon: Bookmark,     title: "No favourites yet",          msg: "Save campaigns you're interested in for later.",             cta: "Browse Campaigns",  to: "/dashboard" },
-    created:   { icon: PenLine,      title: "No campaigns yet",           msg: "Start creating your first campaign to raise funds.",         cta: "Create Campaign",   to: "/pages/CreateCampaign" },
-    drafts:    { icon: FileText,     title: "No drafts",                  msg: "Your saved drafts will appear here.",                        cta: "Create Campaign",   to: "/pages/CreateCampaign" },
-    submitted: { icon: Clock,        title: "Nothing under review",       msg: "Campaigns you've submitted for approval will appear here.",  cta: null },
-    approved:  { icon: CheckCircle,  title: "No published campaigns",     msg: "Your approved campaigns will appear here.",                  cta: null },
-    rejected:  { icon: XCircle,      title: "No rejected campaigns",      msg: "Rejected campaigns with admin feedback will appear here.",   cta: null },
-    funded:    { icon: DollarSign,   title: "No funded campaigns yet",    msg: "Invest in campaigns you believe in.",                        cta: "Find Campaigns",    to: "/dashboard" },
+    viewed: { icon: Eye, title: "No viewed campaigns yet", msg: "Browse campaigns to keep track of ones you've seen.", cta: "Browse Campaigns", to: "/dashboard" },
+    favorites: { icon: Bookmark, title: "No favourites yet", msg: "Save campaigns you're interested in for later.", cta: "Browse Campaigns", to: "/dashboard" },
+    created: { icon: PenLine, title: "No campaigns yet", msg: "Start creating your first campaign to raise funds.", cta: "Create Campaign", to: "/pages/CreateCampaign" },
+    drafts: { icon: FileText, title: "No drafts", msg: "Your saved drafts will appear here.", cta: "Create Campaign", to: "/pages/CreateCampaign" },
+    submitted: { icon: Clock, title: "Nothing under review", msg: "Campaigns you've submitted for approval will appear here.", cta: null },
+    approved: { icon: CheckCircle, title: "No published campaigns", msg: "Your approved campaigns will appear here.", cta: null },
+    rejected: { icon: XCircle, title: "No rejected campaigns", msg: "Rejected campaigns with admin feedback will appear here.", cta: null },
+    funded: { icon: DollarSign, title: "No funded campaigns yet", msg: "Invest in campaigns you believe in.", cta: "Find Campaigns", to: "/dashboard" },
   };
 
   const stats = isFounder
     ? [
-        { label: "Total",       value: campaignData.created?.all?.length || 0,       color: "text-gray-900" },
-        { label: "Under Review",value: campaignData.created?.submitted?.length || 0,  color: "text-amber-600" },
-        { label: "Published",   value: campaignData.created?.approved?.length || 0,   color: "text-primary-600" },
-        { label: "Drafts",      value: campaignData.created?.drafts?.length || 0,     color: "text-gray-500" },
-      ]
+      { label: "Total", value: campaignData.created?.all?.length || 0, color: "text-gray-900" },
+      { label: "Under Review", value: campaignData.created?.submitted?.length || 0, color: "text-amber-600" },
+      { label: "Published", value: campaignData.created?.approved?.length || 0, color: "text-primary-600" },
+      { label: "Drafts", value: campaignData.created?.drafts?.length || 0, color: "text-gray-500" },
+    ]
     : [
-        { label: "Viewed",    value: campaignData.viewed?.length || 0,    color: "text-blue-600" },
-        { label: "Favourites",value: campaignData.favorites?.length || 0, color: "text-red-500" },
-        { label: "Funded",    value: campaignData.funded?.length || 0,    color: "text-primary-600" },
-        { label: "Portfolio", value: "—",                                  color: "text-gray-400" },
-      ];
+      { label: "Viewed", value: campaignData.viewed?.length || 0, color: "text-blue-600" },
+      { label: "Favourites", value: campaignData.favorites?.length || 0, color: "text-red-500" },
+      { label: "Funded", value: campaignData.funded?.length || 0, color: "text-primary-600" },
+      { label: "Portfolio", value: "—", color: "text-gray-400" },
+    ];
 
   const campaigns = getActiveCampaigns();
   const empty = EMPTY[activeTab] || EMPTY.viewed;
@@ -212,19 +212,19 @@ const MyCampaigns = () => {
 
           <motion.div
             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.55, delay: 0.1 }}
-            className="flex items-center gap-3"
+            className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 w-full"
           >
-            <button onClick={() => loadAll(true)} disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-medium   border border-white/20 transition-all disabled:opacity-50">
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing ? "Refreshing…" : "Refresh"}
-            </button>
-            {isFounder && (
-              <button onClick={() => navigate("/pages/CreateCampaign")}
-                className="flex items-center gap-2 px-5 py-2.5 bg-primary-500 hover:bg-primary-400 text-white text-sm font-bold   transition-all hover:scale-105 shadow-lg shadow-primary-900/30">
-                <Plus className="h-4 w-4" /> New Campaign
+              <button onClick={() => loadAll(true)} disabled={refreshing}
+                className="flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs md:text-sm font-medium border border-white/20 transition-all disabled:opacity-50 w-full md:w-auto">
+                <RefreshCw className={`h-3.5 w-3.5 md:h-4 md:w-4 ${refreshing ? "animate-spin" : ""}`} />
+                {refreshing ? "Refreshing…" : "Refresh"}
               </button>
-            )}
+              {isFounder && (
+                <button onClick={() => navigate("/pages/CreateCampaign")}
+                  className="flex items-center justify-center gap-2 px-4 py-2 md:px-5 md:py-2.5 bg-primary-500 hover:bg-primary-400 text-white text-xs md:text-sm font-bold transition-all hover:scale-105 shadow-lg shadow-primary-900/30 w-full md:w-auto">
+                  <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" /> New Campaign
+                </button>
+              )}
           </motion.div>
         </div>
       </div>
@@ -254,11 +254,10 @@ const MyCampaigns = () => {
             const active = activeTab === tab.id;
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2   text-sm font-medium transition-all ${
-                  active
+                className={`flex items-center gap-2 px-4 py-2   text-sm font-medium transition-all ${active
                     ? "bg-primary-600 text-white shadow-md shadow-primary-200"
                     : "bg-white text-gray-600 border border-gray-200 hover:border-primary-300 hover:text-primary-700"
-                }`}
+                  }`}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {tab.label}
