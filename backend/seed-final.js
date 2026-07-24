@@ -30,7 +30,7 @@ async function seedDatabase() {
     await connection.execute('DELETE FROM campaign_images WHERE 1=1');
     await connection.execute('DELETE FROM investments WHERE 1=1');
     await connection.execute('DELETE FROM campaigns WHERE 1=1');
-    await connection.execute('DELETE FROM users WHERE email LIKE "%@test.com" OR email LIKE "%@example.com"');
+    await connection.execute('DELETE FROM users WHERE email LIKE "%@darbnetwork.com" OR email LIKE "%@test.com" OR email LIKE "%@example.com"');
     console.log('✓ Cleanup complete\n');
 
     // === CREATE USERS ===
@@ -40,43 +40,65 @@ async function seedDatabase() {
     const brianPassword = 'Brian2025!';
     const brianHash = await bcrypt.hash(brianPassword, 10);
     const [brianResult] = await connection.execute(
-      `INSERT INTO users (email, password, fullName, userType, companyName, phoneNumber, isActive, isVerified, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      ['brian@darbnetwork.com', brianHash, 'Brian', 'founder', 'Tech Innovations Ltd', '+2348123456789', true, true]
+      `INSERT INTO users (email, password, fullName, userType, companyName, phoneNumber, isActive, isVerified, profileImageUrl, createdAt, updatedAt) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [
+        'brian@darbnetwork.com', 
+        brianHash, 
+        'Brian Okeke', 
+        'founder', 
+        'Tech Innovations Ltd', 
+        '+2348123456789', 
+        true, 
+        true, 
+        'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ]
     );
     const brianId = brianResult.insertId;
     console.log(`  ✓ Brian (Founder) - ID: ${brianId}`);
-    console.log(`    Email: brian@darbnetwork.com`);
-    console.log(`    Password: ${brianPassword}\n`);
 
     // 2. Frank (Investor)
     const frankPassword = 'Frank2025!';
     const frankHash = await bcrypt.hash(frankPassword, 10);
     const [frankResult] = await connection.execute(
-      `INSERT INTO users (email, password, fullName, userType, phoneNumber, isActive, isVerified, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      ['frank@darbnetwork.com', frankHash, 'Frank', 'investor', '+2348987654321', true, true]
+      `INSERT INTO users (email, password, fullName, userType, phoneNumber, isActive, isVerified, profileImageUrl, createdAt, updatedAt) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [
+        'frank@darbnetwork.com', 
+        frankHash, 
+        'Frank Egwu', 
+        'investor', 
+        '+2348987654321', 
+        true, 
+        true, 
+        'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ]
     );
     const frankId = frankResult.insertId;
     console.log(`  ✓ Frank (Investor) - ID: ${frankId}`);
-    console.log(`    Email: frank@darbnetwork.com`);
-    console.log(`    Password: ${frankPassword}\n`);
 
     // 3. Nelson (Admin)
     const nelsonPassword = 'Nelson2025!';
     const nelsonHash = await bcrypt.hash(nelsonPassword, 10);
     const [nelsonResult] = await connection.execute(
-      `INSERT INTO users (email, password, fullName, userType, phoneNumber, isActive, isVerified, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      ['nelson@darbnetwork.com', nelsonHash, 'Nelson', 'admin', '+2348111222333', true, true]
+      `INSERT INTO users (email, password, fullName, userType, phoneNumber, isActive, isVerified, profileImageUrl, createdAt, updatedAt) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [
+        'nelson@darbnetwork.com', 
+        nelsonHash, 
+        'Nelson Somto', 
+        'admin', 
+        '+2348111222333', 
+        true, 
+        true, 
+        'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400'
+      ]
     );
     const nelsonId = nelsonResult.insertId;
-    console.log(`  ✓ Nelson (Admin) - ID: ${nelsonId}`);
-    console.log(`    Email: nelson@darbnetwork.com`);
-    console.log(`    Password: ${nelsonPassword}\n`);
+    console.log(`  ✓ Nelson (Admin) - ID: ${nelsonId}\n`);
 
-    // === CREATE CAMPAIGNS WITH IMAGES ===
-    console.log('Creating campaigns with images...');
+    // === CREATE CAMPAIGNS WITH IMAGES AND RAISED AMOUNTS ===
+    console.log('Creating campaigns with reliable direct images and active raised funds...');
 
     const campaigns = [
       {
@@ -85,95 +107,101 @@ async function seedDatabase() {
         category: 'Energy & Green Tech',
         location: 'Lagos, Nigeria',
         target_amount: 50000000,
+        current_amount: 18500000, // 37% funded
         minimum_investment: 100000,
         maximum_investment: 5000000,
-        problem_statement: 'Traditional solar panels are expensive and inefficient, making clean energy inaccessible to most Nigerian households and businesses. Current solutions require significant upfront capital.',
-        solution: 'Our patented nano-coating technology increases solar panel efficiency by 40% while reducing manufacturing costs by 30%. We manufacture locally, creating jobs and making solar energy affordable.',
-        business_plan: 'We plan to manufacture 50,000 units in Year 1, targeting the residential and SME sectors. Revenue projection: ₦2.8B in Year 1, ₦8.5B in Year 3.',
-        market_analysis: 'The Nigerian solar market is projected to grow 25% annually. We target the residential and SME sectors with a combined TAM of ₦180B.',
-        main_image_url: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=1200&h=800&fit=crop&q=80',
+        view_count: 342,
+        favorite_count: 28,
+        problem_statement: 'Traditional solar panels are expensive and inefficient, making clean energy inaccessible to most Nigerian households and businesses.',
+        solution: 'Our patented nano-coating technology increases solar panel efficiency by 40% while reducing manufacturing costs by 30%.',
+        business_plan: 'We plan to manufacture 50,000 units in Year 1. Revenue projection: ₦2.8B in Year 1, ₦8.5B in Year 3.',
+        market_analysis: 'The Nigerian solar market is projected to grow 25% annually with a TAM of ₦180B.',
+        main_image_url: 'https://images.pexels.com/photos/356036/pexels-photo-356036.jpeg?auto=compress&cs=tinysrgb&w=800',
         video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         gallery_images: [
-          { url: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&h=600&fit=crop&q=80', caption: 'Solar panel installation' },
-          { url: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=800&h=600&fit=crop&q=80', caption: 'Our manufacturing facility' },
-          { url: 'https://images.unsplash.com/photo-1497440001374-f26997328c1b?w=800&h=600&fit=crop&q=80', caption: 'Team at work' },
-          { url: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&h=600&fit=crop&q=80', caption: 'Solar farm project' }
+          { url: 'https://images.pexels.com/photos/356036/pexels-photo-356036.jpeg?auto=compress&cs=tinysrgb&w=800', caption: 'Solar panel installation' },
+          { url: 'https://images.pexels.com/photos/2800832/pexels-photo-2800832.jpeg?auto=compress&cs=tinysrgb&w=800', caption: 'Our manufacturing facility' }
         ]
       },
       {
         title: 'AgriConnect - Farm to Market Platform',
-        description: 'Digital platform connecting farmers directly with buyers, eliminating middlemen and increasing farmer profits by 60%. Real-time pricing, logistics support, and payment security.',
+        description: 'Digital platform connecting farmers directly with buyers, eliminating middlemen and increasing farmer profits by 60%.',
         category: 'Food & Beverages',
         location: 'Abuja, Nigeria',
         target_amount: 25000000,
+        current_amount: 12500000, // 50% funded
         minimum_investment: 50000,
         maximum_investment: 2000000,
-        problem_statement: 'Farmers lose 40% of their income to middlemen and lack access to fair market prices. Post-harvest losses exceed 30% due to poor logistics.',
-        solution: 'Our mobile app connects farmers directly with buyers, providing real-time pricing, quality inspection, and cold-chain logistics. Payments are secured through escrow.',
-        business_plan: 'Platform fee model: 4% of transaction value. Year 1 GMV target: ₦2.4B, scaling to ₦28B by Year 3.',
-        market_analysis: 'Nigerian agricultural supply chain is worth ₦12 trillion. Fresh produce segment alone represents ₦4.2 trillion opportunity.',
-        main_image_url: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1200&h=800&fit=crop&q=80',
+        view_count: 189,
+        favorite_count: 15,
+        problem_statement: 'Farmers lose 40% of their income to middlemen and lack access to fair market prices.',
+        solution: 'Our mobile app connects farmers directly with buyers, providing real-time pricing and logistics support.',
+        business_plan: 'Platform fee model: 4% of transaction value. Year 1 GMV target: ₦2.4B.',
+        market_analysis: 'Nigerian agricultural supply chain is worth ₦12 trillion.',
+        main_image_url: 'https://images.pexels.com/photos/2255801/pexels-photo-2255801.jpeg?auto=compress&cs=tinysrgb&w=800',
         gallery_images: [
-          { url: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&h=600&fit=crop&q=80', caption: 'Fresh produce from farmers' },
-          { url: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&h=600&fit=crop&q=80', caption: 'Farmer using the app' },
-          { url: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=800&h=600&fit=crop&q=80', caption: 'Cold storage facility' }
+          { url: 'https://images.pexels.com/photos/2255801/pexels-photo-2255801.jpeg?auto=compress&cs=tinysrgb&w=800', caption: 'Fresh produce from farmers' },
+          { url: 'https://images.pexels.com/photos/2132250/pexels-photo-2132250.jpeg?auto=compress&cs=tinysrgb&w=800', caption: 'Farmer using the app' }
         ]
       },
       {
         title: 'HealthTech Diagnostic App',
-        description: 'AI-powered mobile app for preliminary health diagnostics, making healthcare accessible to remote areas. Instant health screening using smartphone camera and AI analysis.',
+        description: 'AI-powered mobile app for preliminary health diagnostics, making healthcare accessible to remote areas.',
         category: 'Healthcare',
         location: 'Port Harcourt, Nigeria',
         target_amount: 35000000,
+        current_amount: 26250000, // 75% funded
         minimum_investment: 75000,
         maximum_investment: 3000000,
-        problem_statement: 'Rural areas lack access to basic healthcare diagnostics, leading to late disease detection. 60% of Nigerians live more than 10km from a health facility.',
-        solution: 'AI-powered app provides preliminary diagnostics using smartphone camera for vital signs and symptom-based questionnaire. Connects users with licensed doctors via telemedicine.',
-        business_plan: 'Freemium model: Free basic screening, ₦500/consultation. Targeting 500K users in Year 1, 5M by Year 3.',
-        market_analysis: 'Nigerian digital health market projected to reach $4B by 2027. Telemedicine adoption growing 45% annually.',
-        main_image_url: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&h=800&fit=crop&q=80',
+        view_count: 512,
+        favorite_count: 42,
+        problem_statement: 'Rural areas lack access to basic healthcare diagnostics, leading to late disease detection.',
+        solution: 'AI-powered app provides preliminary diagnostics using smartphone camera for vital signs.',
+        business_plan: 'Freemium model: Free basic screening, ₦500/consultation.',
+        market_analysis: 'Nigerian digital health market projected to reach $4B by 2027.',
+        main_image_url: 'https://images.pexels.com/photos/40568/medical-appointment-doctor-healthcare-40568.jpeg?auto=compress&cs=tinysrgb&w=800',
         gallery_images: [
-          { url: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&h=600&fit=crop&q=80', caption: 'Doctor consultation via app' },
-          { url: 'https://images.unsplash.com/photo-1584515933487-779824d29309?w=800&h=600&fit=crop&q=80', caption: 'AI diagnostic interface' },
-          { url: 'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=800&h=600&fit=crop&q=80', caption: 'Mobile health screening' }
+          { url: 'https://images.pexels.com/photos/40568/medical-appointment-doctor-healthcare-40568.jpeg?auto=compress&cs=tinysrgb&w=800', caption: 'Doctor consultation via app' }
         ]
       },
       {
         title: 'EduLearn - Online Skills Training',
-        description: 'Affordable online platform offering vocational skills training with job placement guarantee. Focus on digital skills, coding, and entrepreneurship.',
+        description: 'Affordable online platform offering vocational skills training with job placement guarantee.',
         category: 'Education',
         location: 'Ibadan, Nigeria',
         target_amount: 15000000,
+        current_amount: 3000000, // 20% funded
         minimum_investment: 25000,
         maximum_investment: 1000000,
-        problem_statement: 'Youth unemployment is 42% due to skills gap. Traditional training programs cost ₦150K-₦500K, making them inaccessible to most.',
-        solution: 'Online platform offering affordable training (₦15K/course) with payment plans. Partnerships with 150+ companies for guaranteed job placement.',
-        business_plan: 'Course fee revenue + 10% placement fee from employers. Target: 10K students in Year 1, 50K by Year 3.',
-        market_analysis: 'Nigerian EdTech market valued at $180M, growing at 37% CAGR. Youth vocational training is a ₦2.5T market.',
-        main_image_url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&h=800&fit=crop&q=80',
+        view_count: 98,
+        favorite_count: 9,
+        problem_statement: 'Youth unemployment is high due to the skills gap in traditional curricula.',
+        solution: 'Online platform offering affordable training (₦15K/course) with job placement support.',
+        business_plan: 'Course fee revenue + 10% placement fee from employers.',
+        market_analysis: 'Nigerian EdTech market valued at $180M, growing at 37% CAGR.',
+        main_image_url: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
         gallery_images: [
-          { url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=600&fit=crop&q=80', caption: 'Students learning online' },
-          { url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop&q=80', caption: 'Coding bootcamp session' },
-          { url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&h=600&fit=crop&q=80', caption: 'Job placement ceremony' }
+          { url: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800', caption: 'Students learning online' }
         ]
       },
       {
         title: 'SwiftPay - Cross-Border Remittance',
-        description: 'Instant cross-border money transfer platform for diaspora Nigerians. Send money home in 60 seconds at 80% lower fees than traditional services.',
+        description: 'Instant cross-border money transfer platform for diaspora Nigerians at lower fees.',
         category: 'Productivity',
         location: 'Lagos, Nigeria',
         target_amount: 85000000,
+        current_amount: 51000000, // 60% funded
         minimum_investment: 250000,
         maximum_investment: 10000000,
-        problem_statement: 'Nigeria receives $20B in remittances annually. Traditional services charge 8-12% fees and take 2-5 days.',
-        solution: 'Blockchain-based instant transfers with 1.5% flat fee. Network of 1,200 cashout agents across 28 states for recipients without smartphones.',
-        business_plan: '1.5% transaction fee. Year 1: ₦500M GMV, Year 3: ₦18B GMV. Break-even at Month 14.',
-        market_analysis: 'West Africa remittance corridor: $35B annually, growing 7% YoY. 5.5M Nigerians in diaspora.',
-        main_image_url: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=800&fit=crop&q=80',
+        view_count: 620,
+        favorite_count: 55,
+        problem_statement: 'Traditional services charge high fees and take 2-5 days for remittance.',
+        solution: 'Instant transfers with 1.5% flat fee and local cashout agent network.',
+        business_plan: '1.5% transaction fee. Break-even at Month 14.',
+        market_analysis: 'West Africa remittance corridor: $35B annually.',
+        main_image_url: 'https://images.pexels.com/photos/6214476/pexels-photo-6214476.jpeg?auto=compress&cs=tinysrgb&w=800',
         gallery_images: [
-          { url: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop&q=80', caption: 'Mobile money transfer' },
-          { url: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=600&fit=crop&q=80', caption: 'Cashout agent network' },
-          { url: 'https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=800&h=600&fit=crop&q=80', caption: 'App interface' }
+          { url: 'https://images.pexels.com/photos/6214476/pexels-photo-6214476.jpeg?auto=compress&cs=tinysrgb&w=800', caption: 'Mobile money transfer' }
         ]
       }
     ];
@@ -186,22 +214,22 @@ async function seedDatabase() {
         `INSERT INTO campaigns (
           title, description, category, location, target_amount, current_amount,
           minimum_investment, maximum_investment, problem_statement, solution,
-          business_plan, market_analysis, main_image_url, video_url,
+          business_plan, market_analysis, main_image_url, video_url, view_count, favorite_count,
           status, is_featured, duration_days, start_date, end_date, founder_id,
           submitted_at, approved_at, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, NOW(), NOW(), NOW(), NOW())`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 90, NOW(), ?, ?, NOW(), NOW(), NOW(), NOW())`,
         [
           camp.title, camp.description, camp.category, camp.location,
-          camp.target_amount, 0, camp.minimum_investment, camp.maximum_investment,
+          camp.target_amount, camp.current_amount, camp.minimum_investment, camp.maximum_investment,
           camp.problem_statement, camp.solution, camp.business_plan, camp.market_analysis,
-          camp.main_image_url, camp.video_url || null,
+          camp.main_image_url, camp.video_url || null, camp.view_count || 0, camp.favorite_count || 0,
           'approved', camp.title.includes('EcoTech') || camp.title.includes('HealthTech') || camp.title.includes('SwiftPay'),
-          90, endDate, brianId
+          endDate, brianId
         ]
       );
       
       const campaignId = result.insertId;
-      console.log(`  ✓ Created: ${camp.title} (ID: ${campaignId})`);
+      console.log(`  ✓ Created: ${camp.title} (ID: ${campaignId}) - Raised: ₦${camp.current_amount.toLocaleString()}`);
 
       // Add gallery images
       if (camp.gallery_images) {
@@ -213,31 +241,10 @@ async function seedDatabase() {
             [campaignId, img.url, img.caption, `gallery-${i}.jpg`, i]
           );
         }
-        console.log(`    Added ${camp.gallery_images.length} gallery images`);
       }
     }
 
     console.log('\n=== Database Seeded Successfully! ===\n');
-    console.log('Login Credentials:');
-    console.log('─'.repeat(50));
-    console.log('👤 FOUNDER');
-    console.log('   Email:    brian@darbnetwork.com');
-    console.log(`   Password: ${brianPassword}`);
-    console.log('');
-    console.log('💰 INVESTOR');
-    console.log('   Email:    frank@darbnetwork.com');
-    console.log(`   Password: ${frankPassword}`);
-    console.log('');
-    console.log('🔧 ADMIN');
-    console.log('   Email:    nelson@darbnetwork.com');
-    console.log(`   Password: ${nelsonPassword}`);
-    console.log('─'.repeat(50));
-    console.log('\n✅ You can now:');
-    console.log('   - Login to frontend with any account');
-    console.log('   - View 5 campaigns with images');
-    console.log('   - Create new campaigns as Brian (founder)');
-    console.log('   - Make investments as Frank (investor)');
-    console.log('   - Manage campaigns as Nelson (admin)\n');
 
   } catch (error) {
     console.error('\n✗ Error seeding database:', error.message);

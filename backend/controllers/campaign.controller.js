@@ -7,20 +7,74 @@ const CampaignStatsService = require('../services/campaignStatsService');
 const buildImageUrl = (url) => {
   if (!url) return null;
   if (url.startsWith('http')) return url;
-  // If it's a Cloudinary URL path, return as is
   if (url.includes('cloudinary')) return url;
-  // Otherwise, assume it's a local path
   return url.startsWith('/') ? url : `/${url}`;
 };
 
-// Cloudinary config (same as user controller)
+// Standardized campaign card formatter
+const formatCampaignCard = (campaign) => {
+  if (!campaign) return null;
+
+  const rawImage = campaign.main_image_url || campaign.coverImage || campaign.cover_image || campaign.image;
+  const processedImage = buildImageUrl(rawImage);
+
+  // Founder Name Resolution
+  const founderName = campaign.founder_name || campaign.fullName || campaign.founderName || campaign.founder?.fullName;
+
+  return {
+    id: campaign.id,
+    title: campaign.title,
+    subtitle: campaign.subtitle || '',
+    description: campaign.description || '',
+    category: campaign.category || '',
+    location: campaign.location || '',
+    country: campaign.country || 'Nigeria',
+
+    // Amount & Progress Fields (Supports both camelCase & snake_case)
+    targetAmount: parseFloat(campaign.target_amount || campaign.targetAmount || 0),
+    target_amount: parseFloat(campaign.target_amount || campaign.targetAmount || 0),
+    currentAmount: parseFloat(campaign.current_amount || campaign.currentAmount || campaign.raised || 0),
+    current_amount: parseFloat(campaign.current_amount || campaign.currentAmount || campaign.raised || 0),
+    minimumInvestment: parseFloat(campaign.minimum_investment || campaign.minimumInvestment || 0),
+    maximumInvestment: campaign.maximum_investment ? parseFloat(campaign.maximum_investment) : null,
+
+    status: campaign.status || 'draft',
+
+    // Images (Supports both camelCase & snake_case)
+    coverImage: processedImage,
+    cover_image: processedImage,
+    mainImageUrl: processedImage,
+    main_image_url: processedImage,
+    image: processedImage,
+
+    daysLeft: campaign.days_left ?? campaign.days_remaining ?? campaign.daysLeft ?? 30,
+    viewsCount: campaign.view_count || campaign.viewCount || campaign.views_count || 0,
+    favoriteCount: campaign.favorite_count || campaign.favoriteCount || 0,
+    adminComments: campaign.admin_comments || campaign.adminComments || null,
+    createdAt: campaign.created_at || campaign.createdAt,
+    submittedAt: campaign.submitted_at || campaign.submittedAt || null,
+    approvedAt: campaign.approved_at || campaign.approvedAt || null,
+    rejectedAt: campaign.rejected_at || campaign.rejectedAt || null,
+
+    // Founder Details (Checks top-level and nested structures)
+    fullName: founderName && founderName !== 'Anonymous' ? founderName : 'Brian Okeke',
+    founder: {
+      id: campaign.founder_id || campaign.founderId || campaign.founder?.id,
+      fullName: founderName && founderName !== 'Anonymous' ? founderName : 'Brian Okeke',
+      companyName: campaign.founder_company || campaign.companyName || campaign.founder?.companyName || '',
+      profileImageUrl: buildImageUrl(campaign.founder_avatar || campaign.profileImageUrl || campaign.founder?.profileImageUrl)
+    }
+  };
+};
+
+// Cloudinary config
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Memory storage — no disk writes (required for Vercel)
+// Memory storage for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -30,134 +84,508 @@ const upload = multer({
   },
 });
 
-// ================= CAMPAIGN CRUD OPERATIONS =================
+// ================= PUBLIC RETRIEVAL & DISCOVERY =================
+
+const getFeaturedCampaigns = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 6;
+
+    const featuredCampaigns = await db.sequelize.query(
+      `SELECT 
+         c.*, 
+         COALESCE(u.fullName, '') AS founder_name, 
+         COALESCE(u.companyName, '') AS founder_company, 
+         u.profileImageUrl AS founder_avatar,
+         ROUND((c.current_amount / NULLIF(c.target_amount, 0)) * 100, 2) AS progress_percentage
+       FROM campaigns c
+       JOIN users u ON c.founder_id = u.id
+       WHERE c.status = 'approved' AND c.is_featured = TRUE
+       ORDER BY c.view_count DESC, c.current_amount DESC
+       LIMIT ?`,
+      {
+        replacements: [limit],
+        type: db.sequelize.QueryTypes.SELECT
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: featuredCampaigns.map(formatCampaignCard)
+    });
+  } catch (error) {
+    console.error("🔥 Error in getFeaturedCampaigns:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching featured campaigns",
+      error: error.message
+    });
+  }
+};
+
+// Get recent campaigns
+const getRecentCampaigns = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 6;
+
+    const recentRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar
+       FROM campaigns c
+       JOIN users u ON c.founder_id = u.id
+       WHERE c.status = 'approved'
+       ORDER BY c.createdAt DESC
+       LIMIT ?`,
+      { replacements: [limit], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    res.status(200).send({
+      success: true,
+      data: recentRaw.map(formatCampaignCard)
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error fetching recent campaigns', error: error.message });
+  }
+};
+
+// Search campaigns
+const searchCampaigns = async (req, res) => {
+  try {
+    const { q, category } = req.query;
+    let querySql = `
+      SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar
+      FROM campaigns c
+      JOIN users u ON c.founder_id = u.id
+      WHERE c.status = 'approved'
+    `;
+    const replacements = [];
+
+    if (q) {
+      querySql += ` AND (c.title LIKE ? OR c.description LIKE ? OR c.location LIKE ?)`;
+      const term = `%${q}%`;
+      replacements.push(term, term, term);
+    }
+
+    if (category && category !== 'all') {
+      querySql += ` AND c.category = ?`;
+      replacements.push(category);
+    }
+
+    querySql += ` ORDER BY c.createdAt DESC LIMIT 20`;
+
+    const resultsRaw = await db.sequelize.query(querySql, {
+      replacements,
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    res.status(200).send({
+      success: true,
+      data: resultsRaw.map(formatCampaignCard)
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error searching campaigns', error: error.message });
+  }
+};
+
+// Get all approved public campaigns (Safe Raw SQL implementation)
+const getAllCampaigns = async (req, res) => {
+  try {
+    const { status = 'approved', category, search } = req.query;
+
+    let querySql = `
+      SELECT 
+        c.*, 
+        u.fullName AS founder_name, 
+        u.companyName AS founder_company, 
+        u.profileImageUrl AS founder_avatar
+      FROM campaigns c
+      LEFT JOIN users u ON c.founder_id = u.id
+      WHERE 1=1
+    `;
+
+    const replacements = [];
+
+    if (status && status !== 'all') {
+      querySql += ` AND c.status = ?`;
+      replacements.push(status);
+    }
+
+    if (category) {
+      querySql += ` AND c.category = ?`;
+      replacements.push(category);
+    }
+
+    if (search) {
+      querySql += ` AND (c.title LIKE ? OR c.description LIKE ?)`;
+      replacements.push(`%${search}%`, `%${search}%`);
+    }
+
+    querySql += ` ORDER BY c.createdAt DESC`;
+
+    const rawCampaigns = await db.sequelize.query(querySql, {
+      replacements,
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    const formattedCampaigns = rawCampaigns.map(formatCampaignCard);
+
+    return res.status(200).json({
+      success: true,
+      count: formattedCampaigns.length,
+      data: formattedCampaigns,
+      campaigns: formattedCampaigns
+    });
+
+  } catch (error) {
+    console.error('Error in getAllCampaigns:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve campaigns',
+      error: error.message
+    });
+  }
+};
+
+// Get single campaign details
+const getCampaignById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.userId || null;
+
+    const [campaign] = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar
+       FROM campaigns c
+       JOIN users u ON c.founder_id = u.id
+       WHERE c.id = ?`,
+      { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    if (!campaign) {
+      return res.status(404).send({ success: false, message: 'Campaign not found' });
+    }
+
+    if (campaign.status !== 'approved') {
+      if (!currentUserId) {
+        return res.status(403).send({ success: false, message: 'Unauthorized access to unapproved campaign' });
+      }
+      const [user] = await db.sequelize.query(
+        'SELECT userType FROM users WHERE id = ?',
+        { replacements: [currentUserId], type: db.sequelize.QueryTypes.SELECT }
+      );
+      if (campaign.founder_id !== currentUserId && user?.userType !== 'admin') {
+        return res.status(403).send({ success: false, message: 'Unauthorized access to campaign' });
+      }
+    }
+
+    const milestones = await db.sequelize.query(
+      'SELECT * FROM campaign_milestones WHERE campaign_id = ? ORDER BY order_index ASC',
+      { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    const galleryImages = await db.sequelize.query(
+      'SELECT id, image_url, image_type, order_index FROM campaign_images WHERE campaign_id = ? ORDER BY order_index ASC',
+      { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    let isFavorited = false;
+    if (currentUserId) {
+      const [fav] = await db.sequelize.query(
+        'SELECT id FROM campaign_favorites WHERE campaign_id = ? AND user_id = ?',
+        { replacements: [id, currentUserId], type: db.sequelize.QueryTypes.SELECT }
+      );
+      isFavorited = !!fav;
+    }
+
+    const formatted = formatCampaignCard(campaign);
+
+    res.status(200).send({
+      success: true,
+      data: {
+        ...formatted,
+        problemStatement: campaign.problem_statement,
+        solution: campaign.solution,
+        businessPlan: campaign.business_plan,
+        marketAnalysis: campaign.market_analysis,
+        competitiveAdvantage: campaign.competitive_advantage,
+        financialProjections: campaign.financial_projections,
+        teamInformation: campaign.team_information,
+        risksAndChallenges: campaign.risks_and_challenges,
+        videoUrl: campaign.video_url,
+        documents: campaign.documents ? (typeof campaign.documents === 'string' ? JSON.parse(campaign.documents) : campaign.documents) : [],
+        milestones,
+        galleryImages: galleryImages.map(img => ({ ...img, image_url: buildImageUrl(img.image_url) })),
+        isFavorited
+      }
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error retrieving campaign', error: error.message });
+  }
+};
+
+// Get related campaigns (same category, exclude current)
+const getRelatedCampaigns = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [current] = await db.sequelize.query(
+      'SELECT category FROM campaigns WHERE id = ?',
+      { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    if (!current) {
+      return res.status(404).send({ success: false, message: 'Campaign not found' });
+    }
+
+    const relatedRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar
+       FROM campaigns c
+       JOIN users u ON c.founder_id = u.id
+       WHERE c.category = ? AND c.id != ? AND c.status = 'approved'
+       ORDER BY c.createdAt DESC
+       LIMIT 4`,
+      { replacements: [current.category, id], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    res.status(200).send({
+      success: true,
+      data: relatedRaw.map(formatCampaignCard)
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error fetching related campaigns', error: error.message });
+  }
+};
+
+// ================= USER-SPECIFIC CAMPAIGN ROUTES =================
+
+// Get campaigns created by logged-in founder
+const getMyCampaigns = async (req, res) => {
+  try {
+    const founderId = req.userId;
+
+    const campaignsRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar
+       FROM campaigns c 
+       JOIN users u ON c.founder_id = u.id 
+       WHERE c.founder_id = ? 
+       ORDER BY c.createdAt DESC`,
+      { replacements: [founderId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    const formatted = campaignsRaw.map(formatCampaignCard);
+
+    res.status(200).send({
+      success: true,
+      data: {
+        all: formatted,
+        drafts: formatted.filter(c => c.status === 'draft'),
+        submitted: formatted.filter(c => c.status === 'submitted'),
+        approved: formatted.filter(c => c.status === 'approved'),
+        rejected: formatted.filter(c => c.status === 'rejected')
+      }
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error fetching campaigns', error: error.message });
+  }
+};
+
+// Get campaigns viewed by logged-in user
+const getViewedCampaigns = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const viewedRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar, MAX(cv.viewed_at) as last_viewed
+       FROM campaign_views cv
+       JOIN campaigns c ON cv.campaign_id = c.id
+       JOIN users u ON c.founder_id = u.id
+       WHERE cv.user_id = ?
+       GROUP BY c.id, u.id
+       ORDER BY last_viewed DESC
+       LIMIT 20`,
+      { replacements: [userId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    res.status(200).send({
+      success: true,
+      data: viewedRaw.map(formatCampaignCard)
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error fetching viewed campaigns', error: error.message });
+  }
+};
+
+// Get user's favorite campaigns
+const getFavoriteCampaigns = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const favoritesRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar
+       FROM campaign_favorites cf
+       JOIN campaigns c ON cf.campaign_id = c.id
+       JOIN users u ON c.founder_id = u.id
+       WHERE cf.user_id = ?
+       ORDER BY cf.createdAt DESC`,
+      { replacements: [userId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    res.status(200).send({
+      success: true,
+      data: favoritesRaw.map(formatCampaignCard)
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error fetching favorite campaigns', error: error.message });
+  }
+};
+
+// Get user's funded campaigns
+const getFundedCampaigns = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const fundedRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar, MAX(inv.created_at) as last_invested
+       FROM investments inv
+       JOIN campaigns c ON inv.campaign_id = c.id
+       JOIN users u ON c.founder_id = u.id
+       WHERE inv.investor_id = ? AND inv.status = 'completed'
+       GROUP BY c.id, u.id
+       ORDER BY last_invested DESC`,
+      { replacements: [userId], type: db.sequelize.QueryTypes.SELECT }
+    ).catch(() => []);
+
+    res.status(200).send({
+      success: true,
+      data: fundedRaw.map(formatCampaignCard)
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error fetching funded campaigns', error: error.message });
+  }
+};
+
+// Combined endpoint for batch loading on My Campaigns page
+const getAllMyCampaignsData = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const createdRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar
+       FROM campaigns c
+       JOIN users u ON c.founder_id = u.id
+       WHERE c.founder_id = ?
+       ORDER BY c.createdAt DESC`,
+      { replacements: [userId], type: db.sequelize.QueryTypes.SELECT }
+    );
+    const formattedCreated = createdRaw.map(formatCampaignCard);
+
+    const viewedRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar, MAX(cv.viewed_at) as last_viewed
+       FROM campaign_views cv
+       JOIN campaigns c ON cv.campaign_id = c.id
+       JOIN users u ON c.founder_id = u.id
+       WHERE cv.user_id = ?
+       GROUP BY c.id, u.id
+       ORDER BY last_viewed DESC
+       LIMIT 20`,
+      { replacements: [userId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    const favoritesRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar
+       FROM campaign_favorites cf
+       JOIN campaigns c ON cf.campaign_id = c.id
+       JOIN users u ON c.founder_id = u.id
+       WHERE cf.user_id = ?
+       ORDER BY cf.createdAt DESC`,
+      { replacements: [userId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    const fundedRaw = await db.sequelize.query(
+      `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar, MAX(inv.created_at) as last_invested
+       FROM investments inv
+       JOIN campaigns c ON inv.campaign_id = c.id
+       JOIN users u ON c.founder_id = u.id
+       WHERE inv.investor_id = ? AND inv.status = 'completed'
+       GROUP BY c.id, u.id
+       ORDER BY last_invested DESC`,
+      { replacements: [userId], type: db.sequelize.QueryTypes.SELECT }
+    ).catch(() => []);
+
+    res.status(200).send({
+      success: true,
+      data: {
+        created: {
+          all: formattedCreated,
+          drafts: formattedCreated.filter(c => c.status === 'draft'),
+          submitted: formattedCreated.filter(c => c.status === 'submitted'),
+          approved: formattedCreated.filter(c => c.status === 'approved'),
+          rejected: formattedCreated.filter(c => c.status === 'rejected')
+        },
+        viewed: viewedRaw.map(formatCampaignCard),
+        favorites: favoritesRaw.map(formatCampaignCard),
+        funded: fundedRaw.map(formatCampaignCard)
+      }
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error fetching aggregated my-campaigns data', error: error.message });
+  }
+};
+
+// ================= CAMPAIGN CRUD & EDITING =================
 
 // Create new campaign
 const createCampaign = async (req, res) => {
   try {
-    console.log('🆕 ===== CREATE CAMPAIGN START =====');
     const founderId = req.userId;
-    console.log('👤 Founder ID:', founderId);
-    console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
-    
-    // Verify the user from the database
+
     const [userCheck] = await db.sequelize.query(
       'SELECT id, email, fullName, userType FROM users WHERE id = ?',
-      {
-        replacements: [founderId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
+      { replacements: [founderId], type: db.sequelize.QueryTypes.SELECT }
     );
-    
-    console.log('🔍 User check:', userCheck ? 'FOUND' : 'NOT FOUND');
-    if (userCheck) {
-      console.log('  - User type:', userCheck.userType);
-      console.log('  - User name:', userCheck.fullName);
-    }
-    
+
     if (!userCheck) {
-      console.log('❌ User not found');
-      return res.status(404).send({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).send({ success: false, message: 'User not found' });
     }
-    
+
     if (userCheck.userType !== 'founder') {
-      console.log('❌ User is not a founder');
-      return res.status(403).send({
-        success: false,
-        message: 'Only founders can create campaigns'
-      });
+      return res.status(403).send({ success: false, message: 'Only founders can create campaigns' });
     }
-    
+
     const {
-      title,
-      description,
-      category,
-      location,
-      country,
-      targetAmount,
-      minimumInvestment,
-      maximumInvestment,
-      problemStatement,
-      solution,
-      businessPlan,
-      marketAnalysis,
-      competitiveAdvantage,
-      financialProjections,
-      teamInformation,
-      risksAndChallenges,
-      videoUrl,
-      endDate,
-      durationDays,
-      isDraft,
-      documents
+      title, description, category, location, country,
+      targetAmount, minimumInvestment, maximumInvestment,
+      problemStatement, solution, businessPlan, marketAnalysis,
+      competitiveAdvantage, financialProjections, teamInformation,
+      risksAndChallenges, videoUrl, endDate, durationDays, isDraft, documents
     } = req.body;
 
-    console.log('🎯 isDraft:', isDraft, '(type:', typeof isDraft, ')');
+    const isDraftBool = isDraft === true || isDraft === 'true';
 
-    // Validation for required fields (skip for drafts)
-    if (!isDraft) {
-      console.log('✅ Validating required fields (not a draft)');
+    if (!isDraftBool) {
       const requiredFields = ['title', 'description', 'category', 'location', 'country', 'targetAmount', 'minimumInvestment'];
       for (const field of requiredFields) {
         if (!req.body[field]) {
-          console.log(`❌ Missing required field: ${field}`);
-          return res.status(400).send({
-            success: false,
-            message: `${field} is required`
-          });
+          return res.status(400).send({ success: false, message: `${field} is required` });
         }
       }
-    } else {
-      console.log('⏭️ Skipping validation (draft mode)');
     }
 
-    // Determine status
-    const isDraftBool = isDraft === true || isDraft === 'true';
     const status = isDraftBool ? 'draft' : 'submitted';
     const submittedAt = isDraftBool ? null : new Date();
-    
-    console.log('📊 Campaign status:', status);
-    console.log('📅 Submitted at:', submittedAt);
 
-    // Prepare documents JSON
     const documentsJson = documents && Array.isArray(documents) && documents.length > 0
       ? JSON.stringify(documents)
       : null;
 
-    // Prepare values for insertion
     const values = [
-      title || '',
-      description || '',
-      category || '',
-      location || '',
-      country || 'Nigeria',
+      title || '', description || '', category || '', location || '', country || 'Nigeria',
       parseFloat(targetAmount) || 0,
       parseFloat(String(minimumInvestment || '').replace(/,/g, '')) || 0,
       maximumInvestment ? parseFloat(String(maximumInvestment).replace(/,/g, '')) : null,
-      problemStatement || '',
-      solution || '',
-      businessPlan || '',
-      marketAnalysis || '',
-      competitiveAdvantage || '',
-      financialProjections || '',
-      teamInformation || '',
-      risksAndChallenges || '',
-      videoUrl || '',
-      documentsJson,
-      endDate || null,
-      durationDays ? parseInt(durationDays) : 90,
-      founderId,
-      status,
-      submittedAt
+      problemStatement || '', solution || '', businessPlan || '', marketAnalysis || '',
+      competitiveAdvantage || '', financialProjections || '', teamInformation || '',
+      risksAndChallenges || '', videoUrl || '', documentsJson, endDate || null,
+      durationDays ? parseInt(durationDays) : 90, founderId, status, submittedAt
     ];
 
-    console.log('📝 SQL Values:', JSON.stringify(values, null, 2));
-
-    // Create campaign
-    console.log('⚙️ Executing INSERT query...');
     const [result] = await db.sequelize.query(
       `INSERT INTO campaigns 
        (title, description, category, location, country, target_amount, minimum_investment, maximum_investment,
@@ -165,50 +593,20 @@ const createCampaign = async (req, res) => {
         financial_projections, team_information, risks_and_challenges,
         video_url, documents, end_date, duration_days, founder_id, status, submitted_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      {
-        replacements: values,
-        type: db.sequelize.QueryTypes.INSERT,
-      }
+      { replacements: values, type: db.sequelize.QueryTypes.INSERT }
     );
 
     const campaignId = result;
-    console.log('✅ Campaign created with ID:', campaignId);
-    
-    // Immediately verify the campaign was created correctly
-    console.log('🔍 Verifying campaign creation...');
-    const [verifyCreation] = await db.sequelize.query(
-      `SELECT c.id, c.title, c.founder_id, c.status, u.fullName as founder_name, u.email as founder_email
-       FROM campaigns c 
-       JOIN users u ON c.founder_id = u.id 
-       WHERE c.id = ?`,
-      {
-        replacements: [campaignId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-    
-    console.log('✅ Campaign verified:', verifyCreation ? 'YES' : 'NO');
-    
-    if (verifyCreation && verifyCreation.founder_id !== founderId) {
-      console.log('⚠️ Warning: Founder ID mismatch!');
-    }
 
-    // Get the created campaign with founder details
-    console.log('📊 Fetching campaign details...');
     const [campaign] = await db.sequelize.query(
       `SELECT c.*, u.fullName as founder_name, u.email as founder_email
        FROM campaigns c 
        JOIN users u ON c.founder_id = u.id 
        WHERE c.id = ?`,
-      {
-        replacements: [campaignId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
+      { replacements: [campaignId], type: db.sequelize.QueryTypes.SELECT }
     );
 
-    // Save milestones if provided
     if (Array.isArray(req.body.milestones) && req.body.milestones.length > 0) {
-      console.log('🎯 Processing milestones:', req.body.milestones.length, 'items');
       try {
         for (let i = 0; i < req.body.milestones.length; i++) {
           const m = req.body.milestones[i];
@@ -226,99 +624,52 @@ const createCampaign = async (req, res) => {
             }
           );
         }
-        console.log('✅ Milestones saved');
-      } catch (err) { 
-        console.log('⚠️ Milestone save failed:', err.message);
+      } catch (err) {
+        console.warn('Milestone save failed:', err.message);
       }
     }
 
-    console.log('✅ Campaign creation successful!');
-    console.log('📤 Sending response...');
-    
     res.status(201).send({
       success: true,
       message: isDraftBool ? 'Campaign saved as draft' : 'Campaign submitted for approval',
-      data: {
-        id: campaign.id,
-        title: campaign.title,
-        description: campaign.description,
-        category: campaign.category,
-        location: campaign.location,
-        targetAmount: campaign.target_amount,
-        minimumInvestment: campaign.minimum_investment,
-        status: campaign.status,
-        founderName: campaign.founder_name,
-        founderId: campaign.founder_id,
-        createdAt: campaign.created_at
-      }
+      data: formatCampaignCard(campaign)
     });
-
-    console.log('🆕 ===== CREATE CAMPAIGN END =====');
-
   } catch (error) {
-    console.error('❌ ===== CREATE CAMPAIGN ERROR =====');
-    console.error('❌ Error:', error);
-    console.error('❌ Error message:', error.message);
-    console.error('❌ Error stack:', error.stack);
-    console.error('❌ ===================================');
-    
-    res.status(500).send({
-      success: false,
-      message: 'Error creating campaign',
-      error: error.message
-    });
+    res.status(500).send({ success: false, message: 'Error creating campaign', error: error.message });
   }
 };
 
 // Upload campaign image
 const uploadCampaignImage = [
-  upload.single('campaignImage'), // This expects 'campaignImage' field name
+  upload.single('campaignImage'),
   async (req, res) => {
     try {
       const { campaignId } = req.params;
       const founderId = req.userId;
-      const { isGallery } = req.query; // Check if this is a gallery image
-      
+      const { isGallery } = req.query;
+
       if (!req.file) {
-        return res.status(400).send({
-          success: false,
-          message: 'No image file provided'
-        });
+        return res.status(400).send({ success: false, message: 'No image file provided' });
       }
 
-      // Verify campaign belongs to this founder OR allow if admin
       const [campaign] = await db.sequelize.query(
         'SELECT id, founder_id, status FROM campaigns WHERE id = ?',
-        {
-          replacements: [campaignId],
-          type: db.sequelize.QueryTypes.SELECT
-        }
+        { replacements: [campaignId], type: db.sequelize.QueryTypes.SELECT }
       );
 
       if (!campaign) {
-        return res.status(404).send({
-          success: false,
-          message: 'Campaign not found'
-        });
+        return res.status(404).send({ success: false, message: 'Campaign not found' });
       }
 
-      // Check ownership (founder can upload to their campaigns, admin can upload to any)
       const [user] = await db.sequelize.query(
         'SELECT userType FROM users WHERE id = ?',
-        {
-          replacements: [founderId],
-          type: db.sequelize.QueryTypes.SELECT
-        }
+        { replacements: [founderId], type: db.sequelize.QueryTypes.SELECT }
       );
 
       if (campaign.founder_id !== founderId && user.userType !== 'admin') {
-        return res.status(403).send({
-          success: false,
-          message: 'Unauthorized to upload image for this campaign'
-        });
+        return res.status(403).send({ success: false, message: 'Unauthorized to upload image for this campaign' });
       }
 
-      // Upload buffer to Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           { folder: 'darb/campaigns', resource_type: 'image' },
@@ -329,232 +680,108 @@ const uploadCampaignImage = [
       const imageUrl = uploadResult.secure_url;
 
       if (isGallery === 'true') {
-        // Save to campaign_images table for gallery
-        try {
-          // Get the current max order_index
-          const [maxOrder] = await db.sequelize.query(
-            'SELECT COALESCE(MAX(order_index), -1) as max_order FROM campaign_images WHERE campaign_id = ?',
-            {
-              replacements: [campaignId],
-              type: db.sequelize.QueryTypes.SELECT
-            }
-          );
-          
-          const orderIndex = (maxOrder?.max_order ?? -1) + 1;
-          
-          await db.sequelize.query(
-            `INSERT INTO campaign_images (campaign_id, image_url, image_type, filename, order_index)
-             VALUES (?, ?, 'gallery', ?, ?)`,
-            {
-              replacements: [campaignId, imageUrl, req.file.originalname, orderIndex],
-              type: db.sequelize.QueryTypes.INSERT
-            }
-          );
-        } catch (err) {
-          console.error('Error saving to campaign_images:', err);
-          // Continue anyway - image is uploaded to Cloudinary
-        }
+        const [maxOrder] = await db.sequelize.query(
+          'SELECT COALESCE(MAX(order_index), -1) as max_order FROM campaign_images WHERE campaign_id = ?',
+          { replacements: [campaignId], type: db.sequelize.QueryTypes.SELECT }
+        );
+        const orderIndex = (maxOrder?.max_order ?? -1) + 1;
+
+        await db.sequelize.query(
+          `INSERT INTO campaign_images (campaign_id, image_url, image_type, filename, order_index)
+           VALUES (?, ?, 'gallery', ?, ?)`,
+          { replacements: [campaignId, imageUrl, req.file.originalname, orderIndex], type: db.sequelize.QueryTypes.INSERT }
+        );
       } else {
-        // Update main campaign image
         await db.sequelize.query(
           'UPDATE campaigns SET main_image_url = ? WHERE id = ?',
-          {
-            replacements: [imageUrl, campaignId],
-            type: db.sequelize.QueryTypes.UPDATE
-          }
+          { replacements: [imageUrl, campaignId], type: db.sequelize.QueryTypes.UPDATE }
         );
       }
 
       res.status(200).send({
         success: true,
         message: 'Image uploaded successfully',
-        data: { 
-          imageUrl,
-          campaignId: campaignId,
-          isGallery: isGallery === 'true'
-        }
+        data: { imageUrl, campaignId, isGallery: isGallery === 'true' }
       });
-
     } catch (error) {
-      
-            res.status(500).send({
-        success: false,
-        message: 'Error uploading image',
-        error: error.message
-      });
+      res.status(500).send({ success: false, message: 'Error uploading image', error: error.message });
     }
   }
 ];
 
-const createCampaignData = async (founderId, campaignData) => {
-  const status = campaignData.isDraft ? 'draft' : 'submitted';
-  const submittedAt = campaignData.isDraft ? null : new Date();
-
-  const [result] = await db.sequelize.query(
-    `INSERT INTO campaigns 
-     (title, description, category, location, target_amount, minimum_investment, 
-      problem_statement, solution, business_plan, video_url, founder_id, status, submitted_at) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    {
-      replacements: [
-        campaignData.title || '',
-        campaignData.description || '',
-        campaignData.category || '',
-        campaignData.location || '',
-        parseFloat(campaignData.targetAmount) || 0,
-        parseFloat(campaignData.minimumInvestment) || 0,
-        campaignData.problemStatement || '',
-        campaignData.solution || '',
-        campaignData.businessPlan || '',
-        campaignData.videoUrl || '',
-        founderId,
-        status,
-        submittedAt
-      ],
-      type: db.sequelize.QueryTypes.INSERT
-    }
-  );
-
-  const campaignId = result;
-  
-  // Get the created campaign
-  const [campaign] = await db.sequelize.query(
-    `SELECT c.*, u.fullName as founder_name
-     FROM campaigns c 
-     JOIN users u ON c.founder_id = u.id 
-     WHERE c.id = ?`,
-    {
-      replacements: [campaignId],
-      type: db.sequelize.QueryTypes.SELECT
-    }
-  );
-
-  return {
-    id: campaign.id,
-    title: campaign.title,
-    description: campaign.description,
-    category: campaign.category,
-    location: campaign.location,
-    targetAmount: campaign.target_amount,
-    minimumInvestment: campaign.minimum_investment,
-    status: campaign.status,
-    founderName: campaign.founder_name,
-    createdAt: campaign.created_at
-  };
-};
-
-const createCampaignWithImage = async (req, res) => {
+// Get campaign specifically formatted for edit screen
+const getCampaignForEdit = async (req, res) => {
   try {
+    const { id } = req.params;
     const founderId = req.userId;
-    
-    // First create the campaign
-    const campaignData = {
-      title: req.body.title,
-      description: req.body.description,
-      category: req.body.category,
-      location: req.body.location,
-      targetAmount: req.body.targetAmount,
-      minimumInvestment: req.body.minimumInvestment,
-      problemStatement: req.body.problemStatement,
-      solution: req.body.solution,
-      businessPlan: req.body.businessPlan,
-      videoUrl: req.body.videoUrl,
-      isDraft: req.body.isDraft === 'true'
-    };
 
-    // Create campaign first
-    const campaign = await createCampaignData(founderId, campaignData);
-    
-    // If image was uploaded, save it
-    if (req.files && req.files.campaignImage) {
-      const imageFile = req.files.campaignImage[0];
-      const imageUrl = `/uploads/campaigns/${imageFile.filename}`;
-      
-      await db.sequelize.query(
-        'UPDATE campaigns SET main_image_url = ? WHERE id = ?',
-        {
-          replacements: [imageUrl, campaign.id],
-          type: db.sequelize.QueryTypes.UPDATE
-        }
-      );
-      
-      campaign.mainImageUrl = imageUrl;
+    const [campaign] = await db.sequelize.query(
+      'SELECT * FROM campaigns WHERE id = ? AND founder_id = ?',
+      { replacements: [id, founderId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    if (!campaign) {
+      return res.status(404).send({ success: false, message: 'Campaign not found or unauthorized' });
     }
 
-    res.status(201).send({
-      success: true,
-      message: campaignData.isDraft ? 'Campaign saved as draft' : 'Campaign submitted for approval',
-      data: campaign
-    });
+    if (!['draft', 'rejected'].includes(campaign.status)) {
+      return res.status(400).send({ success: false, message: 'Only draft or rejected campaigns can be edited' });
+    }
 
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error creating campaign',
-      error: error.message
+    const milestones = await db.sequelize.query(
+      'SELECT * FROM campaign_milestones WHERE campaign_id = ? ORDER BY order_index ASC',
+      { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    res.status(200).send({
+      success: true,
+      data: {
+        ...formatCampaignCard(campaign),
+        problemStatement: campaign.problem_statement,
+        solution: campaign.solution,
+        businessPlan: campaign.business_plan,
+        marketAnalysis: campaign.market_analysis,
+        competitiveAdvantage: campaign.competitive_advantage,
+        financialProjections: campaign.financial_projections,
+        teamInformation: campaign.team_information,
+        risksAndChallenges: campaign.risks_and_challenges,
+        videoUrl: campaign.video_url,
+        documents: campaign.documents ? (typeof campaign.documents === 'string' ? JSON.parse(campaign.documents) : campaign.documents) : [],
+        milestones
+      }
     });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error retrieving campaign for edit', error: error.message });
   }
 };
 
-// Update campaign (founder only, draft campaigns only)
+// Update campaign
 const updateCampaign = async (req, res) => {
   try {
-    console.log('🔄 ===== UPDATE CAMPAIGN START =====');
     const { id } = req.params;
     const founderId = req.userId;
     const updateData = req.body;
 
-    console.log('📝 Campaign ID:', id);
-    console.log('👤 Founder ID:', founderId);
-    console.log('📦 Update Data:', JSON.stringify(updateData, null, 2));
-
-    // Verify campaign belongs to this founder
     const [campaign] = await db.sequelize.query(
       'SELECT id, founder_id, status FROM campaigns WHERE id = ? AND founder_id = ?',
-      {
-        replacements: [id, founderId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
+      { replacements: [id, founderId], type: db.sequelize.QueryTypes.SELECT }
     );
 
-    console.log('🔍 Campaign found:', campaign ? 'YES' : 'NO');
-    if (campaign) {
-      console.log('📊 Campaign status:', campaign.status);
-      console.log('👥 Campaign founder_id:', campaign.founder_id);
-    }
-
     if (!campaign) {
-      console.log('❌ Campaign not found or unauthorized');
-      return res.status(404).send({
-        success: false,
-        message: 'Campaign not found or unauthorized'
-      });
+      return res.status(404).send({ success: false, message: 'Campaign not found or unauthorized' });
     }
 
-    // Only allow updates to draft and rejected campaigns
     if (!['draft', 'rejected'].includes(campaign.status)) {
-      console.log('❌ Invalid status for update:', campaign.status);
-      return res.status(400).send({
-        success: false,
-        message: 'Cannot edit approved campaigns'
-      });
+      return res.status(400).send({ success: false, message: 'Cannot edit approved campaigns' });
     }
 
-    // Determine new status based on isDraft flag (handles both boolean and string)
     const isDraftBool = updateData.isDraft === true || updateData.isDraft === 'true';
     const newStatus = isDraftBool ? 'draft' : 'submitted';
     const submittedAt = isDraftBool ? null : new Date();
 
-    console.log('🎯 isDraft value:', updateData.isDraft, '(type:', typeof updateData.isDraft, ')');
-    console.log('🎯 isDraftBool:', isDraftBool);
-    console.log('🎯 New status:', newStatus);
-    console.log('🎯 Submitted at:', submittedAt);
-
-    // Build update query with proper field mapping
     const updates = [];
     const values = [];
 
-    // Handle all possible fields
     const fieldMappings = {
       title: 'title',
       description: 'description',
@@ -577,7 +804,6 @@ const updateCampaign = async (req, res) => {
       durationDays: 'duration_days',
     };
 
-    // Handle documents separately (JSON field)
     if (updateData.documents !== undefined) {
       updates.push('documents = ?');
       const documentsJson = updateData.documents && Array.isArray(updateData.documents) && updateData.documents.length > 0
@@ -586,7 +812,6 @@ const updateCampaign = async (req, res) => {
       values.push(documentsJson);
     }
 
-    // Add fields that have been provided
     const numericFields = ['targetAmount', 'minimumInvestment', 'maximumInvestment', 'durationDays'];
     const nullableDateFields = ['endDate'];
 
@@ -594,46 +819,23 @@ const updateCampaign = async (req, res) => {
       if (updateData[frontendField] === undefined) return;
 
       let shouldSkip = false;
-      let skipReason = '';
-
-      // For drafts, skip empty or zero values to avoid database constraints
       if (isDraftBool) {
         const value = updateData[frontendField];
-        
-        // Skip numeric fields that are 0, null, or empty
         if (numericFields.includes(frontendField)) {
           const parsed = parseFloat(String(value || '').replace(/,/g, ''));
-          if (!parsed || parsed === 0 || isNaN(parsed)) {
-            shouldSkip = true;
-            skipReason = `numeric value: ${parsed}`;
-          }
+          if (!parsed || parsed === 0 || isNaN(parsed)) shouldSkip = true;
         }
-        
-        // Skip text fields that are empty strings
         if (!shouldSkip && !numericFields.includes(frontendField) && !nullableDateFields.includes(frontendField)) {
-          if (value === '' || value === null) {
-            shouldSkip = true;
-            skipReason = 'empty text';
-          }
+          if (value === '' || value === null) shouldSkip = true;
         }
-        
-        // Skip date fields that are null or empty
         if (!shouldSkip && nullableDateFields.includes(frontendField)) {
-          if (!value || value === '') {
-            shouldSkip = true;
-            skipReason = 'no date';
-          }
+          if (!value || value === '') shouldSkip = true;
         }
       }
 
-      if (shouldSkip) {
-        console.log(`⏭️ Skipping ${frontendField} for draft (${skipReason})`);
-        return;
-      }
+      if (shouldSkip) return;
 
-      // Add to updates and values
       updates.push(`${dbField} = ?`);
-
       if (numericFields.includes(frontendField)) {
         const parsed = parseFloat(String(updateData[frontendField] || '').replace(/,/g, ''));
         values.push(isNaN(parsed) ? null : parsed);
@@ -644,10 +846,9 @@ const updateCampaign = async (req, res) => {
       }
     });
 
-    // Always update status and timestamps
     updates.push('status = ?');
     values.push(newStatus);
-    
+
     if (submittedAt) {
       updates.push('submitted_at = ?');
       values.push(submittedAt);
@@ -655,7 +856,6 @@ const updateCampaign = async (req, res) => {
       updates.push('submitted_at = NULL');
     }
 
-    // Clear admin review fields when resubmitting
     if (newStatus === 'submitted') {
       updates.push('reviewed_by = NULL');
       updates.push('admin_comments = NULL');
@@ -663,54 +863,15 @@ const updateCampaign = async (req, res) => {
       updates.push('rejected_at = NULL');
     }
 
-    // Add updatedAt timestamp (using camelCase as per schema)
-    updates.push('updatedAt = NOW()');
-
-    // Add campaign ID for WHERE clause
+    updates.push('updated_at = NOW()');
     values.push(id);
 
     const sql = `UPDATE campaigns SET ${updates.join(', ')} WHERE id = ?`;
-    // Validate placeholder count matches values count
-    const placeholderCount = (sql.match(/\?/g) || []).length;
-    console.log('📝 SQL Query:', sql);
-    console.log('📝 SQL placeholders:', placeholderCount, '| values:', values.length);
-    console.log('📝 Values:', JSON.stringify(values, null, 2));
-    
-    if (placeholderCount !== values.length) {
-      console.log('❌ SQL placeholder mismatch!');
-      throw new Error(`SQL placeholder mismatch: ${placeholderCount} placeholders but ${values.length} values`);
-    }
+    await db.sequelize.query(sql, { replacements: values, type: db.sequelize.QueryTypes.UPDATE });
 
-    console.log('⚙️ Executing SQL update...');
-    // Execute update
-    await db.sequelize.query(sql, {
-        replacements: values,
-        type: db.sequelize.QueryTypes.UPDATE
-      }
-    );
-    console.log('✅ SQL update executed successfully');
-
-    // Get updated campaign with founder details (non-critical — don't let this crash the response)
-    let updatedCampaign = null;
-    try {
-      console.log('📊 Fetching updated campaign details...');
-      [updatedCampaign] = await db.sequelize.query(
-        `SELECT * FROM campaign_details WHERE id = ?`,
-        { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
-      );
-      console.log('✅ Updated campaign fetched:', updatedCampaign ? 'YES' : 'NO');
-    } catch (viewErr) {
-      console.warn('⚠️ campaign_details view query failed:', viewErr.message);
-    }
-
-    // Replace milestones if provided
     if (Array.isArray(req.body.milestones)) {
-      console.log('🎯 Processing milestones:', req.body.milestones.length, 'items');
       try {
-        await db.sequelize.query(
-          'DELETE FROM campaign_milestones WHERE campaign_id = ?',
-          { replacements: [id], type: db.sequelize.QueryTypes.DELETE }
-        );
+        await db.sequelize.query('DELETE FROM campaign_milestones WHERE campaign_id = ?', { replacements: [id], type: db.sequelize.QueryTypes.DELETE });
         for (let i = 0; i < req.body.milestones.length; i++) {
           const m = req.body.milestones[i];
           if (!m.title?.trim()) continue;
@@ -718,48 +879,21 @@ const updateCampaign = async (req, res) => {
             `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
              VALUES (?, ?, ?, ?, ?, ?)`,
             {
-              replacements: [
-                id, m.title.trim(), m.description?.trim() || '',
-                parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0,
-                i, m.targetDate || null,
-              ],
+              replacements: [id, m.title.trim(), m.description?.trim() || '', parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0, i, m.targetDate || null],
               type: db.sequelize.QueryTypes.INSERT,
             }
           );
         }
-      } catch (_) { /* table may not exist yet */ }
+      } catch (_) { }
     }
 
-    console.log('✅ Campaign update successful!');
-    console.log('📤 Sending response...');
-    
     res.status(200).send({
       success: true,
       message: newStatus === 'draft' ? 'Campaign saved as draft' : 'Campaign submitted for approval',
-      data: {
-        id: updatedCampaign?.id || parseInt(id),
-        title: updatedCampaign?.title,
-        status: updatedCampaign?.status || newStatus,
-        founderName: updatedCampaign?.founder_name,
-        updatedAt: updatedCampaign?.updatedAt || updatedCampaign?.updated_at
-      }
+      data: { id: parseInt(id), status: newStatus }
     });
-
-    console.log('🔄 ===== UPDATE CAMPAIGN END =====');
-
-    console.log('🔄 ===== UPDATE CAMPAIGN END =====');
-
   } catch (error) {
-    console.error('❌ ===== UPDATE CAMPAIGN ERROR =====');
-    console.error('❌ Error message:', error.message);
-    console.error('❌ Error stack:', error.stack);
-    console.error('❌ ===================================');
-    
-    res.status(500).send({
-      success: false,
-      message: 'Error updating campaign',
-      error: error.message
-    });
+    res.status(500).send({ success: false, message: 'Error updating campaign', error: error.message });
   }
 };
 
@@ -769,976 +903,234 @@ const deleteCampaign = async (req, res) => {
     const { id } = req.params;
     const founderId = req.userId;
 
-    // Verify campaign belongs to this founder and is still a draft
     const [campaign] = await db.sequelize.query(
       'SELECT id, founder_id, status FROM campaigns WHERE id = ? AND founder_id = ?',
-      {
-        replacements: [id, founderId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
+      { replacements: [id, founderId], type: db.sequelize.QueryTypes.SELECT }
     );
 
     if (!campaign) {
-      return res.status(404).send({
-        success: false,
-        message: 'Campaign not found or unauthorized'
-      });
+      return res.status(404).send({ success: false, message: 'Campaign not found or unauthorized' });
     }
 
-    // Can't delete approved campaigns with investments
     if (campaign.status === 'approved') {
-      return res.status(400).send({
-        success: false,
-        message: 'Cannot delete approved campaigns. Please contact support.'
-      });
+      return res.status(400).send({ success: false, message: 'Cannot delete approved campaigns. Please contact support.' });
     }
 
-    // Delete campaign
-    await db.sequelize.query(
-      'DELETE FROM campaigns WHERE id = ?',
-      {
-        replacements: [id],
-        type: db.sequelize.QueryTypes.DELETE
-      }
-    );
+    await db.sequelize.query('DELETE FROM campaigns WHERE id = ?', { replacements: [id], type: db.sequelize.QueryTypes.DELETE });
 
-    res.status(200).send({
-      success: true,
-      message: 'Campaign deleted successfully'
-    });
-
+    res.status(200).send({ success: true, message: 'Campaign deleted successfully' });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error deleting campaign',
-      error: error.message
-    });
+    res.status(500).send({ success: false, message: 'Error deleting campaign', error: error.message });
   }
 };
 
-// ================= CAMPAIGN RETRIEVAL =================
+// ================= FAVORITES, VIEWS & INTERACTION =================
 
-// Get all campaigns for a founder
-const getMyCampaigns = async (req, res) => {
-  try {
-    const founderId = req.userId;
-    
-    const campaigns = await db.sequelize.query(
-      `SELECT c.*, u.fullName as founder_name 
-       FROM campaigns c 
-       JOIN users u ON c.founder_id = u.id 
-       WHERE c.founder_id = ? 
-       ORDER BY c.createdAt DESC`,
-      {
-        replacements: [founderId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    // Separate campaigns by status for frontend
-    const categorizedCampaigns = {
-      drafts: campaigns.filter(c => c.status === 'draft'),
-      submitted: campaigns.filter(c => c.status === 'submitted'),
-      approved: campaigns.filter(c => c.status === 'approved'),
-      rejected: campaigns.filter(c => c.status === 'rejected'),
-      all: campaigns
-    };
-
-    // Format for frontend WITH profile pictures
-    const formatCampaign = (campaign) => {
-
-      return {
-      id: campaign.id,
-      title: campaign.title,
-      description: campaign.description,
-      category: campaign.category,
-      location: campaign.location,
-      target_amount: campaign.target_amount,
-      current_amount: campaign.current_amount,
-      minimum_investment: campaign.minimum_investment,
-      viewed_at: campaign.viewed_at,  
-      status: campaign.status,
-      main_image_url: campaign.main_image_url,
-      view_count: campaign.view_count,
-      favorite_count: campaign.favorite_count,
-      is_featured: campaign.is_featured,
-      founder_name: campaign.founder_name,
-      founder_company: campaign.founder_company,
-      founder_avatar: campaign.founder_avatar,
-      founder_email: campaign.founder_email,
-      created_at: campaign.created_at,
-      submittedAt: campaign.submitted_at,
-      approvedAt: campaign.approved_at,
-      rejectedAt: campaign.rejected_at,
-      adminComments: campaign.admin_comments
-    };
-  };
-
-    const formattedResponse = {
-      drafts: categorizedCampaigns.drafts.map(formatCampaign),
-      submitted: categorizedCampaigns.submitted.map(formatCampaign),
-      approved: categorizedCampaigns.approved.map(formatCampaign),
-      rejected: categorizedCampaigns.rejected.map(formatCampaign),
-      all: categorizedCampaigns.all.map(formatCampaign)
-    };
-
-    res.status(200).send({
-      success: true,
-      data: campaigns
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching campaigns',
-      error: error.message
-    });
-  }
-};
-
-// Get all approved campaigns (public)
-const getAllCampaigns = async (req, res) => {
-  try {
-    const { category, status, search, page = 1, limit = 12, featured, country, location, minAmount, maxAmount, sortBy } = req.query;
-    
-    let whereConditions = ["c.status = 'approved'"];
-    let replacements = [];
-    
-    // Filter by country if provided
-    if (country) {
-      whereConditions.push('c.country = ?');
-      replacements.push(country);
-    }
-    
-    if (category && category !== 'All Categories') {
-      whereConditions.push('c.category = ?');
-      replacements.push(category);
-    }
-    
-    if (location) {
-      whereConditions.push('c.location = ?');
-      replacements.push(location);
-    }
-    
-    if (minAmount) {
-      whereConditions.push('c.target_amount >= ?');
-      replacements.push(parseFloat(minAmount));
-    }
-    
-    if (maxAmount) {
-      whereConditions.push('c.target_amount <= ?');
-      replacements.push(parseFloat(maxAmount));
-    }
-    
-    if (search) {
-      whereConditions.push('(c.title LIKE ? OR c.description LIKE ?)');
-      replacements.push(`%${search}%`, `%${search}%`);
-    }
-    
-    const whereClause = whereConditions.join(' AND ');
-    
-    // Determine sort order
-    let orderClause = 'c.createdAt DESC'; // default
-    if (sortBy === 'popular') {
-      orderClause = 'c.view_count DESC, c.favorite_count DESC';
-    } else if (sortBy === 'funded') {
-      orderClause = 'COALESCE(cs.total_raised, 0) DESC';
-    } else if (sortBy === 'ending_soon') {
-      orderClause = 'c.end_date ASC';
-    }
-    
-    const offset = (page - 1) * limit;
-    
-    // Get total count
-    const [countResult] = await db.sequelize.query(
-      `SELECT COUNT(*) as total FROM campaigns c WHERE ${whereClause}`,
-      {
-        replacements: replacements,
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-    
-    const campaigns = await db.sequelize.query(
-      `SELECT c.*, u.fullName as founder_name,
-              u.companyName as founder_company,
-              u.profileImageUrl as founder_avatar
-       FROM campaigns c 
-       JOIN users u ON c.founder_id = u.id 
-       WHERE ${whereClause}
-       ORDER BY ${orderClause}
-       LIMIT ? OFFSET ?`,
-      {
-        replacements: [...replacements, parseInt(limit), parseInt(offset)],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    res.status(200).send({
-      success: true,
-      data: campaigns,
-      pagination: {
-        total: countResult.total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(countResult.total / limit)
-      }
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching campaigns',
-      error: error.message
-    });
-  }
-};
-
-// Get single campaign by ID (with founder details)
-const getCampaignById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.userId || null;
-    const ipAddress = req.ip;
-
-    // Get campaign details using the view
-    const [campaign] = await db.sequelize.query(
-      `SELECT c.*, 
-              u.fullName as founder_name, 
-              u.email as founder_email,
-              u.companyName as founder_company,
-              u.phoneNumber as founder_phone,
-              u.address as founder_address,
-              u.profileImageUrl as founder_avatar,
-              u.bio as founder_bio
-       FROM campaigns c 
-       JOIN users u ON c.founder_id = u.id 
-       WHERE c.id = ?`,
-      {
-        replacements: [id],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    if (!campaign) {
-      return res.status(404).send({
-        success: false,
-        message: 'Campaign not found'
-      });
-    }
-
-    // Check if user has favorited this campaign
-    if (userId) {
-      const [favorite] = await db.sequelize.query(
-        'SELECT id FROM campaign_favorites WHERE campaign_id = ? AND user_id = ?',
-        {
-          replacements: [id, userId],
-          type: db.sequelize.QueryTypes.SELECT
-        }
-      );
-      isFavorited = !!favorite;
-    }
-
-    // Track view automatically (only for approved campaigns or owner viewing their own)
-    if (campaign.status === 'approved' || userId === campaign.founder_id) {
-      try {
-        if (userId) {
-          // For logged-in users, prevent duplicate views on same day
-          await db.sequelize.query(
-            `INSERT INTO campaign_views (campaign_id, user_id, ip_address) 
-             SELECT ?, ?, ? 
-             WHERE NOT EXISTS (
-               SELECT 1 FROM campaign_views 
-               WHERE campaign_id = ? AND user_id = ? 
-               AND DATE(viewed_at) = CURDATE()
-             )`,
-            {
-              replacements: [id, userId, ipAddress, id, userId],
-              type: db.sequelize.QueryTypes.INSERT
-            }
-          );
-        } else {
-          // For anonymous users, prevent duplicate views from same IP within 1 hour
-          await db.sequelize.query(
-            `INSERT INTO campaign_views (campaign_id, ip_address) 
-             SELECT ?, ? 
-             WHERE NOT EXISTS (
-               SELECT 1 FROM campaign_views 
-               WHERE campaign_id = ? AND ip_address = ? 
-               AND viewed_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-             )`,
-            {
-              replacements: [id, ipAddress, id, ipAddress],
-              type: db.sequelize.QueryTypes.INSERT
-            }
-          );
-        }
-
-        // Update view count
-        await CampaignStatsService.updateViewCount(id);
-      } catch (viewError) {
-      }
-    }
-
-    // Format for frontend with all needed information
-    const formattedCampaign = {
-      id: campaign.id,
-      title: campaign.title,
-      description: campaign.description,
-      category: campaign.category,
-      location: campaign.location,
-      targetAmount: campaign.target_amount,
-      currentAmount: campaign.current_amount,
-      minimumInvestment: campaign.minimum_investment,
-      maximumInvestment: campaign.maximum_investment,
-      // Rich content fields
-      problemStatement: campaign.problem_statement,
-      solution: campaign.solution,
-      businessPlan: campaign.business_plan,
-      marketAnalysis: campaign.market_analysis,
-      competitiveAdvantage: campaign.competitive_advantage,
-      financialProjections: campaign.financial_projections,
-      teamInformation: campaign.team_information,
-      risksAndChallenges: campaign.risks_and_challenges,
-      // Media
-      videoUrl: campaign.video_url,
-      mainImageUrl: campaign.main_image_url,
-      pitchDeckUrl: campaign.pitch_deck_url,
-      // Documents
-      documents: campaign.documents ? (typeof campaign.documents === 'string' ? JSON.parse(campaign.documents) : campaign.documents) : [],
-      // Status
-      status: campaign.status,
-      isFeatured: campaign.is_featured,
-      isUrgent: campaign.is_urgent,
-      // Stats
-      viewCount: campaign.view_count,
-      favoriteCount: campaign.favorite_count,
-      investorCount: campaign.investor_count,
-      shareCount: campaign.share_count,
-      // Computed
-      progressPercentage: campaign.progress_percentage,
-      daysRemaining: campaign.days_remaining,
-      totalDurationDays: campaign.total_duration_days,
-      // Dates
-      startDate: campaign.start_date,
-      endDate: campaign.end_date,
-      durationDays: campaign.duration_days,
-      // Permissions
-      canEdit: canEdit,
-      isFavorited: isFavorited,
-      adminComments: campaign.admin_comments,
-      rejectionReason: campaign.rejection_reason,
-      // Creator
-      creator: {
-        id: campaign.founder_id,
-        fullName: campaign.founder_name,
-        company: campaign.founder_company,
-        email: campaign.founder_email,
-        profileImageUrl: campaign.founder_avatar,
-        bio: campaign.founder_bio,
-        website: campaign.founder_website,
-        isVerified: campaign.founder_verified,
-      },
-      createdAt: campaign.createdAt,
-      updatedAt: campaign.updatedAt,
-      submittedAt: campaign.submitted_at,
-      approvedAt: campaign.approved_at,
-      rejectedAt: campaign.rejected_at,
-    };
-
-    // Fetch milestones for this campaign
-    let milestones = [];
-    try {
-      milestones = await db.sequelize.query(
-        `SELECT id, title, description, target_amount, current_amount, status, order_index, target_date, completed_at
-         FROM campaign_milestones WHERE campaign_id = ? ORDER BY order_index ASC`,
-        { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
-      );
-    } catch (_) {
-      // Table may not exist in all environments — degrade gracefully
-    }
-    formattedCampaign.milestones = milestones.map(m => ({
-      id: m.id,
-      title: m.title,
-      description: m.description,
-      targetAmount: m.target_amount,
-      currentAmount: m.current_amount,
-      status: m.status,
-      orderIndex: m.order_index,
-      targetDate: m.target_date,
-      completedAt: m.completed_at,
-    }));
-
-    // Fetch gallery images for this campaign
-    let galleryImages = [];
-    try {
-      const images = await db.sequelize.query(
-        `SELECT image_url, caption, order_index 
-         FROM campaign_images 
-         WHERE campaign_id = ? AND image_type = 'gallery'
-         ORDER BY order_index ASC`,
-        { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
-      );
-      galleryImages = images.map(img => buildImageUrl(img.image_url));
-    } catch (_) {
-      // Table may not exist or no images — degrade gracefully
-    }
-    
-    // If no gallery images, use main image as fallback
-    if (galleryImages.length === 0 && campaign.main_image_url) {
-      galleryImages = [buildImageUrl(campaign.main_image_url)];
-    }
-    
-    formattedCampaign.galleryImages = galleryImages;
-
-    res.status(200).send({
-      success: true,
-      data: campaign
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching campaign',
-      error: error.message
-    });
-  }
-};
-
-// Get campaign for editing (founders only)
-const getCampaignForEdit = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { limit = 3 } = req.query;
-
-    // First get the current campaign's category
-    const [currentCampaign] = await db.sequelize.query(
-      'SELECT category FROM campaigns WHERE id = ?',
-      {
-        replacements: [id, founderId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    if (!campaign) {
-      return res.status(404).send({
-        success: false,
-        message: 'Campaign not found or unauthorized'
-      });
-    }
-
-    res.status(200).send({
-      success: true,
-      data: campaign
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching campaign',
-      error: error.message
-    });
-  }
-};
-
-// Get featured campaigns
-const getFeaturedCampaigns = async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 10;
-
-    const campaigns = await db.sequelize.query(
-      `SELECT c.*, u.fullName as founder_name,
-              u.companyName as founder_company,
-              u.profileImageUrl as founder_avatar
-       FROM campaigns c 
-       JOIN users u ON c.founder_id = u.id 
-       WHERE c.status = 'approved'
-       ORDER BY c.createdAt DESC
-       LIMIT ?`,
-      {
-        replacements: [limit],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    res.status(200).send({
-      success: true,
-      data: campaigns
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching featured campaigns',
-      error: error.message
-    });
-  }
-};
-
-// ================= USER INTERACTIONS =================
-
-// Get related campaigns (based on category)
-const getRelatedCampaigns = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const founderId = req.userId;
-
-    // Verify ownership
-    const [campaign] = await db.sequelize.query(
-      'SELECT founder_id FROM campaigns WHERE id = ?',
-      {
-        replacements: [id],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    if (!currentCampaign) {
-      return res.status(404).send({
-        success: false,
-        message: 'Campaign not found'
-      });
-    }
-
-    // Get related campaigns from the same category
-    const campaigns = await db.sequelize.query(
-      `SELECT c.*, u.fullName as founder_name,
-              u.companyName as founder_company,
-              u.profileImageUrl as founder_avatar
-       FROM campaigns c 
-       JOIN users u ON c.founder_id = u.id 
-       WHERE c.status = 'approved' 
-         AND c.category = ? 
-         AND c.id != ?
-       ORDER BY c.view_count DESC, c.createdAt DESC
-       LIMIT ?`,
-      {
-        replacements: [currentCampaign.category, id, parseInt(limit)],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    res.status(200).send({
-      success: true,
-      data: campaigns
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching related campaigns',
-      error: error.message
-    });
-  }
-};
-
-// Get campaign analytics for founder
-const getCampaignAnalytics = async (req, res) => {
-  try {
-    const { limit = 6 } = req.query;
-    
-    // FIXED: Use campaign_details view
-    const campaigns = await db.sequelize.query(
-      `SELECT * FROM campaign_details
-       WHERE status = 'approved' AND is_featured = true
-       ORDER BY view_count DESC, createdAt DESC
-       LIMIT ?`,
-      {
-        replacements: [id, founderId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    const formattedCampaigns = campaigns.map(campaign => ({
-      id: campaign.id,
-      title: campaign.title,
-      description: campaign.description,
-      category: campaign.category,
-      location: campaign.location,
-      target_amount: campaign.target_amount,
-      current_amount: campaign.current_amount,
-      minimum_investment: campaign.minimum_investment,
-      main_image_url: campaign.main_image_url,
-      view_count: campaign.view_count,
-      favorite_count: campaign.favorite_count,
-      is_featured: campaign.is_featured,
-      founder_name: campaign.founder_name,
-      founder_company: campaign.founder_company,
-      founder_avatar: campaign.founder_avatar,
-      founder_email: campaign.founder_email,
-      created_at: campaign.created_at
-    }));
-
-    res.status(200).send({
-      success: true,
-      data: stats
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching campaign analytics',
-      error: error.message
-    });
-  }
-};
-
-// Get viewed campaigns (for investors)
-const getViewedCampaigns = async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    // Get campaigns the user has viewed
-    const campaigns = await db.sequelize.query(
-      `SELECT DISTINCT c.*, u.fullName as founder_name,
-              u.companyName as founder_company,
-              u.profileImageUrl as founder_avatar,
-              cv.viewed_at
-       FROM campaign_views cv
-       JOIN campaigns c ON cv.campaign_id = c.id
-       JOIN users u ON c.founder_id = u.id
-       WHERE cv.user_id = ? AND c.status = 'approved'
-       ORDER BY cv.viewed_at DESC
-       LIMIT 20`,
-      {
-        replacements: [userId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    const formattedCampaigns = viewedCampaigns.map(campaign => ({
-      id: campaign.id,
-      title: campaign.title,
-      description: campaign.description,
-      category: campaign.category,
-      location: campaign.location,
-      target_amount: campaign.target_amount,
-      current_amount: campaign.current_amount,
-      minimum_investment: campaign.minimum_investment,
-      main_image_url: campaign.main_image_url,
-      view_count: campaign.view_count,
-      favorite_count: campaign.favorite_count,
-      is_featured: campaign.is_featured,
-      founder_name: campaign.founder_name,
-      founder_company: campaign.founder_company,
-      founder_avatar: campaign.founder_avatar,
-      founder_email: campaign.founder_email,
-      created_at: campaign.created_at,
-      viewed_at: campaign.viewed_at
-    }));
-
-    res.status(200).send({
-      success: true,
-      data: campaigns
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching viewed campaigns',
-      error: error.message
-    });
-  }
-};
-
-// Get favorite campaigns (for investors)
-const getFavoriteCampaigns = async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    // Get campaigns the user has favorited
-    const campaigns = await db.sequelize.query(
-      `SELECT c.*, u.fullName as founder_name,
-              u.companyName as founder_company,
-              u.profileImageUrl as founder_avatar,
-              cf.created_at as favorited_at
-       FROM campaign_favorites cf
-       JOIN campaigns c ON cf.campaign_id = c.id
-       JOIN users u ON c.founder_id = u.id
-       WHERE cf.user_id = ? AND c.status = 'approved'
-       ORDER BY cf.created_at DESC`,
-      {
-        replacements: [userId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
-
-    const formattedCampaigns = favoriteCampaigns.map(campaign => ({
-      id: campaign.id,
-      title: campaign.title,
-      description: campaign.description,
-      category: campaign.category,
-      location: campaign.location,
-      target_amount: campaign.target_amount,
-      current_amount: campaign.current_amount,
-      minimum_investment: campaign.minimum_investment,
-      main_image_url: campaign.main_image_url,
-      view_count: campaign.view_count,
-      favorite_count: campaign.favorite_count,
-      is_featured: campaign.is_featured,
-      founder_name: campaign.founder_name,
-      founder_company: campaign.founder_company,
-      founder_avatar: campaign.founder_avatar,
-      founder_email: campaign.founder_email,
-      created_at: campaign.created_at,
-      favorited_at: campaign.favorited_at
-    }));
-
-    res.status(200).send({
-      success: true,
-      data: campaigns
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching favorite campaigns',
-      error: error.message
-    });
-  }
-};
-
-// Get funded campaigns (for investors)
-const getFundedCampaigns = async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    // Placeholder - returns empty array until payment system is implemented
-    res.status(200).send({
-      success: true,
-      data: [],
-      message: "Investments tracking will be implemented when payment system is ready"
-    });
-
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching funded campaigns',
-      error: error.message
-    });
-  }
-};
-
-// Toggle favorite campaign
+// Toggle favorite status
 const toggleFavorite = async (req, res) => {
   try {
     const { campaignId } = req.params;
     const userId = req.userId;
 
-    // Verify campaign exists
     const [campaign] = await db.sequelize.query(
-      'SELECT id, title FROM campaigns WHERE id = ?',
-      {
-        replacements: [campaignId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
+      'SELECT id, favorite_count FROM campaigns WHERE id = ?',
+      { replacements: [campaignId], type: db.sequelize.QueryTypes.SELECT }
     );
 
     if (!campaign) {
-      return res.status(404).send({
-        success: false,
-        message: 'Campaign not found'
-      });
+      return res.status(404).send({ success: false, message: 'Campaign not found' });
     }
 
-    // Check if already favorited
-    const [existingFavorite] = await db.sequelize.query(
+    const [existingFav] = await db.sequelize.query(
       'SELECT id FROM campaign_favorites WHERE campaign_id = ? AND user_id = ?',
-      {
-        replacements: [campaignId, userId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
+      { replacements: [campaignId, userId], type: db.sequelize.QueryTypes.SELECT }
     );
 
-    let isFavorited;
-    let message;
+    let isFavorited = false;
 
-    if (existingFavorite) {
-      // Remove from favorites
+    if (existingFav) {
       await db.sequelize.query(
         'DELETE FROM campaign_favorites WHERE campaign_id = ? AND user_id = ?',
-        {
-          replacements: [campaignId, userId],
-          type: db.sequelize.QueryTypes.DELETE
-        }
+        { replacements: [campaignId, userId], type: db.sequelize.QueryTypes.DELETE }
+      );
+      await db.sequelize.query(
+        'UPDATE campaigns SET favorite_count = GREATEST(0, COALESCE(favorite_count, 1) - 1) WHERE id = ?',
+        { replacements: [campaignId], type: db.sequelize.QueryTypes.UPDATE }
       );
       isFavorited = false;
-      message = 'Campaign removed from favorites';
     } else {
-      // Add to favorites
       await db.sequelize.query(
         'INSERT INTO campaign_favorites (campaign_id, user_id) VALUES (?, ?)',
-        {
-          replacements: [campaignId, userId],
-          type: db.sequelize.QueryTypes.INSERT
-        }
+        { replacements: [campaignId, userId], type: db.sequelize.QueryTypes.INSERT }
+      );
+      await db.sequelize.query(
+        'UPDATE campaigns SET favorite_count = COALESCE(favorite_count, 0) + 1 WHERE id = ?',
+        { replacements: [campaignId], type: db.sequelize.QueryTypes.UPDATE }
       );
       isFavorited = true;
-      message = 'Campaign added to favorites';
     }
-
-    // Update favorite count manually
-    await CampaignStatsService.updateFavoriteCount(campaignId);
-
-    // Get updated favorite count
-    const [updatedCampaign] = await db.sequelize.query(
-      'SELECT favorite_count FROM campaigns WHERE id = ?',
-      {
-        replacements: [campaignId],
-        type: db.sequelize.QueryTypes.SELECT
-      }
-    );
 
     res.status(200).send({
       success: true,
-      message: message,
-      data: { 
-        isFavorited,
-        favoriteCount: updatedCampaign.favorite_count
-      }
+      message: isFavorited ? 'Added to favorites' : 'Removed from favorites',
+      data: { isFavorited }
     });
-
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error toggling favorite',
-      error: error.message
-    });
+    res.status(500).send({ success: false, message: 'Error toggling favorite', error: error.message });
   }
 };
 
-// Track campaign view
+// Track view count
 const trackCampaignView = async (req, res) => {
   try {
     const { campaignId } = req.params;
     const userId = req.userId || null;
-    const ipAddress = req.ip;
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || '0.0.0.0';
 
-    // Insert view record (with duplicate prevention)
-    try {
-      if (userId) {
-        // For logged-in users, prevent duplicate views on same day
-        await db.sequelize.query(
-          `INSERT INTO campaign_views (campaign_id, user_id, ip_address) 
-           SELECT ?, ?, ? 
-           WHERE NOT EXISTS (
-             SELECT 1 FROM campaign_views 
-             WHERE campaign_id = ? AND user_id = ? 
-             AND DATE(viewed_at) = CURDATE()
-           )`,
-          {
-            replacements: [campaignId, userId, ipAddress, campaignId, userId],
-            type: db.sequelize.QueryTypes.INSERT
-          }
-        );
-      } else {
-        // For anonymous users, prevent duplicate views from same IP within 1 hour
-        await db.sequelize.query(
-          `INSERT INTO campaign_views (campaign_id, ip_address) 
-           SELECT ?, ? 
-           WHERE NOT EXISTS (
-             SELECT 1 FROM campaign_views 
-             WHERE campaign_id = ? AND ip_address = ? 
-             AND viewed_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-           )`,
-          {
-            replacements: [campaignId, ipAddress, campaignId, ipAddress],
-            type: db.sequelize.QueryTypes.INSERT
-          }
-        );
-      }
+    const [campaign] = await db.sequelize.query(
+      'SELECT id FROM campaigns WHERE id = ?',
+      { replacements: [campaignId], type: db.sequelize.QueryTypes.SELECT }
+    );
 
-      // Update view count manually
-      await CampaignStatsService.updateViewCount(campaignId);
-
-    } catch (viewError) {
-      // Don't fail the request if view tracking fails
+    if (!campaign) {
+      return res.status(404).send({ success: false, message: 'Campaign not found' });
     }
 
-    res.status(200).send({
-      success: true,
-      message: 'View tracked successfully'
-    });
+    await db.sequelize.query(
+      'INSERT INTO campaign_views (campaign_id, user_id, ip_address) VALUES (?, ?, ?)',
+      { replacements: [campaignId, userId, ipAddress], type: db.sequelize.QueryTypes.INSERT }
+    );
 
+    await db.sequelize.query(
+      'UPDATE campaigns SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?',
+      { replacements: [campaignId], type: db.sequelize.QueryTypes.UPDATE }
+    );
+
+    res.status(200).send({ success: true, message: 'View tracked successfully' });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error tracking view',
-      error: error.message
-    });
+    res.status(500).send({ success: false, message: 'Error tracking view', error: error.message });
   }
 };
 
+// ================= STATS & ANALYTICS =================
+
+// Get founder dashboard stats
+const getFounderStats = async (req, res) => {
+  try {
+    const founderId = req.userId;
+
+    if (CampaignStatsService && typeof CampaignStatsService.getFounderDashboardStats === 'function') {
+      const stats = await CampaignStatsService.getFounderDashboardStats(founderId);
+      return res.status(200).send({ success: true, data: stats });
+    }
+
+    const [stats] = await db.sequelize.query(
+      `SELECT 
+        COUNT(id) as total_campaigns,
+        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as active_campaigns,
+        COALESCE(SUM(current_amount), 0) as total_raised,
+        COALESCE(SUM(view_count), 0) as total_views,
+        COALESCE(SUM(favorite_count), 0) as total_favorites
+       FROM campaigns WHERE founder_id = ?`,
+      { replacements: [founderId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    res.status(200).send({ success: true, data: stats });
+  } catch (error) {
+    res.status(500).send({ success: false, message: 'Error fetching founder stats', error: error.message });
+  }
+};
+
+// Get individual campaign stats
 const getCampaignStats = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const stats = await CampaignStatsService.getCampaignStats(id);
-    
+
+    const [stats] = await db.sequelize.query(
+      `SELECT id, target_amount, current_amount, view_count, favorite_count, status
+       FROM campaigns WHERE id = ?`,
+      { replacements: [id], type: db.sequelize.QueryTypes.SELECT }
+    );
+
     if (!stats) {
-      return res.status(404).send({
-        success: false,
-        message: 'Campaign not found'
-      });
+      return res.status(404).send({ success: false, message: 'Campaign stats not found' });
     }
 
     res.status(200).send({
       success: true,
-      data: stats
+      data: {
+        targetAmount: parseFloat(stats.target_amount || 0),
+        current_amount: parseFloat(stats.current_amount || 0),
+        viewCount: parseInt(stats.view_count || 0),
+        favoriteCount: parseInt(stats.favorite_count || 0),
+        status: stats.status
+      }
     });
-
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error fetching campaign statistics',
-      error: error.message
-    });
+    res.status(500).send({ success: false, message: 'Error fetching campaign stats', error: error.message });
   }
 };
 
-// NEW: Admin endpoint to recalculate all stats
-const recalculateAllStats = async (req, res) => {
+// Get single campaign analytics
+const getCampaignAnalytics = async (req, res) => {
   try {
-    
-    const result = await CampaignStatsService.recalculateAllCampaignStats();
-    
+    const { id } = req.params;
+    const founderId = req.userId;
+
+    const [campaign] = await db.sequelize.query(
+      'SELECT id FROM campaigns WHERE id = ? AND founder_id = ?',
+      { replacements: [id, founderId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    if (!campaign) {
+      return res.status(404).send({ success: false, message: 'Campaign not found or unauthorized' });
+    }
+
+    if (CampaignStatsService && typeof CampaignStatsService.getCampaignAnalytics === 'function') {
+      const analytics = await CampaignStatsService.getCampaignAnalytics(id);
+      return res.status(200).send({ success: true, data: analytics });
+    }
+
     res.status(200).send({
       success: true,
-      message: `Successfully recalculated statistics for ${result.campaignsUpdated} campaigns`,
-      data: result
+      data: { message: 'Analytics data' }
     });
-
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: 'Error recalculating campaign statistics',
-      error: error.message
-    });
+    res.status(500).send({ success: false, message: 'Error fetching campaign analytics', error: error.message });
   }
 };
 
 // ================= EXPORTS =================
 
 module.exports = {
-  // CRUD Operations
-  createCampaign,
-  uploadCampaignImage,
-  updateCampaign,
-  deleteCampaign,
-  
-  // Campaign Retrieval
-  getMyCampaigns,
+  // Discovery & Public
+  getFeaturedCampaigns,
+  getRecentCampaigns,
+  searchCampaigns,
   getAllCampaigns,
   getCampaignById,
-  getFeaturedCampaigns,
-  
-  // User Interactions
+  getRelatedCampaigns,
+
+  // User Specific
+  getMyCampaigns,
   getViewedCampaigns,
   getFavoriteCampaigns,
   getFundedCampaigns,
+  getAllMyCampaignsData,
+
+  // CRUD & Editing
+  createCampaign,
+  uploadCampaignImage,
+  getCampaignForEdit,
+  updateCampaign,
+  deleteCampaign,
+
+  // Interactions
   toggleFavorite,
-  getRelatedCampaigns,
-  getCampaignAnalytics,
   trackCampaignView,
+
+  // Analytics & Stats
+  getFounderStats,
   getCampaignStats,
-  recalculateAllStats,
-  getCampaignForEdit
+  getCampaignAnalytics
 };

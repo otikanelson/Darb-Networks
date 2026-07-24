@@ -1,17 +1,19 @@
 // CampaignDisplay
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
+import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import { useTransition } from "../context/TransitionContext";
 import { buildImageUrl, buildApiUrl } from "../config/apiUrl";
 import DOMPurify from "dompurify";
 import {
-  Heart, Share2, MapPin, Eye, Users, DollarSign, Clock,
+  Heart, Share2, MapPin, Eye, Users, DollarSign,
   ArrowLeft, Edit, Play, Star, CheckCircle, AlertTriangle,
   TrendingUp, Building, BarChart2, Shield, Lightbulb,
   Target, BookOpen, Award, ExternalLink, Check, ChevronLeft,
-  ChevronRight, X, Zap, Flag,
+  ChevronRight, Zap, Flag,
 } from "lucide-react";
 import UnifiedNavbar from "../components/layout/Navbars";
 import Footer from "../components/layout/Footer";
@@ -158,6 +160,7 @@ const CampaignDisplay = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { transitionState, endTransition } = useTransition();
 
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -169,28 +172,60 @@ const CampaignDisplay = () => {
   const [showInvestmentModal, setShowInvestmentModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showTransition, setShowTransition] = useState(() => transitionState.isTransitioning);
 
   // Track when the funding card scrolls out of view
   const { ref: fundingCardRef, inView: fundingCardInView } = useInView({ threshold: 0.2 });
   // Hide the bar when the footer comes into view
   const { ref: footerRef, inView: footerInView } = useInView({ threshold: 0.1 });
 
-  useEffect(() => { if (id) { loadCampaign(); loadRelated(); } }, [id]);
+  useEffect(() => { 
+    if (id) { 
+      loadCampaign(); 
+      loadRelated(); 
+    } 
+  }, [id]);
+
+  // Handle transition animation
+  useEffect(() => {
+    if (transitionState.isTransitioning) {
+      setShowTransition(true);
+      const timer = setTimeout(() => {
+        setShowTransition(false);
+        endTransition();
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, [transitionState.isTransitioning, endTransition]);
+
+  // Scroll to top on every campaign navigation
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [id]);
 
   const loadCampaign = async () => {
     try {
-      setLoading(true); setError(null);
+      // Don't show loading spinner if we're transitioning (better UX)
+      if (!showTransition) {
+        setLoading(true);
+      }
+      setError(null);
+      
       const token = localStorage.getItem("authToken");
       const headers = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
+      
       const res = await fetch(buildApiUrl(`/campaigns/${id}`), { headers });
       if (!res.ok) throw new Error("Failed to load campaign");
       const result = await res.json();
       if (!result.success) throw new Error(result.message || "Failed to load campaign");
       setCampaign(result.data);
       setIsFavorited(result.data.isFavorited || false);
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
+    } catch (e) { 
+      setError(e.message); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const loadRelated = async () => {
@@ -218,71 +253,159 @@ const CampaignDisplay = () => {
 
   const handleShare = () => {
     const url = `${window.location.origin}/campaign/${id}`;
-    if (navigator.share) { navigator.share({ title: campaign.title, url }); }
+    if (navigator.share) { navigator.share({ title: campaign?.title || 'Campaign', url }); }
     else { navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); }
   };
 
-  if (!campaign) return null;
+  // Optimistic rendering: use real data OR card data from the transition context
+  const displayCampaign = campaign || (showTransition ? transitionState.cardData : null);
 
-  const progress = pct(campaign.currentAmount, campaign.targetAmount);
-  const daysLeft = campaign.daysRemaining ?? campaign.durationDays ?? 0;
+  // ── Early returns — must come before any code that uses activeCampaign ────
+  if (!displayCampaign && loading) return (
+    <div className="min-h-screen bg-gray-50">
+      <UnifiedNavbar variant="display" />
+      {/* Hero Skeleton */}
+      <div className="relative w-full h-64 md:h-[460px] bg-gray-200 animate-pulse">
+        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex gap-2 mb-3">
+              <div className="h-6 w-20 bg-gray-300" />
+              <div className="h-6 w-24 bg-gray-300" />
+            </div>
+            <div className="h-10 bg-gray-300 rounded-lg w-3/4 mb-3" />
+            <div className="flex gap-4">
+              <div className="h-4 w-24 bg-gray-300 rounded" />
+              <div className="h-4 w-28 bg-gray-300 rounded" />
+              <div className="h-4 w-20 bg-gray-300 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Body Skeleton */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-5">
+            <div className="flex gap-2">
+              <div className="h-10 w-24 bg-white rounded-xl animate-pulse" />
+              <div className="h-10 w-24 bg-white rounded-xl animate-pulse" />
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="flex border-b border-gray-100 p-2 gap-2">
+                <div className="h-10 w-28 bg-gray-100 rounded animate-pulse" />
+                <div className="h-10 w-32 bg-gray-100 rounded animate-pulse" />
+                <div className="h-10 w-36 bg-gray-100 rounded animate-pulse" />
+              </div>
+              <div className="p-6 md:p-8 space-y-4">
+                <div className="h-6 bg-gray-100 rounded w-3/4 animate-pulse" />
+                <div className="h-4 bg-gray-100 rounded w-full animate-pulse" />
+                <div className="h-4 bg-gray-100 rounded w-5/6 animate-pulse" />
+                <div className="h-32 bg-gray-100 rounded-lg animate-pulse mt-4" />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="h-10 bg-gray-100 rounded w-2/3 mb-2 animate-pulse" />
+              <div className="h-4 bg-gray-100 rounded w-1/2 mb-4 animate-pulse" />
+              <div className="h-2.5 bg-gray-100 mb-5 animate-pulse" />
+              <div className="grid grid-cols-3 gap-2 mb-5 py-4 border-y border-gray-50">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="text-center">
+                    <div className="h-8 bg-gray-100 rounded w-12 mx-auto mb-1 animate-pulse" />
+                    <div className="h-3 bg-gray-100 rounded w-16 mx-auto animate-pulse" />
+                  </div>
+                ))}
+              </div>
+              <div className="h-12 bg-gray-100 rounded-xl animate-pulse" />
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="h-3 bg-gray-100 rounded w-32 mb-4 animate-pulse" />
+              <div className="flex items-start gap-3">
+                <div className="h-14 w-14 bg-gray-100 animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 bg-gray-100 rounded w-32 animate-pulse" />
+                  <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+
+  if (error || !displayCampaign) return (
+    <div className="min-h-screen bg-gray-50">
+      <UnifiedNavbar variant="display" />
+      <div className="max-w-2xl mx-auto px-4 py-24 text-center">
+        <AlertTriangle className="mx-auto h-16 w-16 text-red-400 mb-4" />
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Campaign Not Found</h1>
+        <p className="text-gray-500 mb-8">{error}</p>
+        <button onClick={() => navigate("/dashboard")} className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700">Browse Campaigns</button>
+      </div>
+      <Footer />
+    </div>
+  );
+
+  // ── Safe from here: activeCampaign is guaranteed non-null ─────────────────
+  const activeCampaign = displayCampaign;
+
+  const progress = pct(activeCampaign.currentAmount || activeCampaign.current_amount, activeCampaign.targetAmount || activeCampaign.target_amount);
+  const daysLeft = activeCampaign.daysRemaining ?? activeCampaign.durationDays ?? activeCampaign.days_left ?? 0;
 
   const canInvest = () =>
     isAuthenticated() &&
-    user?.id !== campaign?.creator?.id &&
-    campaign?.status === "approved" &&
+    user?.id !== activeCampaign?.creator?.id &&
+    activeCampaign?.status === "approved" &&
     progress < 100 &&
     daysLeft > 0;
 
   const canEdit = () =>
     isAuthenticated() &&
-    user?.id === campaign?.creator?.id &&
-    ["draft", "rejected"].includes(campaign?.status);
+    user?.id === activeCampaign?.creator?.id &&
+    ["draft", "rejected"].includes(activeCampaign?.status);
 
   const heroImg = () => {
-    const u = campaign.mainImageUrl;
+    const u = activeCampaign.mainImageUrl || activeCampaign.main_image_url;
     if (!u) return "/assets/placeholder-campaign.jpg";
     return u.startsWith("http") ? u : buildImageUrl(u);
   };
 
   const avatarUrl = () => {
-    const u = campaign.creator?.profileImageUrl;
+    const u = activeCampaign.creator?.profileImageUrl || activeCampaign.founder_avatar;
     if (!u) return null;
     return u.startsWith("http") ? u : buildImageUrl(u);
   };
 
   // Parse multiple video URLs (comma-separated from editor)
-  const videoUrls = campaign.videoUrl
-    ? campaign.videoUrl.split(",").map(v => v.trim()).filter(Boolean)
+  const videoUrls = activeCampaign.videoUrl
+    ? activeCampaign.videoUrl.split(",").map(v => v.trim()).filter(Boolean)
     : [];
 
   // Gallery images (from campaign_images table or fallback to main image)
-  const galleryImages = campaign.galleryImages || [];
-  
-  console.log('🖼️ Campaign Display - Images:', {
-    mainImageUrl: campaign.mainImageUrl,
-    galleryImages: galleryImages,
-    galleryCount: galleryImages.length
-  });
+  const galleryImages = activeCampaign.galleryImages || [];
   
   // Carousel images: combine main image with gallery images
   const carouselImages = [];
-  if (campaign.mainImageUrl) {
-    const mainUrl = campaign.mainImageUrl.startsWith('http') 
-      ? campaign.mainImageUrl 
-      : buildImageUrl(campaign.mainImageUrl);
+  if (activeCampaign.mainImageUrl || activeCampaign.main_image_url) {
+    const mainUrl = (activeCampaign.mainImageUrl || activeCampaign.main_image_url).startsWith('http') 
+      ? (activeCampaign.mainImageUrl || activeCampaign.main_image_url)
+      : buildImageUrl(activeCampaign.mainImageUrl || activeCampaign.main_image_url);
     carouselImages.push(mainUrl);
   }
   // Add gallery images (they're already processed URLs from backend)
   carouselImages.push(...galleryImages.filter(img => img !== carouselImages[0]));
   
-  // If no images at all, use placeholder
+  // If no images at all, use placeholder or transition image
   if (carouselImages.length === 0) {
-    carouselImages.push("/assets/placeholder-campaign.jpg");
+    if (showTransition && transitionState.imageUrl) {
+      carouselImages.push(transitionState.imageUrl);
+    } else {
+      carouselImages.push("/assets/placeholder-campaign.jpg");
+    }
   }
   
-  console.log('🎠 Carousel images:', carouselImages.length, carouselImages);
-
   // Carousel navigation functions
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % carouselImages.length);
@@ -298,7 +421,7 @@ const CampaignDisplay = () => {
     { id: "market",     label: "Market & Competition" },
     { id: "business",   label: "Business & Financials" },
     { id: "team",       label: "Team & Risks" },
-    ...(campaign.milestones?.length ? [{ id: "milestones", label: "Milestones" }] : []),
+    ...(activeCampaign.milestones?.length ? [{ id: "milestones", label: "Milestones" }] : []),
   ];
 
   const renderTab = () => {
@@ -315,27 +438,27 @@ const CampaignDisplay = () => {
               </Section>
             )}
             
-            {campaign.description && (
+            {activeCampaign.description && (
               <Section icon={BookOpen} title="About This Campaign">
-                <RichContent html={campaign.description} />
+                <RichContent html={activeCampaign.description} />
               </Section>
             )}
-            {campaign.problemStatement && (
+            {activeCampaign.problemStatement && (
               <Section icon={AlertTriangle} title="The Problem">
-                <RichContent html={campaign.problemStatement} />
+                <RichContent html={activeCampaign.problemStatement} />
               </Section>
             )}
-            {campaign.solution && (
+            {activeCampaign.solution && (
               <Section icon={Lightbulb} title="Our Solution" accent>
-                <RichContent html={campaign.solution} />
+                <RichContent html={activeCampaign.solution} />
               </Section>
             )}
-            {campaign.competitiveAdvantage && (
+            {activeCampaign.competitiveAdvantage && (
               <Section icon={Award} title="Competitive Advantage">
-                <RichContent html={campaign.competitiveAdvantage} />
+                <RichContent html={activeCampaign.competitiveAdvantage} />
               </Section>
             )}
-            {!campaign.description && !campaign.problemStatement && !campaign.solution && !videoUrls.length && (
+            {!activeCampaign.description && !activeCampaign.problemStatement && !activeCampaign.solution && !videoUrls.length && (
               <div className="text-center py-16 text-gray-400">
                 <BookOpen className="mx-auto h-12 w-12 mb-3 opacity-40" />
                 <p>No overview content yet.</p>
@@ -347,17 +470,17 @@ const CampaignDisplay = () => {
       case "market":
         return (
           <div className="space-y-6">
-            {campaign.marketAnalysis && (
+            {activeCampaign.marketAnalysis && (
               <Section icon={BarChart2} title="Market Analysis">
-                <RichContent html={campaign.marketAnalysis} />
+                <RichContent html={activeCampaign.marketAnalysis} />
               </Section>
             )}
-            {campaign.competitiveAdvantage && (
+            {activeCampaign.competitiveAdvantage && (
               <Section icon={Award} title="Competitive Advantage">
-                <RichContent html={campaign.competitiveAdvantage} />
+                <RichContent html={activeCampaign.competitiveAdvantage} />
               </Section>
             )}
-            {!campaign.marketAnalysis && !campaign.competitiveAdvantage && (
+            {!activeCampaign.marketAnalysis && !activeCampaign.competitiveAdvantage && (
               <div className="text-center py-16 text-gray-400">
                 <BarChart2 className="mx-auto h-12 w-12 mb-3 opacity-40" />
                 <p>Market details not provided yet.</p>
@@ -369,17 +492,17 @@ const CampaignDisplay = () => {
       case "business":
         return (
           <div className="space-y-6">
-            {campaign.businessPlan && (
+            {activeCampaign.businessPlan && (
               <Section icon={Target} title="Business Plan">
-                <RichContent html={campaign.businessPlan} />
+                <RichContent html={activeCampaign.businessPlan} />
               </Section>
             )}
-            {campaign.financialProjections && (
+            {activeCampaign.financialProjections && (
               <Section icon={TrendingUp} title="Financial Projections" accent>
-                <RichContent html={campaign.financialProjections} />
+                <RichContent html={activeCampaign.financialProjections} />
               </Section>
             )}
-            {!campaign.businessPlan && !campaign.financialProjections && (
+            {!activeCampaign.businessPlan && !activeCampaign.financialProjections && (
               <div className="text-center py-16 text-gray-400">
                 <Target className="mx-auto h-12 w-12 mb-3 opacity-40" />
                 <p>Business details not provided yet.</p>
@@ -391,17 +514,17 @@ const CampaignDisplay = () => {
       case "team":
         return (
           <div className="space-y-6">
-            {campaign.teamInformation && (
+            {activeCampaign.teamInformation && (
               <Section icon={Users} title="The Team">
-                <RichContent html={campaign.teamInformation} />
+                <RichContent html={activeCampaign.teamInformation} />
               </Section>
             )}
-            {campaign.risksAndChallenges && (
+            {activeCampaign.risksAndChallenges && (
               <Section icon={Shield} title="Risks & Challenges">
-                <RichContent html={campaign.risksAndChallenges} />
+                <RichContent html={activeCampaign.risksAndChallenges} />
               </Section>
             )}
-            {!campaign.teamInformation && !campaign.risksAndChallenges && (
+            {!activeCampaign.teamInformation && !activeCampaign.risksAndChallenges && (
               <div className="text-center py-16 text-gray-400">
                 <Users className="mx-auto h-12 w-12 mb-3 opacity-40" />
                 <p>Team details not provided yet.</p>
@@ -413,17 +536,17 @@ const CampaignDisplay = () => {
       case "milestones":
         return (
           <div className="space-y-4">
-            {campaign.milestones?.length ? (
+            {activeCampaign.milestones?.length ? (
               <>
                 {/* Progress summary */}
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
-                  <span>{campaign.milestones.filter(m => m.status === 'completed').length} of {campaign.milestones.length} milestones completed</span>
+                  <span>{activeCampaign.milestones.filter(m => m.status === 'completed').length} of {activeCampaign.milestones.length} milestones completed</span>
                   <span className="font-medium text-primary-600">
-                    {Math.round((campaign.milestones.filter(m => m.status === 'completed').length / campaign.milestones.length) * 100)}%
+                    {Math.round((activeCampaign.milestones.filter(m => m.status === 'completed').length / activeCampaign.milestones.length) * 100)}%
                   </span>
                 </div>
 
-                {campaign.milestones.map((m, i) => {
+                {activeCampaign.milestones.map((m, i) => {
                   const isCompleted = m.status === 'completed';
                   const isActive = m.status === 'active';
                   const pctFunded = m.targetAmount > 0
@@ -514,233 +637,121 @@ const CampaignDisplay = () => {
     }
   };
 
-  // ── loading / error ────────────────────────────────────────────────────────
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50">
-      <UnifiedNavbar variant="display" />
-      
-      {/* Hero Skeleton */}
-      <div className="relative w-full h-64 md:h-[460px] bg-gray-200 animate-pulse">
-        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex gap-2 mb-3">
-              <div className="h-6 w-20 bg-gray-300  " />
-              <div className="h-6 w-24 bg-gray-300  " />
-            </div>
-            <div className="h-10 bg-gray-300 rounded-lg w-3/4 mb-3" />
-            <div className="flex gap-4">
-              <div className="h-4 w-24 bg-gray-300 rounded" />
-              <div className="h-4 w-28 bg-gray-300 rounded" />
-              <div className="h-4 w-20 bg-gray-300 rounded" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Body Skeleton */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Left Content Skeleton */}
-          <div className="lg:col-span-2 space-y-5">
-            {/* Action Bar Skeleton */}
-            <div className="flex gap-2">
-              <div className="h-10 w-24 bg-white rounded-xl animate-pulse" />
-              <div className="h-10 w-24 bg-white rounded-xl animate-pulse" />
-            </div>
-
-            {/* Tabs Skeleton */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="flex border-b border-gray-100 p-2 gap-2">
-                <div className="h-10 w-28 bg-gray-100 rounded animate-pulse" />
-                <div className="h-10 w-32 bg-gray-100 rounded animate-pulse" />
-                <div className="h-10 w-36 bg-gray-100 rounded animate-pulse" />
-              </div>
-              <div className="p-6 md:p-8 space-y-4">
-                <div className="h-6 bg-gray-100 rounded w-3/4 animate-pulse" />
-                <div className="h-4 bg-gray-100 rounded w-full animate-pulse" />
-                <div className="h-4 bg-gray-100 rounded w-5/6 animate-pulse" />
-                <div className="h-4 bg-gray-100 rounded w-4/5 animate-pulse" />
-                <div className="h-32 bg-gray-100 rounded-lg animate-pulse mt-4" />
-              </div>
-            </div>
-          </div>
-
-          {/* Right Sidebar Skeleton */}
-          <div className="space-y-4">
-            {/* Funding Card Skeleton */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="h-10 bg-gray-100 rounded w-2/3 mb-2 animate-pulse" />
-              <div className="h-4 bg-gray-100 rounded w-1/2 mb-4 animate-pulse" />
-              <div className="h-2.5 bg-gray-100   mb-5 animate-pulse" />
-              
-              <div className="grid grid-cols-3 gap-2 mb-5 py-4 border-y border-gray-50">
-                <div className="text-center">
-                  <div className="h-8 bg-gray-100 rounded w-12 mx-auto mb-1 animate-pulse" />
-                  <div className="h-3 bg-gray-100 rounded w-16 mx-auto animate-pulse" />
-                </div>
-                <div className="text-center">
-                  <div className="h-8 bg-gray-100 rounded w-12 mx-auto mb-1 animate-pulse" />
-                  <div className="h-3 bg-gray-100 rounded w-16 mx-auto animate-pulse" />
-                </div>
-                <div className="text-center">
-                  <div className="h-8 bg-gray-100 rounded w-12 mx-auto mb-1 animate-pulse" />
-                  <div className="h-3 bg-gray-100 rounded w-16 mx-auto animate-pulse" />
-                </div>
-              </div>
-
-              <div className="space-y-2.5 mb-5">
-                <div className="h-4 bg-gray-100 rounded animate-pulse" />
-                <div className="h-4 bg-gray-100 rounded animate-pulse" />
-              </div>
-
-              <div className="h-12 bg-gray-100 rounded-xl animate-pulse" />
-            </div>
-
-            {/* Creator Card Skeleton */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="h-3 bg-gray-100 rounded w-32 mb-4 animate-pulse" />
-              <div className="flex items-start gap-3">
-                <div className="h-14 w-14   bg-gray-100 animate-pulse" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-5 bg-gray-100 rounded w-32 animate-pulse" />
-                  <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
-                  <div className="h-3 bg-gray-100 rounded w-full animate-pulse" />
-                </div>
-              </div>
-            </div>
-
-            {/* Details Card Skeleton */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="h-3 bg-gray-100 rounded w-32 mb-4 animate-pulse" />
-              <div className="space-y-2.5">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex justify-between py-1.5">
-                    <div className="h-4 bg-gray-100 rounded w-20 animate-pulse" />
-                    <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <Footer />
-    </div>
-  );
-
-  if (error || !campaign) return (
-    <div className="min-h-screen bg-gray-50">
-      <UnifiedNavbar variant="display" />
-      <div className="max-w-2xl mx-auto px-4 py-24 text-center">
-        <AlertTriangle className="mx-auto h-16 w-16 text-red-400 mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Campaign Not Found</h1>
-        <p className="text-gray-500 mb-8">{error}</p>
-        <button onClick={() => navigate("/dashboard")} className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700">Browse Campaigns</button>
-      </div>
-      <Footer />
-    </div>
-  );
-
   // ── render ─────────────────────────────────────────────────────────────────
   const showInvestBar = canInvest() && !fundingCardInView && !footerInView;
 
   return (
-    <div className={`min-h-screen bg-gray-50${showInvestBar ? ' pb-20' : ''}`}>
+    <div className="min-h-screen bg-gray-50">
       <UnifiedNavbar variant="display" />
 
-      {/* ── Hero Carousel ── */}
+      {/* ── Hero — transition image paints instantly, real image cross-fades in ── */}
       <div className="relative w-full h-56 sm:h-64 md:h-80 lg:h-96 bg-gray-900 overflow-hidden group">
-        {/* Current Image */}
-        <img 
-          src={carouselImages[currentImageIndex]} 
-          alt={campaign.title}
-          className="w-full h-full object-cover opacity-75 transition-opacity duration-500"
-          onError={(e) => { e.target.src = "/assets/placeholder-campaign.jpg"; }} 
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
-        {/* Navigation Arrows - only show if multiple images */}
+        {/* Transition placeholder — shown immediately, fades out as real image arrives */}
+        {showTransition && transitionState.imageUrl && (
+          <motion.img
+            src={transitionState.imageUrl}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0.9 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.4, delay: 0.2, ease: "easeInOut" }}
+          />
+        )}
+
+        {/* Real hero image */}
+        <motion.img
+          key={carouselImages[currentImageIndex]}
+          src={carouselImages[currentImageIndex]}
+          alt={activeCampaign.title}
+          className="absolute inset-0 w-full h-full object-cover"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.85 }}
+          transition={{ duration: 0.35, delay: showTransition ? 0.15 : 0, ease: "easeOut" }}
+          onError={(e) => { e.target.src = "/assets/placeholder-campaign.jpg"; }}
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+
+        {/* Carousel arrows */}
         {carouselImages.length > 1 && (
           <>
-            <button 
-              onClick={prevImage}
-              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3   transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
-              aria-label="Previous image"
-            >
+            <button onClick={prevImage}
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3 rounded-lg transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
+              aria-label="Previous image">
               <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
-            <button 
-              onClick={nextImage}
-              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3   transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
-              aria-label="Next image"
-            >
+            <button onClick={nextImage}
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 sm:p-3 rounded-lg transition opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
+              aria-label="Next image">
               <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
-            
-            {/* Image Indicators */}
             <div className="absolute bottom-16 sm:bottom-20 md:bottom-24 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-10">
-              {carouselImages.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentImageIndex(idx)}
-                  className={`h-1.5 sm:h-2   transition-all ${
-                    idx === currentImageIndex 
-                      ? 'w-6 sm:w-8 bg-white' 
-                      : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75'
+              {carouselImages.map((_, i) => (
+                <button key={i} onClick={() => setCurrentImageIndex(i)}
+                  className={`h-1.5 sm:h-2 rounded-full transition-all ${
+                    i === currentImageIndex ? 'w-6 sm:w-8 bg-white' : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/75'
                   }`}
-                  aria-label={`Go to image ${idx + 1}`}
-                />
+                  aria-label={`Go to image ${i + 1}`} />
               ))}
             </div>
           </>
         )}
 
-        {/* Back Button */}
+        {/* Back button */}
         <button onClick={() => navigate(-1)}
-          className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-white/20 backdrop-blur-sm text-white p-1.5 sm:p-2   hover:bg-white/30 transition z-10">
+          className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-white/20 backdrop-blur-sm text-white p-1.5 sm:p-2 rounded-lg hover:bg-white/30 transition z-10">
           <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
 
-        {/* Content Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 px-3 sm:px-4 md:px-8 pb-4 sm:pb-6 md:pb-8">
+        {/* Hero text overlay */}
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 px-3 sm:px-4 md:px-8 pb-4 sm:pb-6 md:pb-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
+        >
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-              <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm text-white   text-xs font-medium border border-white/20">
-                {campaign.category}
+              <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm text-white rounded-md text-xs font-medium border border-white/20">
+                {activeCampaign.category}
               </span>
-              {campaign.isFeatured && (
-                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-yellow-400/90 text-yellow-900   text-xs font-semibold">
+              {activeCampaign.isFeatured && (
+                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-yellow-400/90 text-yellow-900 rounded-md text-xs font-semibold">
                   <Star className="h-3 w-3" /> Featured
                 </span>
               )}
-              {campaign.isUrgent && (
-                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-500/90 text-white   text-xs font-semibold">
+              {activeCampaign.isUrgent && (
+                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-red-500/90 text-white rounded-md text-xs font-semibold">
                   <Zap className="h-3 w-3" /> Urgent
                 </span>
               )}
               {progress >= 100 && (
-                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-primary-500/90 text-white   text-xs font-semibold">
+                <span className="flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 bg-primary-500/90 text-white rounded-md text-xs font-semibold">
                   <CheckCircle className="h-3 w-3" /> Fully Funded
                 </span>
               )}
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight max-w-4xl mb-2 sm:mb-3">
-              {campaign.title}
+              {activeCampaign.title}
             </h1>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-white/80 text-xs sm:text-sm">
-              <span className="flex items-center gap-1 sm:gap-1.5"><MapPin className="h-3 w-3 sm:h-4 sm:w-4" />{campaign.location}</span>
-              <span className="flex items-center gap-1 sm:gap-1.5"><Eye className="h-3 w-3 sm:h-4 sm:w-4" />{(campaign.viewCount || 0).toLocaleString()} views</span>
-              <span className="hidden sm:flex items-center gap-1.5"><Heart className="h-4 w-4" />{campaign.favoriteCount || 0} saves</span>
-              <span className="hidden sm:flex items-center gap-1.5"><Users className="h-4 w-4" />{campaign.investorCount || 0} investors</span>
+              <span className="flex items-center gap-1 sm:gap-1.5"><MapPin className="h-3 w-3 sm:h-4 sm:w-4" />{activeCampaign.location}</span>
+              <span className="flex items-center gap-1 sm:gap-1.5"><Eye className="h-3 w-3 sm:h-4 sm:w-4" />{(activeCampaign.viewCount || 0).toLocaleString()} views</span>
+              <span className="hidden sm:flex items-center gap-1.5"><Heart className="h-4 w-4" />{activeCampaign.favoriteCount || 0} saves</span>
+              <span className="hidden sm:flex items-center gap-1.5"><Users className="h-4 w-4" />{activeCampaign.investorCount || 0} investors</span>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* ── Body ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* ── Body — slides up into view ── */}
+      <motion.div
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8${showInvestBar ? ' pb-24' : ''}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.12, ease: "easeOut" }}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
 
           {/* ── LEFT: content ── */}
@@ -760,7 +771,7 @@ const CampaignDisplay = () => {
                   {copied ? "Copied!" : "Share"}
                 </button>
                 {canEdit() && (
-                  <button onClick={() => navigate(`/edit-campaign/${campaign.id}`)}
+                  <button onClick={() => navigate(`/edit-campaign/${activeCampaign.id}`)}
                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-medium hover:bg-blue-700 transition">
                     <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Edit Campaign
                   </button>
@@ -804,40 +815,40 @@ const CampaignDisplay = () => {
             {/* funding card */}
             <div ref={fundingCardRef} className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100">
               <div className="mb-1">
-                <span className="text-2xl sm:text-3xl font-bold text-gray-900">{fmt(campaign.currentAmount)}</span>
+                <span className="text-2xl sm:text-3xl font-bold text-gray-900">{fmt(activeCampaign.currentAmount)}</span>
               </div>
               <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
-                raised of <span className="font-semibold text-gray-800">{fmt(campaign.targetAmount)}</span> goal
+                raised of <span className="font-semibold text-gray-800">{fmt(activeCampaign.targetAmount)}</span> goal
               </p>
 
-              <div className="w-full bg-gray-100   h-2 sm:h-2.5 mb-1 overflow-hidden">
-                <div className="h-full   bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-700"
+              <div className="w-full bg-gray-100 h-2 sm:h-2.5 mb-1 overflow-hidden rounded-full">
+                <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-700"
                   style={{ width: `${progress}%` }} />
               </div>
               <p className="text-xs text-gray-400 mb-4 sm:mb-5">{Math.round(progress)}% funded</p>
 
               <div className="grid grid-cols-3 gap-2 mb-4 sm:mb-5 py-3 sm:py-4 border-y border-gray-50">
-                <Stat value={campaign.investorCount || 0} label="Investors" />
+                <Stat value={activeCampaign.investorCount || 0} label="Investors" />
                 <Stat value={daysLeft} label="Days Left" />
-                <Stat value={campaign.favoriteCount || 0} label="Saves" />
+                <Stat value={activeCampaign.favoriteCount || 0} label="Saves" />
               </div>
 
               <div className="space-y-2 sm:space-y-2.5 text-xs sm:text-sm mb-4 sm:mb-5">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Min. Investment</span>
-                  <span className="font-semibold text-gray-900">{fmt(campaign.minimumInvestment)}</span>
+                  <span className="font-semibold text-gray-900">{fmt(activeCampaign.minimumInvestment)}</span>
                 </div>
-                {campaign.maximumInvestment && (
+                {activeCampaign.maximumInvestment && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">Max. Investment</span>
-                    <span className="font-semibold text-gray-900">{fmt(campaign.maximumInvestment)}</span>
+                    <span className="font-semibold text-gray-900">{fmt(activeCampaign.maximumInvestment)}</span>
                   </div>
                 )}
-                {campaign.endDate && (
+                {activeCampaign.endDate && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">Deadline</span>
                     <span className="font-semibold text-gray-900">
-                      {new Date(campaign.endDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                      {new Date(activeCampaign.endDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
                     </span>
                   </div>
                 )}
@@ -851,10 +862,10 @@ const CampaignDisplay = () => {
               ) : (
                 <div className="w-full py-3 sm:py-3.5 rounded-xl font-semibold text-center bg-gray-100 text-gray-400 text-xs sm:text-sm">
                   {!isAuthenticated() ? "Log in to Invest"
-                    : user?.id === campaign?.creator?.id ? "Your Campaign"
+                    : user?.id === activeCampaign?.creator?.id ? "Your Campaign"
                     : progress >= 100 ? "Fully Funded"
                     : daysLeft <= 0 ? "Campaign Ended"
-                    : campaign?.status !== "approved" ? "Not Yet Open"
+                    : activeCampaign?.status !== "approved" ? "Not Yet Open"
                     : "Cannot Invest"}
                 </div>
               )}
@@ -865,29 +876,29 @@ const CampaignDisplay = () => {
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Campaign Creator</p>
               <div className="flex items-start gap-3">
-                <div className="h-14 w-14   bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center border border-gray-200">
+                <div className="h-14 w-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center border border-gray-200">
                   {avatarUrl() ? (
-                    <img src={avatarUrl()} alt={campaign.creator?.fullName} className="h-full w-full object-cover"
+                    <img src={avatarUrl()} alt={activeCampaign.creator?.fullName} className="h-full w-full object-cover"
                       onError={(e) => { e.target.style.display = "none"; }} />
                   ) : (
-                    <span className="text-gray-600 font-bold text-xl">{campaign.creator?.fullName?.charAt(0) || "?"}</span>
+                    <span className="text-gray-600 font-bold text-xl">{activeCampaign.creator?.fullName?.charAt(0) || "?"}</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="font-semibold text-gray-900 truncate">{campaign.creator?.fullName || "Unknown"}</p>
-                    {campaign.creator?.isVerified && <CheckCircle className="h-4 w-4 text-primary-500 flex-shrink-0" />}
+                    <p className="font-semibold text-gray-900 truncate">{activeCampaign.creator?.fullName || "Unknown"}</p>
+                    {activeCampaign.creator?.isVerified && <CheckCircle className="h-4 w-4 text-primary-500 flex-shrink-0" />}
                   </div>
-                  {campaign.creator?.company && (
+                  {activeCampaign.creator?.company && (
                     <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
-                      <Building className="h-3 w-3" />{campaign.creator.company}
+                      <Building className="h-3 w-3" />{activeCampaign.creator.company}
                     </p>
                   )}
-                  {campaign.creator?.bio && (
-                    <p className="text-xs text-gray-500 mt-2 leading-relaxed line-clamp-4">{campaign.creator.bio}</p>
+                  {activeCampaign.creator?.bio && (
+                    <p className="text-xs text-gray-500 mt-2 leading-relaxed line-clamp-4">{activeCampaign.creator.bio}</p>
                   )}
-                  {campaign.creator?.website && (
-                    <a href={campaign.creator.website} target="_blank" rel="noopener noreferrer"
+                  {activeCampaign.creator?.website && (
+                    <a href={activeCampaign.creator.website} target="_blank" rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline mt-2">
                       <ExternalLink className="h-3 w-3" /> Website
                     </a>
@@ -901,14 +912,14 @@ const CampaignDisplay = () => {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Campaign Details</p>
               <div className="space-y-2.5 text-sm">
                 {[
-                  { label: "Category", value: campaign.category },
-                  { label: "Location", value: campaign.location },
-                  { label: "Status", value: campaign.status?.charAt(0).toUpperCase() + campaign.status?.slice(1) },
-                  campaign.approvedAt && { label: "Approved", value: new Date(campaign.approvedAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) },
-                  campaign.startDate && { label: "Start Date", value: new Date(campaign.startDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) },
-                  campaign.endDate && { label: "End Date", value: new Date(campaign.endDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) },
-                  { label: "Duration", value: `${campaign.durationDays || campaign.totalDurationDays || "—"} days` },
-                  { label: "Posted", value: new Date(campaign.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) },
+                  { label: "Category", value: activeCampaign.category },
+                  { label: "Location", value: activeCampaign.location },
+                  { label: "Status", value: activeCampaign.status?.charAt(0).toUpperCase() + activeCampaign.status?.slice(1) },
+                  activeCampaign.approvedAt && { label: "Approved", value: new Date(activeCampaign.approvedAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) },
+                  activeCampaign.startDate && { label: "Start Date", value: new Date(activeCampaign.startDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) },
+                  activeCampaign.endDate && { label: "End Date", value: new Date(activeCampaign.endDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) },
+                  { label: "Duration", value: `${activeCampaign.durationDays || activeCampaign.totalDurationDays || "—"} days` },
+                  activeCampaign.createdAt && { label: "Posted", value: new Date(activeCampaign.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) },
                 ].filter(Boolean).map(({ label, value }) => (
                   <div key={label} className="flex justify-between items-center py-1.5 border-b border-gray-50 last:border-0">
                     <span className="text-gray-500">{label}</span>
@@ -919,20 +930,20 @@ const CampaignDisplay = () => {
             </div>
 
             {/* documents card */}
-            {campaign.documents && campaign.documents.length > 0 && (
-              <DocumentsCard documents={campaign.documents} />
+            {activeCampaign.documents && activeCampaign.documents.length > 0 && (
+              <DocumentsCard documents={activeCampaign.documents} />
             )}
 
             {/* admin feedback */}
-            {campaign.adminComments && (
+            {activeCampaign.adminComments && (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm">
                 <p className="font-semibold text-amber-800 mb-1">Admin Feedback</p>
-                <p className="text-amber-700 leading-relaxed">{campaign.adminComments}</p>
+                <p className="text-amber-700 leading-relaxed">{activeCampaign.adminComments}</p>
               </div>
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <div ref={footerRef}>
         <Footer />
@@ -943,10 +954,10 @@ const CampaignDisplay = () => {
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{campaign.title}</p>
+              <p className="text-sm font-semibold text-gray-900 truncate">{activeCampaign.title}</p>
               <p className="text-xs text-gray-500">
                 <span className="font-semibold text-primary-600">{Math.round(progress)}% funded</span>
-                {' · '}{fmt(campaign.currentAmount)} raised
+                {' · '}{fmt(activeCampaign.currentAmount)} raised
               </p>
             </div>
             <button
@@ -963,7 +974,7 @@ const CampaignDisplay = () => {
       {showInvestmentModal && (
         <InvestmentModal
           isOpen={showInvestmentModal}
-          campaign={campaign}
+          campaign={activeCampaign}
           onClose={() => setShowInvestmentModal(false)}
           onInvestmentSuccess={() => { setShowInvestmentModal(false); loadCampaign(); }}
         />

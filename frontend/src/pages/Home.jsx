@@ -7,6 +7,7 @@ import FeaturedStartups from '../components/sections/FeaturedStartups';
 import HowItWorks from '../components/sections/HowItWorks';
 import FeaturesSection from '../components/sections/FeaturesSection';
 import Testimonials from '../components/sections/Testimonials';
+import StartupConnection from './StartupConnection';
 import UserCampaignsSection from '../components/sections/UserCampaignsSection';
 import SplitCTA from '../components/sections/SplitCTA';
 
@@ -16,12 +17,13 @@ const Home = () => (
 
     <main>
       <HeroSection />
-      <SocialProofStrip />
-      <FeaturedStartups />
       <HowItWorks />
+      <FeaturedStartups />
+      <SocialProofStrip />
       <FeaturesSection />
       <Testimonials />
       <UserCampaignsSection />
+      <StartupConnection />
       <SplitCTA />
     </main>
 

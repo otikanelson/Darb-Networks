@@ -1,9 +1,9 @@
 const { authJwt, adminAuth } = require("../middlewares");
 const controller = require("../controllers/campaign.controller");
 
-module.exports = function(app) {
+module.exports = function (app) {
   // CORS headers
-  app.use(function(req, res, next) {
+  app.use(function (req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
       "x-access-token, Origin, Content-Type, Accept, Authorization"
@@ -12,7 +12,7 @@ module.exports = function(app) {
   });
 
   // ============= SPECIFIC ROUTES FIRST (order matters!) =============
-  
+
   // Get featured campaigns (public)
   app.get(
     "/api/campaigns/featured",
@@ -68,7 +68,7 @@ module.exports = function(app) {
   );
 
   // ============= CAMPAIGN CRUD OPERATIONS =============
-  
+
   // Create new campaign
   app.post(
     "/api/campaigns",
@@ -104,7 +104,7 @@ module.exports = function(app) {
   );
 
   // ============= CAMPAIGN VIEWING ROUTES =============
-  
+
   // Get related campaigns (same category, exclude current)
   app.get(
     "/api/campaigns/:id/related",
@@ -131,7 +131,7 @@ module.exports = function(app) {
   );
 
   // ============= CAMPAIGN EDITING ROUTES =============
-  
+
   // Get campaign for editing (founder only, restricted access)
   app.get(
     "/api/campaigns/:id/edit",
@@ -156,7 +156,7 @@ module.exports = function(app) {
   );
 
   // ============= GENERAL ROUTES LAST =============
-  
+
   // Get all approved campaigns (public) - MUST come after specific routes
   app.get(
     "/api/campaigns",

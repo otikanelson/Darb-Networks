@@ -99,7 +99,7 @@ All campaigns include:
 ## Backend Configuration
 
 ### Server Changes
-- Default port changed to 5001 (to avoid conflicts)
+- Default port changed to 5000
 - TiDB SSL configuration optimized
 - Database initialization working correctly
 
@@ -123,7 +123,7 @@ npm start
 ## Testing & Verification
 
 ### Backend API ✅
-- Server starts successfully on port 5001
+- Server starts successfully on port 5000
 - Database connection established
 - All routes loaded correctly
 - GET /api/campaigns returns 5 campaigns with images
@@ -155,8 +155,8 @@ npm run dev
 
 ### 2. Access Application
 - **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:5001/api
-- **Health Check:** http://localhost:5001/health
+- **Backend API:** http://localhost:5000/api
+- **Health Check:** http://localhost:5000/health
 
 ### 3. Login & Test
 Use any of the seeded accounts:
@@ -187,7 +187,6 @@ When deploying to production:
 - `backend/.env` - TiDB development config
 - `backend/.env.production` - TiDB production config
 - `backend/config/db.config.js` - TiDB dialect options
-- `backend/server.js` - Port changed to 5001
 - `frontend/index.html` - DM Sans Google Font
 - `frontend/tailwind.config.js` - Font family updated
 - `frontend/src/index.css` - DM Sans applied globally

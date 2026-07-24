@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { TransitionProvider } from './context/TransitionContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Import pages
@@ -34,7 +35,8 @@ function App() {
     <ErrorBoundary>
       <Router>
         <AuthProvider>
-        <Routes>
+          <TransitionProvider>
+            <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -124,6 +126,7 @@ function App() {
           {/* Catch-all route for 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+          </TransitionProvider>
         </AuthProvider>
       </Router>
     </ErrorBoundary>

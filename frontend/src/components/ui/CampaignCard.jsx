@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Heart, 
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { buildImageUrl } from '../../config/apiUrl';
+import { useTransition } from '../../context/TransitionContext';
 
 const CampaignCard = ({ 
   campaign, 
@@ -27,6 +28,8 @@ const CampaignCard = ({
 }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { startTransition } = useTransition();
+  const cardRef = useRef(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,7 +38,17 @@ const CampaignCard = ({
     if (onViewClick) {
       onViewClick(campaign.id);
     }
-    // Track view and navigate
+    
+    // Capture card image + data for optimistic render on the next page
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const imageUrl = getImageUrl();
+      startTransition(rect, campaign, imageUrl);
+    }
+
+    // Scroll to top instantly before navigating so the new page starts at the top
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
     navigate(`/campaign/${campaign.id}`);
   };
 
@@ -102,13 +115,11 @@ const CampaignCard = ({
     return campaign.days_left || 30;
   };
 
-  // Get main image URL
+  // Get main image URL — handles both snake_case (list) and camelCase (detail) field names
   const getImageUrl = () => {
-    if (campaign.main_image_url) {
-      return buildImageUrl(campaign.main_image_url);
-    }
-    // Return null to show icon placeholder instead
-    return null;
+    const raw = campaign.mainImageUrl || campaign.main_image_url;
+    if (!raw) return null;
+    return raw.startsWith('http') ? raw : buildImageUrl(raw);
   };
 
   // Get status badge
@@ -178,16 +189,10 @@ const CampaignCard = ({
   // Get card classes based on size
   const getCardClasses = () => {
     const baseClasses = "bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg border border-gray-200 transition-all duration-300 cursor-pointer group";
-    
     switch (size) {
-      case 'compact':
-        return `${baseClasses} max-w-sm`;
-      case 'featured':
-        return `${baseClasses} max-w-md transform hover:scale-[1.02]`;
-      case 'preview':
-        return `${baseClasses}`;
-      default:
-        return baseClasses;
+      case 'compact':  return `${baseClasses} max-w-sm`;
+      case 'featured': return `${baseClasses} max-w-md transform hover:scale-[1.02]`;
+      default:         return baseClasses;
     }
   };
 
@@ -204,7 +209,7 @@ const CampaignCard = ({
   // ── Preview layout (home page) ──────────────────────────────────────────────
   if (size === 'preview') {
     return (
-      <div className={getCardClasses()} onClick={handleCardClick}>
+      <div ref={cardRef} className={getCardClasses()} onClick={handleCardClick}>
         {/* Image */}
         <div className={`relative ${getImageHeight()} overflow-hidden`}>
           {getImageUrl() ? (
@@ -301,7 +306,7 @@ const CampaignCard = ({
 
   // ── Full layout ──────────────────────────────────────────────────────────────
   return (
-    <div className={getCardClasses()} onClick={handleCardClick}>
+    <div ref={cardRef} className={getCardClasses()} onClick={handleCardClick}>
       {/* Campaign Image */}
       <div className={`relative ${getImageHeight()} overflow-hidden`}>
         {getImageUrl() ? (

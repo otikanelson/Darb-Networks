@@ -487,7 +487,7 @@ exports.getMyInvestments = async (req, res) => {
        JOIN campaigns c ON i.campaign_id = c.id
        JOIN users u ON c.founder_id = u.id
        ${whereClause}
-       ORDER BY i.created_at DESC
+       ORDER BY i.investment_date DESC
        LIMIT ? OFFSET ?`,
       {
         replacements: [...replacements, parseInt(limit), parseInt(offset)],
