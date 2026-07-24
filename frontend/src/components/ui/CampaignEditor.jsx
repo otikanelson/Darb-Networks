@@ -779,7 +779,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
           <div className="mt-8 pt-6 border-t border-gray-100">
             <button type="button" onClick={() => save(true)} disabled={saving}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition disabled:opacity-40">
-              {saving ? <span className="h-3.5 w-3.5 border-2 border-gray-400 border-t-transparent   animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              {saving ? <span className="h-3.5 w-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> : <Save className="h-3.5 w-3.5" />}
               Save draft
             </button>
           </div>
@@ -828,7 +828,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
                 {/* mobile save draft */}
                 <button type="button" onClick={() => save(true)} disabled={saving}
                   className="lg:hidden flex items-center gap-1.5 px-4 py-3 rounded-xl border border-gray-200 text-gray-500 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 transition">
-                  {saving ? <span className="h-3.5 w-3.5 border-2 border-gray-400 border-t-transparent   animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                  {saving ? <span className="h-3.5 w-3.5 border-2 border-gray-400 border-t-transparent rounded-full  animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                   Draft
                 </button>
 
@@ -836,7 +836,7 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
                   <button type="button" onClick={() => save(false)} disabled={submitting || saving}
                     className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 disabled:opacity-50 transition shadow-sm text-sm">
                     {submitting
-                      ? <span className="h-4 w-4 border-2 border-white border-t-transparent   animate-spin" />
+                      ? <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       : <Send className="h-4 w-4" />}
                     {mode === 'edit' ? 'Submit for Approval' : 'Submit Campaign'}
                   </button>

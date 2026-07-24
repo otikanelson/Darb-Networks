@@ -22,6 +22,7 @@ import {
   Trash2,
   CreditCard,
   MapPin,
+  AlertCircle,
   CheckCircle,
   XCircle,
 } from "lucide-react";
@@ -526,7 +527,7 @@ const Profile = () => {
   if (loading && !profileData.email) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin   h-12 w-12 border-4 border-primary-700 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-700 border-t-transparent"></div>
       </div>
     );
   }
@@ -638,7 +639,7 @@ const Profile = () => {
                   >
                     {imageUploading ? (
                       <>
-                        <div className="animate-spin rounded-full  h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
                         Uploading...
                       </>
                     ) : (
@@ -1107,7 +1108,7 @@ const Profile = () => {
                       <p className="text-sm text-gray-500">
                         {user?.isVerified ? (
                           <span className="flex items-center text-primary-600">
-                            <Check className="h-4 w-4 mr-1" />
+                            <CheckCircle className="h-4 w-4 mr-1" />
                             Verified
                           </span>
                         ) : (

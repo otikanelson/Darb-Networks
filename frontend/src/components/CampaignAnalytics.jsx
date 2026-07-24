@@ -62,7 +62,7 @@ const CampaignAnalytics = ({ campaignId, isOwner = false }) => {
     return (
       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-center py-8">
-          <Loader className="h-6 w-6 animate-spin text-gray-400" />
+          <Loader className="h-6 w-6 animate-spin rounded-full text-gray-400" />
           <span className="ml-2 text-gray-600">Loading analytics...</span>
         </div>
       </div>
