@@ -493,7 +493,7 @@ const FAQ = () => {
                 </div>
               ) : (
                 <>
-                  <div className="mb-4">
+                  <div className="mb-4 p-4">
                     <label
                       htmlFor="question"
                       className="block text-sm font-medium text-purple-700 mb-1"

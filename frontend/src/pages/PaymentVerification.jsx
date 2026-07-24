@@ -207,7 +207,7 @@ const PaymentVerification = () => {
               <p className="text-sm text-gray-600">
                 Still having issues?{" "}
                 <a
-                  href="mailto:support@darbnetwork.com"
+                  href="mailto:legal@darbnetwork.com"
                   className="text-blue-600 hover:text-blue-800 underline"
                 >
                   Contact Support

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ShieldCheck, BarChart3, Globe2, Zap, ArrowRight, CheckCircle2, TrendingUp, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ShieldCheck, BarChart3, Globe2, Zap, ArrowRight, CheckCircle2, TrendingUp, Users, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -291,8 +292,7 @@ const FeaturesSection = () => {
                     {active.badge}
                   </span>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-primary-400" />
-                    <span className="text-xs font-medium text-slate-400">Live Platform Interface</span>
+                    <span className="text-xs font-medium text-slate-400">Platform Interface</span>
                   </div>
                 </div>
 
@@ -317,9 +317,6 @@ const FeaturesSection = () => {
                               <div className="text-[11px] text-slate-400">{row.sub}</div>
                             </div>
                           </div>
-                          <span className="rounded bg-primary-500/10 px-2 py-1 text-xs font-bold text-primary-400">
-                            Connected
-                          </span>
                         </div>
                       ))}
                     </div>
@@ -385,12 +382,15 @@ const FeaturesSection = () => {
                   )}
                 </div>
 
-                {/* Bottom prompt */}
-                <div className="flex items-center justify-between border-t border-white/10 pt-6 text-xs text-slate-400">
-                  <span>Click a feature to preview it live</span>
-                  <span className="flex items-center gap-1 font-semibold text-primary-400">
-                    Interactive demo <ArrowRight className="h-3 w-3" />
-                  </span>
+                {/* Bottom CTA */}
+                <div className="flex items-center justify-between border-t border-white/10 pt-5">
+                  <Link
+                    to="/register"
+                    className="group flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:shadow-primary-500/40 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60"
+                  >
+                    Get started 
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </Link>
                 </div>
               </div>
             </div>

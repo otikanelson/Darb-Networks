@@ -80,9 +80,9 @@ const PrivacyPolicy = () => {
       content: [
         "If you have any questions about this Privacy Policy, please contact us at:",
         [
-          "Email: privacy@example.com",
-          "Phone: +1 (555) 123-4567",
-          "Address: 123 Privacy Street, Security City, 12345",
+          "Email: legal@darbnetwork.com",
+          "Phone: +234 915 621 9654",
+          "Address: Lagos, Nigeria",
         ],
       ],
     },
@@ -98,7 +98,7 @@ const PrivacyPolicy = () => {
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900">Privacy Policy</h1>
             <p className="mt-4 text-gray-600">
-              Last updated: February 14, 2025
+              Last updated: July 24, 2026
             </p>
           </div>
         </div>

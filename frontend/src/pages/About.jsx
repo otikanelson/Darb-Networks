@@ -110,9 +110,6 @@ const About = () => {
                   {resource.title}
                 </h3>
                 <p className="text-sm sm:text-base text-gray-600">{resource.description}</p>
-                <button className="mt-3 sm:mt-4 flex items-center text-sm sm:text-base text-purple-700 hover:text-purple-800">
-                  Learn more <ArrowRight className="ml-2 h-4 w-4" />
-                </button>
               </div>
             ))}
           </div>
@@ -135,10 +132,10 @@ const About = () => {
             </h3>
             <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">For general inquiries:</p>
             <a
-              href="mailto:info@example.com"
+              href="mailto:legal@darbnetwork.com"
               className="text-sm sm:text-base text-purple-700 hover:text-purple-800 break-all"
             >
-              somtootika@gmail.com
+              legal@darbnetwork.com
             </a>
           </div>
           <div className="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-100">
@@ -151,7 +148,7 @@ const About = () => {
               href="tel:+2349156219654"
               className="text-sm sm:text-base text-purple-700 hover:text-purple-800"
             >
-              +234 (915)621 9654
+              +234 915 621 9654
             </a>
           </div>
         </div>

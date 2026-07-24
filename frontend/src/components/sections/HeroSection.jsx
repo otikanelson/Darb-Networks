@@ -38,12 +38,12 @@ const HeroSection = () => {
     fetchCampaigns();
   }, []);
 
-  // Transition to carousel after 3 seconds
+  // Transition to carousel after 6 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowCarousel(true);
       setIsPlaying(true);
-    }, 3000);
+    }, 6000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -83,12 +83,12 @@ const HeroSection = () => {
     fetchCampaigns();
   }, []);
 
-  // Transition to carousel after 3 seconds
+  // Transition to carousel after 6 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowCarousel(true);
       setIsPlaying(true);
-    }, 3000);
+    }, 6000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -238,10 +238,10 @@ const HeroSection = () => {
                     const hasCampaigns = campaigns && campaigns.length > 0;
                     const title = hasCampaigns
                       ? truncateTitle(currentCampaign?.title, 60)
-                      : "Fund the Next Generation of African Innovation";
+                      : "Fund your startup with confidence.";
                     const description = hasCampaigns
                       ? truncateDescription(currentCampaign?.description, 150)
-                      : "Connect with vetted African startups, back high-growth potential founders, and participate in milestone-based funding rounds built on trust.";
+                      : "Connect with verified investors across the continent, showcase your innovation, and get the funding you need to grow.";
 
                     return (
                       <>

@@ -173,7 +173,7 @@ const TermsOfService = () => {
         "For questions about these Terms of Service, please contact us:",
         [
           "Email: legal@darbnetwork.com",
-          "Phone: +234 (0) 123-456-7890",
+          "Phone: +234 915 621 9654",
           "Address: Lagos, Nigeria",
         ],
       ],
@@ -190,7 +190,7 @@ const TermsOfService = () => {
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900">Terms of Service</h1>
             <p className="mt-4 text-gray-600">
-              Last updated: February 14, 2025
+              Last updated: July 24, 2026
             </p>
             <p className="mt-2 text-sm text-gray-500 max-w-2xl mx-auto">
               Please read these terms carefully before using our platform. By using Darb Network, you agree to be bound by these terms.

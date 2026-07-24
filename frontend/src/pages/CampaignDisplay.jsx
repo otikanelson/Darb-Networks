@@ -230,7 +230,7 @@ const CampaignDisplay = () => {
 
   const loadRelated = async () => {
     try {
-      const res = await fetch(buildApiUrl(`/campaigns/${id}/related?limit=3`));
+      const res = await fetch(buildApiUrl(`/campaigns/${id}/related?limit=4`));
       if (res.ok) { const r = await res.json(); if (r.success) setRelatedCampaigns(r.data || []); }
     } catch { /* silent */ }
   };
@@ -394,8 +394,13 @@ const CampaignDisplay = () => {
       : buildImageUrl(activeCampaign.mainImageUrl || activeCampaign.main_image_url);
     carouselImages.push(mainUrl);
   }
-  // Add gallery images (they're already processed URLs from backend)
-  carouselImages.push(...galleryImages.filter(img => img !== carouselImages[0]));
+  // Gallery images are objects { image_url, ... } — extract the URL
+  galleryImages.forEach((img) => {
+    const url = img?.image_url || img;
+    if (url && typeof url === 'string' && url !== carouselImages[0]) {
+      carouselImages.push(url);
+    }
+  });
   
   // If no images at all, use placeholder or transition image
   if (carouselImages.length === 0) {
@@ -802,7 +807,7 @@ const CampaignDisplay = () => {
             {relatedCampaigns.length > 0 && (
               <div>
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">More Like This</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {relatedCampaigns.map((c) => <CampaignCard key={c.id} campaign={c} size="preview" />)}
                 </div>
               </div>
@@ -944,6 +949,25 @@ const CampaignDisplay = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* ── Related Campaigns — full width below the grid ── */}
+      {relatedCampaigns.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
+          <div className="border-t border-gray-100 pt-8">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">More in {activeCampaign.category}</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Similar campaigns you might be interested in</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+              {relatedCampaigns.map((c) => (
+                <CampaignCard key={c.id} campaign={c} size="preview" />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div ref={footerRef}>
         <Footer />
