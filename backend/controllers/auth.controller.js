@@ -12,6 +12,11 @@ exports.signup = async (req, res) => {
       return res.status(400).send({ success: false, message: "Email, password, full name, and user type are required" });
     }
 
+    // Only allow "founder" or "investor" on signup
+    if (!["founder", "investor"].includes(userType)) {
+      return res.status(400).send({ success: false, message: "Invalid user type" });
+    }
+
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).send({ success: false, message: "Email is already in use" });

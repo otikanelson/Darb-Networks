@@ -93,7 +93,6 @@ exports.updateProfile = (req, res) => {
   // Define which fields can be updated
   const allowedFields = [
     'fullName',
-    'userType', 
     'companyName',
     'phoneNumber',
     'address',
@@ -439,13 +438,6 @@ function validateProfileData(data) {
     }
     if (data.fullName.length > 100) {
       errors.push("Full name cannot exceed 100 characters.");
-    }
-  }
-  
-  // User type validation - UPDATE THIS PART
-  if (data.userType !== undefined) {
-    if (!['founder', 'investor', 'admin'].includes(data.userType)) {
-      errors.push("User type must be 'founder', 'investor', or 'admin'.");
     }
   }
   
