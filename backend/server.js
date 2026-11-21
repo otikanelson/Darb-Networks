@@ -13,16 +13,7 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
 
 // Serverless function export for Vercel
 if (process.env.VERCEL) {
-  console.log('🔷 Running on Vercel serverless - Build timestamp:', new Date().toISOString());
-  console.log('🔧 Environment check:', {
-    nodeEnv: process.env.NODE_ENV,
-    hasCloudinary: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET),
-    cloudinaryVars: {
-      cloudName: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
-      apiKey: process.env.CLOUDINARY_API_KEY ? 'SET' : 'NOT SET',
-      apiSecret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'NOT SET'
-    }
-  });
+  console.log('🔷 Running on Vercel serverless');
 }
 
 const app = express();
@@ -73,8 +64,8 @@ const corsOptions = {
       }
     }
 
-    // Reject by default
-    callback(new Error('Not allowed by CORS'));
+    // Reject by default with proper CORS error handler
+    callback(new Error('CORS_REJECTED'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -83,11 +74,26 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Handle CORS rejections with proper JSON response
+app.use((err, req, res, next) => {
+  if (err.message === 'CORS_REJECTED') {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied'
+    });
+  }
+  next(err);
+});
+
 // Add security headers
 app.use(helmet());
 
 // Trust proxy for accurate IP in Vercel
 app.set('trust proxy', 1);
+
+// Register raw body middleware for Paystack webhook BEFORE json parsing
+// This captures the raw body for signature verification
+app.use('/api/webhooks/paystack', express.raw({ type: 'application/json' }));
 
 // Parse requests with lower limits for security
 app.use(express.json({ limit: '1mb' }));
@@ -158,13 +164,6 @@ const initializeDatabase = async () => {
 
     const db = require("./models");
 
-    console.log("🔧 Database config check:", {
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      database: process.env.DB_NAME,
-      hasPassword: !!process.env.DB_PASSWORD
-    });
-
     await db.sequelize.authenticate();
     console.log("✅ Database connection established successfully");
 
@@ -218,7 +217,13 @@ const generalLimiter = rateLimit({
   max: 100,
   message: { success: false, message: 'Too many requests, please try again later' },
   standardHeaders: false,
-  skip: (req) => process.env.NODE_ENV !== 'production' // disable in development
+  skip: (req) => {
+    // Don't rate limit in development
+    if (process.env.NODE_ENV !== 'production') return true;
+    // Don't rate limit webhook endpoints
+    if (req.path.startsWith('/api/webhooks/')) return true;
+    return false;
+  }
 });
 
 // Strict rate limiter for auth endpoints: 10 requests per 15 minutes per IP
@@ -284,15 +289,17 @@ app.use((err, req, res, next) => {
     method: req.method
   });
 
-  res.status(err.status || 500).json({
+  const isProduction = process.env.NODE_ENV === 'production';
+  const statusCode = err.status || 500;
+  const message = isProduction ? 'Internal server error' : (err.message || 'Internal server error');
+
+  res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal server error',
-    path: req.path,
-    timestamp: new Date().toISOString(),
-    error: process.env.NODE_ENV === 'development' ? {
+    message: message,
+    ...(process.env.NODE_ENV === 'development' && {
       stack: err.stack,
       details: err
-    } : undefined
+    })
   });
 });
 

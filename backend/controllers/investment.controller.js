@@ -160,10 +160,11 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
         }
       );
 
+      console.error('❌ Payment initialization failed:', paymentInit.error);
+
       return res.status(400).send({
         success: false,
-        message: 'Payment initialization failed',
-        error: paymentInit.error
+        message: 'Payment initialization failed'
       });
     }
 
@@ -271,12 +272,11 @@ exports.verifyPayment = async (req, res) => {
     }
 
     // Verify that the amount paid matches the stored investment amount
-    // Paystack returns amount in kobo (multiply by 100 from naira)
-    const amountPaidInNaira = verification.data.amount / 100;
-    if (Math.abs(amountPaidInNaira - investment.amount) > 0.01) {
+    // verifyPayment() already returns amount in naira (converted from kobo)
+    if (Math.abs(verification.data.amount - investment.amount) > 0.01) {
       console.error(`❌ Amount mismatch for payment ${paymentReference}:`, {
         storedAmount: investment.amount,
-        paidAmount: amountPaidInNaira
+        paidAmount: verification.data.amount
       });
 
       return res.status(400).send({
@@ -347,8 +347,17 @@ exports.handlePaystackWebhook = async (req, res) => {
   try {
     const signature = req.headers['x-paystack-signature'];
 
-    // req.body is now a Buffer when express.raw is used
-    const rawBody = typeof req.body === 'string' ? req.body : req.body.toString('utf-8');
+    // req.body must be a Buffer when express.raw is used
+    if (!Buffer.isBuffer(req.body)) {
+      console.error('❌ Webhook body is not a Buffer - express.raw middleware may not be configured correctly');
+      return res.status(400).send({
+        success: false,
+        message: 'Invalid webhook format'
+      });
+    }
+
+    // Convert Buffer to string for signature verification
+    const rawBody = req.body.toString('utf-8');
 
     // Verify webhook signature against raw body
     const webhookResult = await PaystackService.processWebhook(rawBody, signature);

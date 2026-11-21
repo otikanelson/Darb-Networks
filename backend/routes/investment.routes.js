@@ -3,10 +3,9 @@ const controller = require("../controllers/investment.controller");
 const express = require("express");
 
 module.exports = function (app) {
-  // Register raw body middleware for Paystack webhook BEFORE json parsing
+  // Register webhook handler (raw body already handled in server.js)
   app.post(
     "/api/webhooks/paystack",
-    express.raw({ type: 'application/json' }),
     controller.handlePaystackWebhook || ((req, res) => {
       console.log('📡 Paystack webhook received');
       res.status(200).send({ status: 'received' });

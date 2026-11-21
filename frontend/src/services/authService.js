@@ -94,7 +94,8 @@ class AuthService {
         companyName: userData.companyName || null, phoneNumber: userData.phoneNumber || null,
         address: userData.address || null, bvn: userData.bvn || null,
         nin: userData.nin || null, cacNumber: userData.cacNumber || null,
-        accountNumber: userData.accountNumber || null, bankName: userData.bankName || null
+        accountNumber: userData.accountNumber || null, bankName: userData.bankName || null,
+        captchaToken: userData.captchaToken || null
       };
 
       const response = await ApiService.post(API_ENDPOINTS.AUTH.REGISTER, backendData);

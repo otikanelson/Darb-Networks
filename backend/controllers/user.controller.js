@@ -26,13 +26,6 @@ const ensureCloudinaryConfigured = () => {
   return isConfigured;
 };
 
-// Log configuration status at module load (for debugging)
-console.log('🔧 User Controller - Cloudinary Check at module load:', {
-  cloudName: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
-  apiKey: process.env.CLOUDINARY_API_KEY ? 'SET' : 'NOT SET',
-  apiSecret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'NOT SET',
-});
-
 // Use memory storage — no disk writes (required for Vercel)
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -54,8 +47,6 @@ exports.getProfile = (req, res) => {
       if (!user) {
         return res.status(404).send({ message: "User not found." });
       }
-
-      console.log('Profile image URL from database:', user.profileImageUrl);
 
       res.status(200).send({
         success: true,
@@ -261,13 +252,6 @@ exports.uploadProfileImage = [
     try {
       const userId = req.userId;
 
-      console.log('📸 Profile image upload request:', {
-        userId,
-        hasFile: !!req.file,
-        fileName: req.file?.originalname,
-        fileSize: req.file?.size
-      });
-
       if (!req.file) {
         return res.status(400).send({ success: false, message: "No image file provided." });
       }
@@ -275,26 +259,13 @@ exports.uploadProfileImage = [
       // Check Cloudinary configuration at runtime
       const cloudinaryConfigured = ensureCloudinaryConfigured();
 
-      console.log('☁️ Cloudinary runtime check:', {
-        configured: cloudinaryConfigured,
-        cloudName: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
-        apiKey: process.env.CLOUDINARY_API_KEY ? 'SET' : 'NOT SET',
-        apiSecret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'NOT SET'
-      });
-
       if (!cloudinaryConfigured) {
-        console.error('❌ Cloudinary not configured at runtime. Environment variables:', {
-          CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || 'undefined',
-          CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ? 'exists' : 'undefined',
-          CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ? 'exists' : 'undefined'
-        });
+        console.error('❌ Image upload service not configured');
         return res.status(500).send({
           success: false,
           message: "Image upload service not configured. Please contact support."
         });
       }
-
-      console.log('☁️ Uploading to Cloudinary...');
 
       // Upload buffer directly to Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {
@@ -302,10 +273,8 @@ exports.uploadProfileImage = [
           { folder: 'darb/profiles', resource_type: 'image' },
           (error, result) => {
             if (error) {
-              console.error('❌ Cloudinary upload error:', error);
               reject(error);
             } else {
-              console.log('✅ Cloudinary upload success:', result.secure_url);
               resolve(result);
             }
           }
@@ -314,8 +283,6 @@ exports.uploadProfileImage = [
       });
 
       const imageUrl = uploadResult.secure_url;
-
-      console.log('💾 Saving image URL to database:', imageUrl);
 
       const [affectedRows] = await User.update(
         { profileImageUrl: imageUrl },
@@ -327,8 +294,6 @@ exports.uploadProfileImage = [
       }
 
       const updatedUser = await User.findByPk(userId, { attributes: { exclude: ['password'] } });
-
-      console.log('✅ Profile image updated successfully for user:', userId);
 
       res.status(200).send({
         success: true,
