@@ -1,28 +1,14 @@
 // controllers/investment.controller.js
-// Complete investment controller with all functions
-
 const db = require("../models");
+const { sendError } = require("../utils/http");
 
-// Check if PaystackService exists, if not create a mock
+// PaystackService must exist - fail loudly if not available
 let PaystackService;
 try {
   PaystackService = require("../services/paymentService");
 } catch (error) {
-  PaystackService = {
-    initializePayment: async (data) => ({ 
-      success: true, 
-      data: { 
-        authorization_url: 'https://checkout.paystack.com/mock',
-        access_code: 'mock_access_code',
-        reference: data.reference
-      }
-    }),
-    verifyPayment: async (ref) => ({ 
-      success: true, 
-      data: { reference: ref, amount: 50000, currency: 'NGN' }
-    }),
-    processWebhook: async (payload, signature) => ({ success: true, message: 'Mock webhook' })
-  };
+  console.error('❌ FATAL: PaystackService failed to load:', error.message);
+  throw new Error('Payment service unavailable - application cannot start');
 }
 
 /**
@@ -37,6 +23,14 @@ try {
  */
 exports.initiateInvestmentWithPayment = async (req, res) => {
   try {
+    // Check if payment service is configured
+    if (!process.env.PAYSTACK_SECRET_KEY) {
+      return res.status(503).send({
+        success: false,
+        message: "Payments unavailable"
+      });
+    }
+
     const investorId = req.userId;
     const { campaignId, amount, investorMessage } = req.body;
 
@@ -128,8 +122,8 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
       {
         replacements: [
           campaignId,
-          investorId, 
-          amount, 
+          investorId,
+          amount,
           paymentReference,
           investorMessage || null,
           JSON.stringify(campaignSnapshot)
@@ -142,7 +136,7 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
 
     // Initialize payment
     const callbackUrl = `${process.env.FRONTEND_URL || 'http://localhost:5174'}/investment/verify/${paymentReference}`;
-    
+
     const paymentData = {
       email: investor.email,
       amount: amount,
@@ -200,8 +194,7 @@ exports.initiateInvestmentWithPayment = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error initiating investment',
-      error: error.message
+      message: 'Error initiating investment'
     });
   }
 };
@@ -277,6 +270,21 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
+    // Verify that the amount paid matches the stored investment amount
+    // Paystack returns amount in kobo (multiply by 100 from naira)
+    const amountPaidInNaira = verification.data.amount / 100;
+    if (Math.abs(amountPaidInNaira - investment.amount) > 0.01) {
+      console.error(`❌ Amount mismatch for payment ${paymentReference}:`, {
+        storedAmount: investment.amount,
+        paidAmount: amountPaidInNaira
+      });
+
+      return res.status(400).send({
+        success: false,
+        message: 'Payment amount does not match investment amount'
+      });
+    }
+
     // Payment successful - update investment and campaign
     await db.sequelize.query(
       `UPDATE investments 
@@ -327,8 +335,7 @@ exports.verifyPayment = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error verifying payment',
-      error: error.message
+      message: 'Error verifying payment'
     });
   }
 };
@@ -339,10 +346,12 @@ exports.verifyPayment = async (req, res) => {
 exports.handlePaystackWebhook = async (req, res) => {
   try {
     const signature = req.headers['x-paystack-signature'];
-    const payload = JSON.stringify(req.body);
 
-    // Verify webhook signature
-    const webhookResult = await PaystackService.processWebhook(payload, signature);
+    // req.body is now a Buffer when express.raw is used
+    const rawBody = typeof req.body === 'string' ? req.body : req.body.toString('utf-8');
+
+    // Verify webhook signature against raw body
+    const webhookResult = await PaystackService.processWebhook(rawBody, signature);
 
     if (!webhookResult.success) {
       return res.status(400).send({
@@ -351,13 +360,16 @@ exports.handlePaystackWebhook = async (req, res) => {
       });
     }
 
+    // Parse JSON only after signature verification
+    const payload = JSON.parse(rawBody);
+
     // Handle different event types
     const event = payload.event;
     const data = payload.data;
 
     if (event === 'charge.success') {
       const paymentReference = data.reference;
-      
+
       // Get investment
       const [investment] = await db.sequelize.query(
         `SELECT i.*, c.title as campaign_title, c.founder_id,
@@ -408,8 +420,7 @@ exports.handlePaystackWebhook = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error processing webhook',
-      error: error.message
+      message: 'Error processing webhook'
     });
   }
 };
@@ -451,8 +462,7 @@ exports.getPaymentStatus = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching payment status',
-      error: error.message
+      message: 'Error fetching payment status'
     });
   }
 };
@@ -533,8 +543,7 @@ exports.getMyInvestments = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching investments',
-      error: error.message
+      message: 'Error fetching investments'
     });
   }
 };
@@ -610,8 +619,7 @@ exports.getCampaignInvestors = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching investors',
-      error: error.message
+      message: 'Error fetching investors'
     });
   }
 };
@@ -687,8 +695,7 @@ exports.getCampaignInvestmentAnalytics = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching investment analytics',
-      error: error.message
+      message: 'Error fetching investment analytics'
     });
   }
 };
@@ -764,8 +771,7 @@ exports.createRepaymentBatch = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error creating repayment batch',
-      error: error.message
+      message: 'Error creating repayment batch'
     });
   }
 };
@@ -808,8 +814,7 @@ exports.getRepaymentHistory = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching repayment history',
-      error: error.message
+      message: 'Error fetching repayment history'
     });
   }
 };
@@ -852,8 +857,7 @@ exports.getInvestmentNotifications = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching notifications',
-      error: error.message
+      message: 'Error fetching notifications'
     });
   }
 };
@@ -909,16 +913,16 @@ module.exports = {
   verifyPayment: exports.verifyPayment,
   handlePaystackWebhook: exports.handlePaystackWebhook,
   getPaymentStatus: exports.getPaymentStatus,
-  
+
   // Investment history and analytics
   getMyInvestments: exports.getMyInvestments,
   getCampaignInvestors: exports.getCampaignInvestors,
   getCampaignInvestmentAnalytics: exports.getCampaignInvestmentAnalytics,
-  
+
   // Repayment management
   createRepaymentBatch: exports.createRepaymentBatch,
   getRepaymentHistory: exports.getRepaymentHistory,
-  
+
   // Notifications
   getInvestmentNotifications: exports.getInvestmentNotifications,
   createInvestmentNotifications: exports.createInvestmentNotifications

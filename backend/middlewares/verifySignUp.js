@@ -1,14 +1,14 @@
 const db = require("../models");
 const User = db.user;
 
-checkDuplicateEmail = (req, res, next) => {
+const checkDuplicateEmail = (req, res, next) => {
   // Check if email already exists
   User.findOne({
     where: {
       email: req.body.email
     }
   }).then(user => {
-    
+
     if (user) {
       console.log("🔧 MIDDLEWARE: Email already exists, sending 400");
       res.status(400).send({

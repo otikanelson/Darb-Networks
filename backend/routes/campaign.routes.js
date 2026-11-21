@@ -2,15 +2,6 @@ const { authJwt, adminAuth } = require("../middlewares");
 const controller = require("../controllers/campaign.controller");
 
 module.exports = function (app) {
-  // CORS headers
-  app.use(function (req, res, next) {
-    res.header(
-      "Access-Control-Allow-Headers",
-      "x-access-token, Origin, Content-Type, Accept, Authorization"
-    );
-    next();
-  });
-
   // ============= SPECIFIC ROUTES FIRST (order matters!) =============
 
   // Get featured campaigns (public)
@@ -166,6 +157,7 @@ module.exports = function (app) {
   // Get campaign by ID (public, but tracks views) - MUST be last
   app.get(
     "/api/campaigns/:id",
+    [authJwt.optionalToken],
     controller.getCampaignById
   );
 };

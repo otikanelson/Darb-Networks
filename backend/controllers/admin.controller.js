@@ -1,19 +1,20 @@
 const db = require("../models");
+const { maskBVN } = require("../utils/dataProtection");
 
 exports.getAllCampaignsForReview = async (req, res) => {
   try {
     const { status = 'all', page = 1, limit = 20 } = req.query;
-        
+
     let whereClause = '';
     let replacements = [];
-    
+
     if (status !== 'all') {
       whereClause = 'WHERE c.status = ?';
       replacements.push(status);
     }
-    
+
     const offset = (page - 1) * limit;
-    
+
     const campaigns = await db.sequelize.query(
       `SELECT c.*, 
               u.fullName as founder_name, 
@@ -88,8 +89,7 @@ exports.getAllCampaignsForReview = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching campaigns',
-      error: error.message
+      message: 'Error fetching campaigns'
     });
   }
 };
@@ -126,16 +126,22 @@ exports.getCampaignForReview = async (req, res) => {
       });
     }
 
+    // Mask sensitive data before returning
+    const safeData = {
+      ...campaign,
+      founder_bvn: maskBVN(campaign.founder_bvn),
+      has_founder_bvn: !!campaign.founder_bvn
+    };
+
     res.status(200).send({
       success: true,
-      data: campaign
+      data: safeData
     });
 
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching campaign',
-      error: error.message
+      message: 'Error fetching campaign'
     });
   }
 };
@@ -206,8 +212,7 @@ exports.approveCampaign = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error approving campaign',
-      error: error.message
+      message: 'Error approving campaign'
     });
   }
 };
@@ -283,8 +288,7 @@ exports.rejectCampaign = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error rejecting campaign',
-      error: error.message
+      message: 'Error rejecting campaign'
     });
   }
 };
@@ -336,8 +340,7 @@ exports.toggleFeaturedStatus = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error updating featured status',
-      error: error.message
+      message: 'Error updating featured status'
     });
   }
 };
@@ -425,8 +428,7 @@ exports.getDashboardStats = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching dashboard stats',
-      error: error.message
+      message: 'Error fetching dashboard stats'
     });
   }
 };
@@ -435,17 +437,17 @@ exports.getDashboardStats = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const { userType = 'all', page = 1, limit = 20 } = req.query;
-    
+
     let whereClause = "WHERE userType != 'admin'"; // Don't show admin users
     let replacements = [];
-    
+
     if (userType !== 'all') {
       whereClause += ' AND userType = ?';
       replacements.push(userType);
     }
-    
+
     const offset = (page - 1) * limit;
-    
+
     const users = await db.sequelize.query(
       `SELECT 
          id, email, fullName, userType, companyName, 
@@ -484,8 +486,7 @@ exports.getAllUsers = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: 'Error fetching users',
-      error: error.message
+      message: 'Error fetching users'
     });
   }
 };

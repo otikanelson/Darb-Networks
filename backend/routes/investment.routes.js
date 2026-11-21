@@ -1,26 +1,28 @@
 const { authJwt, adminAuth } = require("../middlewares");
 const controller = require("../controllers/investment.controller");
+const express = require("express");
 
-module.exports = function(app) {
-  // CORS headers
-  app.use(function(req, res, next) {
-    res.header(
-      "Access-Control-Allow-Headers",
-      "x-access-token, Origin, Content-Type, Accept, Authorization"
-    );
-    next();
-  });
+module.exports = function (app) {
+  // Register raw body middleware for Paystack webhook BEFORE json parsing
+  app.post(
+    "/api/webhooks/paystack",
+    express.raw({ type: 'application/json' }),
+    controller.handlePaystackWebhook || ((req, res) => {
+      console.log('📡 Paystack webhook received');
+      res.status(200).send({ status: 'received' });
+    })
+  );
 
   // ================= CORE INVESTMENT ROUTES =================
-  
+
   // Create investment with Paystack payment initialization
   app.post(
     "/api/investments/create",
     [authJwt.verifyToken],
     controller.initiateInvestmentWithPayment || ((req, res) => {
-      res.status(501).send({ 
+      res.status(501).send({
         success: false,
-        message: "Investment creation not implemented yet" 
+        message: "Investment creation not implemented yet"
       });
     })
   );
@@ -48,23 +50,14 @@ module.exports = function(app) {
     "/api/investments/status/:paymentReference",
     [authJwt.verifyToken],
     controller.getPaymentStatus || ((req, res) => {
-      res.status(404).send({ 
+      res.status(404).send({
         success: false,
-        message: "Payment not found" 
+        message: "Payment not found"
       });
     })
   );
 
   // ================= WEBHOOK ROUTES =================
-
-  // Paystack webhook handler
-  app.post(
-    "/api/webhooks/paystack",
-    controller.handlePaystackWebhook || ((req, res) => {
-      console.log('📡 Paystack webhook received:', req.body);
-      res.status(200).send({ status: 'received' });
-    })
-  );
 
   // Flutterwave webhook (future)
   app.post(
@@ -141,7 +134,7 @@ module.exports = function(app) {
   // Get all payments (admin only)
   app.get(
     "/api/admin/investments/payments",
-    [authJwt.verifyToken, adminAuth.verifyAdmin || (() => {})],
+    [authJwt.verifyToken, adminAuth.verifyAdmin],
     controller.getAllPayments || ((req, res) => {
       res.status(200).send({ success: true, data: [] });
     })
@@ -150,7 +143,7 @@ module.exports = function(app) {
   // Refund investment (admin only)
   app.post(
     "/api/admin/investments/:investmentId/refund",
-    [authJwt.verifyToken, adminAuth.verifyAdmin || (() => {})],
+    [authJwt.verifyToken, adminAuth.verifyAdmin],
     controller.refundInvestment || ((req, res) => {
       res.status(501).send({ message: "Refund functionality not implemented" });
     })
@@ -161,7 +154,7 @@ module.exports = function(app) {
   // Get platform investment statistics (admin only)
   app.get(
     "/api/admin/investments/stats",
-    [authJwt.verifyToken, adminAuth.verifyAdmin || (() => {})],
+    [authJwt.verifyToken, adminAuth.verifyAdmin],
     controller.getPlatformInvestmentStats || ((req, res) => {
       res.status(200).send({
         success: true,

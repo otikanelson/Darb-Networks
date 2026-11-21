@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
 exports.requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
-    
+
     if (!email) {
       return res.status(400).send({
         message: "Email is required"
@@ -25,13 +25,13 @@ exports.requestPasswordReset = async (req, res) => {
     }
 
     // Check if user exists and is active
-    const user = await User.findOne({ 
-      where: { 
+    const user = await User.findOne({
+      where: {
         email: email,
         isActive: true  // Only allow reset for active users
-      } 
+      }
     });
-    
+
     if (!user) {
       // Don't reveal if email exists or not for security
       return res.status(200).send({
@@ -55,7 +55,7 @@ exports.requestPasswordReset = async (req, res) => {
     // Send email (for now, we'll just log it)
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5174';
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
-    
+
     // TODO: Send actual email
     // await transporter.sendMail({
     //   from: process.env.EMAIL_USER,
@@ -79,10 +79,17 @@ exports.requestPasswordReset = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
-    
+
     if (!token || !newPassword) {
       return res.status(400).send({
         message: "Token and new password are required"
+      });
+    }
+
+    // Validate password length
+    if (newPassword.length < 8) {
+      return res.status(400).send({
+        message: "New password must be at least 8 characters long"
       });
     }
 
@@ -102,13 +109,13 @@ exports.resetPassword = async (req, res) => {
     }
 
     // Find user and verify they're active
-    const user = await User.findOne({ 
-      where: { 
+    const user = await User.findOne({
+      where: {
         email: resetRecord.email,
         isActive: true  // Only allow reset for active users
-      } 
+      }
     });
-    
+
     if (!user) {
       return res.status(404).send({
         message: "User not found or account is inactive"
@@ -116,7 +123,7 @@ exports.resetPassword = async (req, res) => {
     }
 
     // Update password
-    const hashedPassword = bcrypt.hashSync(newPassword, 8);
+    const hashedPassword = bcrypt.hashSync(newPassword, 12);
     await User.update(
       { password: hashedPassword },
       { where: { email: resetRecord.email } }

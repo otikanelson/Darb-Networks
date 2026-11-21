@@ -2,6 +2,7 @@ const db = require("../models");
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const CampaignStatsService = require('../services/campaignStatsService');
+const { sendError } = require("../utils/http");
 
 // Helper to build image URLs
 const buildImageUrl = (url) => {
@@ -116,8 +117,7 @@ const getFeaturedCampaigns = async (req, res) => {
     console.error("🔥 Error in getFeaturedCampaigns:", error);
     return res.status(500).json({
       success: false,
-      message: "Error fetching featured campaigns",
-      error: error.message
+      message: "Error fetching featured campaigns"
     });
   }
 };
@@ -142,7 +142,7 @@ const getRecentCampaigns = async (req, res) => {
       data: recentRaw.map(formatCampaignCard)
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching recent campaigns', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching recent campaigns' });
   }
 };
 
@@ -181,14 +181,14 @@ const searchCampaigns = async (req, res) => {
       data: resultsRaw.map(formatCampaignCard)
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error searching campaigns', error: error.message });
+    res.status(500).send({ success: false, message: 'Error searching campaigns' });
   }
 };
 
 // Get all approved public campaigns (Safe Raw SQL implementation)
 const getAllCampaigns = async (req, res) => {
   try {
-    const { status = 'approved', category, search } = req.query;
+    const { category, search } = req.query;
 
     let querySql = `
       SELECT 
@@ -198,15 +198,10 @@ const getAllCampaigns = async (req, res) => {
         u.profileImageUrl AS founder_avatar
       FROM campaigns c
       LEFT JOIN users u ON c.founder_id = u.id
-      WHERE 1=1
+      WHERE c.status = 'approved'
     `;
 
     const replacements = [];
-
-    if (status && status !== 'all') {
-      querySql += ` AND c.status = ?`;
-      replacements.push(status);
-    }
 
     if (category) {
       querySql += ` AND c.category = ?`;
@@ -238,8 +233,7 @@ const getAllCampaigns = async (req, res) => {
     console.error('Error in getAllCampaigns:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve campaigns',
-      error: error.message
+      message: 'Failed to retrieve campaigns'
     });
   }
 };
@@ -262,16 +256,20 @@ const getCampaignById = async (req, res) => {
       return res.status(404).send({ success: false, message: 'Campaign not found' });
     }
 
+    // Check authorization for unapproved campaigns
     if (campaign.status !== 'approved') {
+      // Only founder or admin can view unapproved campaigns
       if (!currentUserId) {
-        return res.status(403).send({ success: false, message: 'Unauthorized access to unapproved campaign' });
+        return res.status(404).send({ success: false, message: 'Campaign not found' });
       }
+
       const [user] = await db.sequelize.query(
         'SELECT userType FROM users WHERE id = ?',
         { replacements: [currentUserId], type: db.sequelize.QueryTypes.SELECT }
       );
+
       if (campaign.founder_id !== currentUserId && user?.userType !== 'admin') {
-        return res.status(403).send({ success: false, message: 'Unauthorized access to campaign' });
+        return res.status(404).send({ success: false, message: 'Campaign not found' });
       }
     }
 
@@ -316,7 +314,7 @@ const getCampaignById = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error retrieving campaign', error: error.message });
+    res.status(500).send({ success: false, message: 'Error retrieving campaign' });
   }
 };
 
@@ -349,7 +347,7 @@ const getRelatedCampaigns = async (req, res) => {
       data: relatedRaw.map(formatCampaignCard)
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching related campaigns', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching related campaigns' });
   }
 };
 
@@ -382,7 +380,7 @@ const getMyCampaigns = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching campaigns', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching campaigns' });
   }
 };
 
@@ -408,7 +406,7 @@ const getViewedCampaigns = async (req, res) => {
       data: viewedRaw.map(formatCampaignCard)
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching viewed campaigns', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching viewed campaigns' });
   }
 };
 
@@ -432,7 +430,7 @@ const getFavoriteCampaigns = async (req, res) => {
       data: favoritesRaw.map(formatCampaignCard)
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching favorite campaigns', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching favorite campaigns' });
   }
 };
 
@@ -457,7 +455,7 @@ const getFundedCampaigns = async (req, res) => {
       data: fundedRaw.map(formatCampaignCard)
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching funded campaigns', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching funded campaigns' });
   }
 };
 
@@ -525,7 +523,7 @@ const getAllMyCampaignsData = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching aggregated my-campaigns data', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching aggregated my-campaigns data' });
   }
 };
 
@@ -635,7 +633,7 @@ const createCampaign = async (req, res) => {
       data: formatCampaignCard(campaign)
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error creating campaign', error: error.message });
+    res.status(500).send({ success: false, message: 'Error creating campaign' });
   }
 };
 
@@ -704,7 +702,7 @@ const uploadCampaignImage = [
         data: { imageUrl, campaignId, isGallery: isGallery === 'true' }
       });
     } catch (error) {
-      res.status(500).send({ success: false, message: 'Error uploading image', error: error.message });
+      res.status(500).send({ success: false, message: 'Error uploading image' });
     }
   }
 ];
@@ -751,7 +749,7 @@ const getCampaignForEdit = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error retrieving campaign for edit', error: error.message });
+    res.status(500).send({ success: false, message: 'Error retrieving campaign for edit' });
   }
 };
 
@@ -893,7 +891,7 @@ const updateCampaign = async (req, res) => {
       data: { id: parseInt(id), status: newStatus }
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error updating campaign', error: error.message });
+    res.status(500).send({ success: false, message: 'Error updating campaign' });
   }
 };
 
@@ -920,7 +918,7 @@ const deleteCampaign = async (req, res) => {
 
     res.status(200).send({ success: true, message: 'Campaign deleted successfully' });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error deleting campaign', error: error.message });
+    res.status(500).send({ success: false, message: 'Error deleting campaign' });
   }
 };
 
@@ -976,7 +974,7 @@ const toggleFavorite = async (req, res) => {
       data: { isFavorited }
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error toggling favorite', error: error.message });
+    res.status(500).send({ success: false, message: 'Error toggling favorite' });
   }
 };
 
@@ -1008,7 +1006,7 @@ const trackCampaignView = async (req, res) => {
 
     res.status(200).send({ success: true, message: 'View tracked successfully' });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error tracking view', error: error.message });
+    res.status(500).send({ success: false, message: 'Error tracking view' });
   }
 };
 
@@ -1037,7 +1035,7 @@ const getFounderStats = async (req, res) => {
 
     res.status(200).send({ success: true, data: stats });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching founder stats', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching founder stats' });
   }
 };
 
@@ -1067,7 +1065,7 @@ const getCampaignStats = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching campaign stats', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching campaign stats' });
   }
 };
 
@@ -1096,7 +1094,7 @@ const getCampaignAnalytics = async (req, res) => {
       data: { message: 'Analytics data' }
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: 'Error fetching campaign analytics', error: error.message });
+    res.status(500).send({ success: false, message: 'Error fetching campaign analytics' });
   }
 };
 

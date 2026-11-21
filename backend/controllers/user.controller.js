@@ -3,6 +3,8 @@ const User = db.user;
 const bcrypt = require("bcryptjs");
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
+const { sendError } = require("../utils/http");
+const { formatSafeUserData, maskBVN, maskAccountNumber } = require("../utils/dataProtection");
 
 // Helper function to check and configure Cloudinary at runtime
 const ensureCloudinaryConfigured = () => {
@@ -16,7 +18,7 @@ const ensureCloudinaryConfigured = () => {
     // Configure Cloudinary each time to ensure fresh config
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key:    process.env.CLOUDINARY_API_KEY,
+      api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
   }
@@ -44,7 +46,7 @@ const upload = multer({
 // Get user profile
 exports.getProfile = (req, res) => {
   const userId = req.userId;
-  
+
   User.findByPk(userId, {
     attributes: { exclude: ['password'] } // Don't send password
   })
@@ -57,39 +59,18 @@ exports.getProfile = (req, res) => {
 
       res.status(200).send({
         success: true,
-        data: {
-          id: user.id,
-          email: user.email,
-          fullName: user.fullName,
-          userType: user.userType,
-          companyName: user.companyName,
-          phoneNumber: user.phoneNumber,
-          address: user.address,
-          bvn: user.bvn,
-          cacNumber: user.cacNumber,
-          accountNumber: user.accountNumber,
-          bankName: user.bankName,
-          profileImageUrl: user.profileImageUrl,
-          isActive: user.isActive,
-          isVerified: user.isVerified,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt
-        }
+        data: formatSafeUserData(user)
       });
     })
     .catch(err => {
-      console.error("Get profile error:", err);
-      res.status(500).send({ 
-        message: "Error retrieving user profile.",
-        error: err.message 
-      });
+      return sendError(res, 500, "Error retrieving user profile.", err);
     });
 };
 
 // Update user profile
 exports.updateProfile = (req, res) => {
   const userId = req.userId;
-  
+
   // Define which fields can be updated
   const allowedFields = [
     'fullName',
@@ -101,16 +82,16 @@ exports.updateProfile = (req, res) => {
     'accountNumber',
     'bankName'
   ];
-  
+
   // Build update object with only allowed fields that are present
   const updateData = {};
-  
+
   allowedFields.forEach(field => {
     if (req.body[field] !== undefined) {
       updateData[field] = req.body[field];
     }
   });
-  
+
   // Validation
   const errors = validateProfileData(updateData);
   if (errors.length > 0) {
@@ -120,7 +101,7 @@ exports.updateProfile = (req, res) => {
       errors: errors
     });
   }
-  
+
   // Update user
   User.update(updateData, {
     where: { id: userId }
@@ -132,7 +113,7 @@ exports.updateProfile = (req, res) => {
           message: "User not found or no changes made."
         });
       }
-      
+
       // Fetch updated user data
       return User.findByPk(userId, {
         attributes: { exclude: ['password'] }
@@ -142,32 +123,11 @@ exports.updateProfile = (req, res) => {
       res.status(200).send({
         success: true,
         message: "Profile updated successfully.",
-        data: {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          fullName: updatedUser.fullName,
-          userType: updatedUser.userType,
-          companyName: updatedUser.companyName,
-          phoneNumber: updatedUser.phoneNumber,
-          address: updatedUser.address,
-          bvn: updatedUser.bvn,
-          cacNumber: updatedUser.cacNumber,
-          accountNumber: updatedUser.accountNumber,
-          bankName: updatedUser.bankName,
-          profileImageUrl: updatedUser.profileImageUrl,
-          isActive: updatedUser.isActive,
-          isVerified: updatedUser.isVerified,
-          updatedAt: updatedUser.updatedAt
-        }
+        data: formatSafeUserData(updatedUser)
       });
     })
     .catch(err => {
-      console.error("Update profile error:", err);
-      res.status(500).send({
-        success: false,
-        message: "Error updating profile.",
-        error: err.message
-      });
+      return sendError(res, 500, "Error updating profile.", err);
     });
 };
 
@@ -175,14 +135,14 @@ exports.updateProfile = (req, res) => {
 exports.updateEmail = (req, res) => {
   const userId = req.userId;
   const { newEmail, currentPassword } = req.body;
-  
+
   if (!newEmail || !currentPassword) {
     return res.status(400).send({
       success: false,
       message: "New email and current password are required."
     });
   }
-  
+
   // Email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(newEmail)) {
@@ -191,7 +151,7 @@ exports.updateEmail = (req, res) => {
       message: "Invalid email format."
     });
   }
-  
+
   User.findByPk(userId)
     .then(user => {
       if (!user) {
@@ -200,7 +160,7 @@ exports.updateEmail = (req, res) => {
           message: "User not found."
         });
       }
-      
+
       // Verify current password
       const passwordIsValid = bcrypt.compareSync(currentPassword, user.password);
       if (!passwordIsValid) {
@@ -209,7 +169,7 @@ exports.updateEmail = (req, res) => {
           message: "Current password is incorrect."
         });
       }
-      
+
       // Check if new email already exists
       return User.findOne({ where: { email: newEmail } });
     })
@@ -220,10 +180,10 @@ exports.updateEmail = (req, res) => {
           message: "Email already in use."
         });
       }
-      
+
       // Update email and set isVerified to false
       return User.update(
-        { 
+        {
           email: newEmail,
           isVerified: false  // Require re-verification
         },
@@ -237,12 +197,7 @@ exports.updateEmail = (req, res) => {
       });
     })
     .catch(err => {
-      console.error("Update email error:", err);
-      res.status(500).send({
-        success: false,
-        message: "Error updating email.",
-        error: err.message
-      });
+      return sendError(res, 500, "Error updating email.", err);
     });
 };
 
@@ -257,11 +212,11 @@ exports.updatePassword = (req, res) => {
       message: "Current password and new password are required."
     });
   }
-  
-  if (newPassword.length < 6) {
+
+  if (newPassword.length < 8) {
     return res.status(400).send({
       success: false,
-      message: "New password must be at least 6 characters long."
+      message: "New password must be at least 8 characters long."
     });
   }
 
@@ -282,7 +237,7 @@ exports.updatePassword = (req, res) => {
         });
       }
 
-      const hashedNewPassword = bcrypt.hashSync(newPassword, 8);
+      const hashedNewPassword = bcrypt.hashSync(newPassword, 12);
       return User.update(
         { password: hashedNewPassword },
         { where: { id: userId } }
@@ -295,12 +250,7 @@ exports.updatePassword = (req, res) => {
       });
     })
     .catch(err => {
-      console.error("Update password error:", err);
-      res.status(500).send({
-        success: false,
-        message: "Error updating password.",
-        error: err.message
-      });
+      return sendError(res, 500, "Error updating password.", err);
     });
 };
 
@@ -324,7 +274,7 @@ exports.uploadProfileImage = [
 
       // Check Cloudinary configuration at runtime
       const cloudinaryConfigured = ensureCloudinaryConfigured();
-      
+
       console.log('☁️ Cloudinary runtime check:', {
         configured: cloudinaryConfigured,
         cloudName: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
@@ -338,9 +288,9 @@ exports.uploadProfileImage = [
           CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ? 'exists' : 'undefined',
           CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ? 'exists' : 'undefined'
         });
-        return res.status(500).send({ 
-          success: false, 
-          message: "Image upload service not configured. Please contact support." 
+        return res.status(500).send({
+          success: false,
+          message: "Image upload service not configured. Please contact support."
         });
       }
 
@@ -350,7 +300,7 @@ exports.uploadProfileImage = [
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           { folder: 'darb/profiles', resource_type: 'image' },
-          (error, result) => { 
+          (error, result) => {
             if (error) {
               console.error('❌ Cloudinary upload error:', error);
               reject(error);
@@ -396,10 +346,9 @@ exports.uploadProfileImage = [
       });
     } catch (error) {
       console.error("❌ Upload profile image error:", error);
-      res.status(500).send({ 
-        success: false, 
-        message: "Error updating profile image.", 
-        error: error.message 
+      res.status(500).send({
+        success: false,
+        message: "Error updating profile image."
       });
     }
   },
@@ -416,21 +365,20 @@ exports.deleteProfileImage = async (req, res) => {
     const cloudinaryConfigured = ensureCloudinaryConfigured();
     if (cloudinaryConfigured && user.profileImageUrl && user.profileImageUrl.includes('cloudinary.com')) {
       const publicId = user.profileImageUrl.split('/').slice(-2).join('/').replace(/\.[^/.]+$/, '');
-      await cloudinary.uploader.destroy(publicId).catch(() => {});
+      await cloudinary.uploader.destroy(publicId).catch(() => { });
     }
 
     await User.update({ profileImageUrl: null }, { where: { id: userId } });
     res.status(200).send({ success: true, message: "Profile image deleted successfully." });
   } catch (err) {
-    console.error("Delete profile image error:", err);
-    res.status(500).send({ success: false, message: "Error deleting profile image.", error: err.message });
+    return sendError(res, 500, "Error deleting profile image.", err);
   }
 };
 
 // Validation helper function
 function validateProfileData(data) {
   const errors = [];
-  
+
   // Full name validation
   if (data.fullName !== undefined) {
     if (!data.fullName || data.fullName.trim().length < 2) {
@@ -440,7 +388,7 @@ function validateProfileData(data) {
       errors.push("Full name cannot exceed 100 characters.");
     }
   }
-  
+
   // Phone number validation
   if (data.phoneNumber !== undefined && data.phoneNumber) {
     const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
@@ -448,28 +396,28 @@ function validateProfileData(data) {
       errors.push("Invalid phone number format.");
     }
   }
-  
+
   // BVN validation (Nigerian Bank Verification Number)
   if (data.bvn !== undefined && data.bvn) {
     if (!/^\d{11}$/.test(data.bvn)) {
       errors.push("BVN must be exactly 11 digits.");
     }
   }
-  
+
   // CAC Number validation
   if (data.cacNumber !== undefined && data.cacNumber) {
     if (data.cacNumber.length > 50) {
       errors.push("CAC Number cannot exceed 50 characters.");
     }
   }
-  
+
   // Account number validation
   if (data.accountNumber !== undefined && data.accountNumber) {
     if (!/^\d{10}$/.test(data.accountNumber)) {
       errors.push("Account number must be exactly 10 digits.");
     }
   }
-  
+
   return errors;
 }
 

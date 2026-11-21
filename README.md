@@ -243,29 +243,10 @@ npm run dev
 
 ## 🎯 Usage
 
-### Default Login Credentials
-
-The sample data includes test accounts for each user type:
-
-#### Admin Account
-- **Email**: `admin@darbnetwork.com`
-- **Password**: `admin2025`
-- **Access**: Full platform administration
-
-#### Founder Account
-- **Email**: `otikanelson29@gmail.com`
-- **Password**: `292025`
-- **Access**: Create and manage campaigns
-
-#### Investor Account
-- **Email**: `otikanelson`
-- **Password**: `2025`
-- **Access**: Browse and invest in campaigns
-
 ### Getting Started
 
 #### For Founders:
-1. Register as a founder or use the test account
+1. Register as a founder through the registration form
 2. Complete your profile with business information
 3. Create your first campaign using the guided wizard
 4. Upload compelling images and videos
@@ -273,7 +254,7 @@ The sample data includes test accounts for each user type:
 6. Track performance once approved
 
 #### For Investors:
-1. Register as an investor or use the test account
+1. Register as an investor through the registration form
 2. Browse approved campaigns
 3. Use filters to find campaigns that match your interests
 4. Review campaign details and founder information
@@ -281,11 +262,50 @@ The sample data includes test accounts for each user type:
 6. Track your investment portfolio
 
 #### For Administrators:
-1. Login with admin credentials
-2. Review submitted campaigns in the admin dashboard
-3. Approve or reject campaigns with feedback
-4. Manage users and monitor platform activity
-5. Feature promising campaigns for increased visibility
+
+**Setting Up Your Admin Account:**
+
+Admin accounts must be created directly in the database to prevent unauthorized privilege escalation. Follow these steps:
+
+1. Connect to your MySQL database:
+   ```bash
+   mysql -u root -p darb_network
+   ```
+
+2. Create an admin user:
+   ```sql
+   INSERT INTO users (
+     email, password, fullName, userType, 
+     isActive, isVerified, createdAt, updatedAt
+   ) VALUES (
+     'admin@darbnetwork.com',
+     '$2a$12$...',  -- Use bcrypt hashed password (cost 12)
+     'Admin User',
+     'admin',
+     1,
+     1,
+     NOW(),
+     NOW()
+   );
+   ```
+
+3. Generate a secure bcrypt hash for your password:
+   ```bash
+   node -e "const bcrypt = require('bcryptjs'); console.log(bcrypt.hashSync('YourSecurePassword123', 12));"
+   ```
+
+4. Once your admin account is created:
+   - Login with your credentials
+   - Review submitted campaigns in the admin dashboard
+   - Approve or reject campaigns with feedback
+   - Manage users and monitor platform activity
+   - Feature promising campaigns for increased visibility
+
+**Important Security Notes:**
+- Never share admin credentials
+- Change the default password immediately after first login
+- Use a strong, unique password (minimum 8 characters)
+- Regularly audit admin account activity
 
 ## 📚 API Documentation
 

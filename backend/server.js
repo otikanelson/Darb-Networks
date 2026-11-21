@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const path = require('path');
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
 // Load environment variables only in non-production environments
 // Vercel automatically injects environment variables, so dotenv is not needed there
@@ -27,28 +29,52 @@ const app = express();
 
 console.log("🚀 Starting Darb Network API...");
 
-// CORS configuration - Updated for production
+// Parse CORS allowlist from environment
+function getAllowedOrigins() {
+  const allowedOrigins = [];
+
+  // Always allow localhost in development
+  if (process.env.NODE_ENV !== 'production') {
+    allowedOrigins.push('http://localhost:5173', 'http://localhost:3000');
+  }
+
+  // Add configured origins
+  if (process.env.ALLOWED_ORIGINS) {
+    const configuredOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+    allowedOrigins.push(...configuredOrigins);
+  }
+
+  return allowedOrigins;
+}
+
+// CORS configuration - Updated for security
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      "http://localhost:5173", 
-      "http://localhost:3000",
-      process.env.CLIENT_ORIGIN,
-      process.env.FRONTEND_URL,
-    ].filter(Boolean);
-    
-    // Allow all Vercel preview and production deployments
-    const isVercelDomain = /\.vercel\.app$/.test(origin);
-    const isAllowedOrigin = allowedOrigins.includes(origin);
-    
-    if (isVercelDomain || isAllowedOrigin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+
+    const allowedOrigins = getAllowedOrigins();
+    const previewPattern = process.env.VERCEL_PREVIEW_PATTERN;
+
+    // Check if origin is in the allowlist
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
+
+    // Check if origin matches Vercel preview pattern (if configured)
+    if (previewPattern) {
+      try {
+        const regex = new RegExp(previewPattern);
+        if (regex.test(origin)) {
+          return callback(null, true);
+        }
+      } catch (err) {
+        console.warn('Invalid VERCEL_PREVIEW_PATTERN regex:', previewPattern);
+      }
+    }
+
+    // Reject by default
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -57,9 +83,15 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Parse requests with larger limits for production
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Add security headers
+app.use(helmet());
+
+// Trust proxy for accurate IP in Vercel
+app.set('trust proxy', 1);
+
+// Parse requests with lower limits for security
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Static files middleware with error handling
 try {
@@ -76,7 +108,7 @@ app.use((req, res, next) => {
 
 // Health check endpoints - These should work without database
 app.get("/", (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     success: true,
     message: "Darb Network API is running",
     status: "healthy",
@@ -87,13 +119,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api", (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     success: true,
     message: "Darb Network API endpoints",
     version: "1.0.0",
     endpoints: {
       auth: "/api/auth/*",
-      users: "/api/users/*",  
+      users: "/api/users/*",
       campaigns: "/api/campaigns/*",
       investments: "/api/investments/*",
       admin: "/api/admin/*"
@@ -106,9 +138,7 @@ app.get("/api", (req, res) => {
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    status: "healthy"
   });
 });
 
@@ -120,30 +150,30 @@ let dbError = null;
 const initializeDatabase = async () => {
   try {
     console.log("🔧 Attempting to initialize database...");
-    
+
     // Only try to connect to database if we have the required environment variables
     if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
       throw new Error("Missing required database environment variables");
     }
-    
+
     const db = require("./models");
-    
+
     console.log("🔧 Database config check:", {
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       database: process.env.DB_NAME,
       hasPassword: !!process.env.DB_PASSWORD
     });
-    
+
     await db.sequelize.authenticate();
     console.log("✅ Database connection established successfully");
-    
+
     // Only sync in development
     if (process.env.NODE_ENV !== 'production') {
       await db.sequelize.sync({ alter: false });
       console.log("✅ Database synchronized successfully");
     }
-    
+
     dbInitialized = true;
     return true;
   } catch (error) {
@@ -153,58 +183,17 @@ const initializeDatabase = async () => {
   }
 };
 
-// Database status endpoint
-app.get("/api/db-status", (req, res) => {
-  res.status(200).json({
-    success: true,
-    database: {
-      initialized: dbInitialized,
-      error: dbError ? dbError.message : null,
-      hasConfig: {
-        host: !!process.env.DB_HOST,
-        user: !!process.env.DB_USER,
-        database: !!process.env.DB_NAME,
-        password: !!process.env.DB_PASSWORD
+// Database status endpoint (development only)
+if (process.env.NODE_ENV !== 'production') {
+  app.get("/api/db-status", (req, res) => {
+    res.status(200).json({
+      success: true,
+      database: {
+        initialized: dbInitialized
       }
-    }
+    });
   });
-});
-
-// Cloudinary status endpoint
-app.get("/api/cloudinary-status", (req, res) => {
-  // Check at runtime, not module load time
-  const cloudinaryConfigured = !!(
-    process.env.CLOUDINARY_CLOUD_NAME &&
-    process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET
-  );
-  
-  // Get all environment variable keys (for debugging)
-  const allEnvKeys = Object.keys(process.env).filter(key => 
-    key.includes('CLOUDINARY') || key.includes('VERCEL') || key.includes('NODE')
-  );
-  
-  res.status(200).json({
-    success: true,
-    cloudinary: {
-      configured: cloudinaryConfigured,
-      hasConfig: {
-        cloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
-        apiKey: !!process.env.CLOUDINARY_API_KEY,
-        apiSecret: !!process.env.CLOUDINARY_API_SECRET
-      },
-      // Add actual values for debugging (first 4 chars only for security)
-      debug: {
-        cloudName: process.env.CLOUDINARY_CLOUD_NAME ? process.env.CLOUDINARY_CLOUD_NAME.substring(0, 4) + '...' : 'NOT SET',
-        apiKey: process.env.CLOUDINARY_API_KEY ? process.env.CLOUDINARY_API_KEY.substring(0, 4) + '...' : 'NOT SET',
-        apiSecret: process.env.CLOUDINARY_API_SECRET ? '****' : 'NOT SET',
-        allCloudinaryKeys: allEnvKeys,
-        isVercel: !!process.env.VERCEL,
-        vercelEnv: process.env.VERCEL_ENV
-      }
-    }
-  });
-});
+}
 
 // Middleware to check database connection for routes that need it
 const requireDatabase = (req, res, next) => {
@@ -219,49 +208,41 @@ const requireDatabase = (req, res, next) => {
 };
 
 // Initialize database async - don't block route loading
-initializeDatabase().catch(() => {});
+initializeDatabase().catch(() => { });
 
 
-// File structure check endpoint
-app.get('/test', (req, res) => {
-  try {
-    const fs = require('fs');
-    
-    // Check what's in the current directory
-    const currentDir = fs.readdirSync('./');
-    const hasRoutes = fs.existsSync('./routes');
-    
-    let routeFiles = [];
-    if (hasRoutes) {
-      routeFiles = fs.readdirSync('./routes');
-    }
-    
-    res.status(200).json({
-      success: true,
-      message: "File structure check",
-      currentDirectory: __dirname,
-      filesInRoot: currentDir,
-      hasRoutesFolder: hasRoutes,
-      filesInRoutes: routeFiles,
-      nodeEnv: process.env.NODE_ENV,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      stack: error.stack
-    });
-  }
+// Configure rate limiters
+// General rate limiter: 100 requests per 15 minutes per IP
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: { success: false, message: 'Too many requests, please try again later' },
+  standardHeaders: false,
+  skip: (req) => process.env.NODE_ENV !== 'production' // disable in development
 });
 
+// Strict rate limiter for auth endpoints: 10 requests per 15 minutes per IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: { success: false, message: 'Too many login attempts, please try again later' },
+  standardHeaders: false,
+  skip: (req) => process.env.NODE_ENV !== 'production' // disable in development
+});
+
+// Apply general rate limiter to all /api routes
+app.use('/api/', generalLimiter);
+
+// Apply strict rate limiter to auth endpoints
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
+
+
 // Load routes with error handling
-const routeLoadErrors = {};
 const loadRoutes = () => {
   try {
-    console.log("🔧 Loading routes...");
-    console.log("🔧 Current directory:", __dirname);
-    
     const routes = [
       { name: 'passwordReset', path: './routes/passwordReset.routes' },
       { name: 'auth', path: './routes/auth.routes' },
@@ -270,33 +251,26 @@ const loadRoutes = () => {
       { name: 'admin', path: './routes/admin.routes' },
       { name: 'investment', path: './routes/investment.routes' }
     ];
-    
+
     routes.forEach(route => {
       try {
         require(route.path)(app);
         console.log(`✅ ${route.name} routes loaded`);
       } catch (error) {
         console.error(`❌ Failed to load ${route.name} routes:`, error.message, error.stack);
-        routeLoadErrors[route.name] = error.message;
         app.all(`/api/${route.name}*`, (req, res) => {
           res.status(503).json({
             success: false,
-            message: `${route.name} service unavailable`,
-            error: error.message
+            message: `${route.name} service unavailable`
           });
         });
       }
     });
-    
+
   } catch (error) {
     console.error("❌ Critical error loading routes:", error);
   }
 };
-
-// Expose route load errors for debugging
-app.get('/api/route-status', (req, res) => {
-  res.json({ routeLoadErrors, timestamp: new Date().toISOString() });
-});
 
 // Load routes
 loadRoutes();
@@ -309,7 +283,7 @@ app.use((err, req, res, next) => {
     path: req.path,
     method: req.method
   });
-  
+
   res.status(err.status || 500).json({
     success: false,
     message: err.message || 'Internal server error',
@@ -326,20 +300,7 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Endpoint not found',
-    path: req.path,
-    method: req.method,
-    availableEndpoints: [
-      'GET /',
-      'GET /api',
-      'GET /health',
-      'GET /test',
-      'GET /api/db-status',
-      'POST /api/auth/register',
-      'POST /api/auth/login',
-      'GET /api/campaigns'
-    ],
-    timestamp: new Date().toISOString()
+    message: "Endpoint not found"
   });
 });
 

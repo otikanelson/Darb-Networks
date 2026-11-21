@@ -2,16 +2,7 @@ const { authJwt } = require("../middlewares");
 const { verifyAdmin } = require("../middlewares/adminAuth");
 const controller = require("../controllers/admin.controller");
 
-module.exports = function(app) {
-  // CORS headers
-  app.use(function(req, res, next) {
-    res.header(
-      "Access-Control-Allow-Headers",
-      "x-access-token, Origin, Content-Type, Accept, Authorization"
-    );
-    next();
-  });
-
+module.exports = function (app) {
   // All admin routes require authentication AND admin role
   const adminMiddleware = [authJwt.verifyToken, verifyAdmin];
 

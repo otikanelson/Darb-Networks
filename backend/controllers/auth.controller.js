@@ -3,6 +3,7 @@ const config = require("../config/auth.config");
 const User = db.user;
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const { sendError } = require("../utils/http");
 
 exports.signup = async (req, res) => {
   try {
@@ -17,12 +18,17 @@ exports.signup = async (req, res) => {
       return res.status(400).send({ success: false, message: "Invalid user type" });
     }
 
+    // Validate password length
+    if (password.length < 8) {
+      return res.status(400).send({ success: false, message: "Password must be at least 8 characters long" });
+    }
+
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).send({ success: false, message: "Email is already in use" });
     }
 
-    const hashedPassword = bcrypt.hashSync(password, 8);
+    const hashedPassword = bcrypt.hashSync(password, 12);
 
     const user = await User.create({
       email, password: hashedPassword, fullName, userType,
@@ -51,7 +57,7 @@ exports.signup = async (req, res) => {
       token
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: error.message || "Some error occurred during registration." });
+    return sendError(res, 500, "Some error occurred during registration.", error);
   }
 };
 
@@ -95,7 +101,7 @@ exports.signin = async (req, res) => {
       token
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: error.message || "Some error occurred during login." });
+    return sendError(res, 500, "Some error occurred during login.", error);
   }
 };
 
@@ -122,7 +128,7 @@ exports.verifyToken = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).send({ success: false, message: error.message || "Error retrieving user." });
+    return sendError(res, 500, "Error retrieving user.", error);
   }
 };
 
