@@ -211,14 +211,31 @@ const initializeDatabase = async () => {
     });
 
     console.log("⏳ Loading models...");
-    const db = require("./models");
-    console.log("✅ Models loaded");
+    let db;
+    try {
+      db = require("./models");
+      console.log("✅ Models loaded successfully");
+    } catch (modelError) {
+      console.error("❌ FAILED to load models!");
+      console.error("   Error:", modelError.message);
+      throw new Error(`Model loading failed: ${modelError.message}`);
+    }
 
     console.log("⏳ Attempting to authenticate with database...");
     const start = Date.now();
-    await db.sequelize.authenticate();
-    const duration = Date.now() - start;
-    console.log("✅ Database connection established successfully (took", duration, "ms)");
+    try {
+      await db.sequelize.authenticate();
+      const duration = Date.now() - start;
+      console.log("✅ Database connection established successfully (took", duration, "ms)");
+    } catch (authError) {
+      console.error("❌ FAILED to authenticate!");
+      console.error("   Error:", authError.message);
+      console.error("   Code:", authError.code);
+      if (authError.original) {
+        console.error("   Original:", authError.original.message);
+      }
+      throw authError;
+    }
 
     // Only sync in development
     if (process.env.NODE_ENV !== 'production') {
@@ -230,11 +247,15 @@ const initializeDatabase = async () => {
     console.log("🎉 Database initialization complete!");
     return true;
   } catch (error) {
-    console.error("❌ Database initialization failed!");
-    console.error("   Error message:", error.message);
-    console.error("   Error name:", error.name);
-    console.error("   Error code:", error.code);
-    console.error("   Stack trace:", error.stack);
+    console.error("❌❌❌ DATABASE INITIALIZATION FAILED ❌❌❌");
+    console.error("Error message:", error.message);
+    console.error("Error name:", error.name);
+    console.error("Error code:", error.code);
+    if (error.original) {
+      console.error("Original error:", error.original.message);
+      console.error("Original code:", error.original.code);
+    }
+    console.error("Full error:", error);
     dbError = error;
     return false;
   }
