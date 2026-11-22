@@ -204,16 +204,21 @@ const initializeDatabase = async () => {
 
     console.log("📍 Connecting to database:", {
       host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
+      port: process.env.DB_PORT || 3306,
       user: process.env.DB_USER ? process.env.DB_USER.substring(0, 10) + "..." : "undefined",
-      database: process.env.DB_NAME
+      database: process.env.DB_NAME,
+      ssl: process.env.DB_SSL === 'true'
     });
 
+    console.log("⏳ Loading models...");
     const db = require("./models");
+    console.log("✅ Models loaded");
 
-    console.log("⏳ Authenticating with database...");
+    console.log("⏳ Attempting to authenticate with database...");
+    const start = Date.now();
     await db.sequelize.authenticate();
-    console.log("✅ Database connection established successfully");
+    const duration = Date.now() - start;
+    console.log("✅ Database connection established successfully (took", duration, "ms)");
 
     // Only sync in development
     if (process.env.NODE_ENV !== 'production') {
@@ -222,10 +227,14 @@ const initializeDatabase = async () => {
     }
 
     dbInitialized = true;
+    console.log("🎉 Database initialization complete!");
     return true;
   } catch (error) {
-    console.error("❌ Database initialization failed:", error.message);
-    console.error("Stack:", error.stack);
+    console.error("❌ Database initialization failed!");
+    console.error("   Error message:", error.message);
+    console.error("   Error name:", error.name);
+    console.error("   Error code:", error.code);
+    console.error("   Stack trace:", error.stack);
     dbError = error;
     return false;
   }
