@@ -141,9 +141,12 @@ app.get("/api", (req, res) => {
 });
 
 // Health check endpoint with environment diagnostics
-app.get("/debug/env-status", (req, res) => {
+app.get("/debug/env-status", async (req, res) => {
+  console.log("🔍 /debug/env-status called");
+
   res.status(200).json({
     success: true,
+    timestamp: new Date().toISOString(),
     environment: {
       NODE_ENV: process.env.NODE_ENV,
       VERCEL: !!process.env.VERCEL,
@@ -160,18 +163,73 @@ app.get("/debug/env-status", (req, res) => {
       },
       database: {
         initialized: dbInitialized,
-        error: dbError ? dbError.message : null
+        error: dbError ? {
+          message: dbError.message,
+          name: dbError.name,
+          code: dbError.code
+        } : null,
+        waitTime: 0
       }
     }
   });
 });
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    status: "healthy"
-  });
+// Test database connection endpoint
+app.get("/debug/db-test", async (req, res) => {
+  console.log("🧪 /debug/db-test called - testing database connection...");
+
+  try {
+    if (!process.env.DB_HOST) {
+      throw new Error("DB_HOST not set");
+    }
+
+    console.log("Creating test connection to", process.env.DB_HOST);
+    const Sequelize = require("sequelize");
+    const testSeq = new Sequelize(
+      process.env.DB_NAME,
+      process.env.DB_USER,
+      process.env.DB_PASSWORD,
+      {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT || 3306,
+        dialect: 'mysql',
+        dialectModule: require('mysql2'),
+        dialectOptions: {
+          ssl: process.env.DB_SSL === 'true' ? {
+            require: true,
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2'
+          } : undefined,
+          connectTimeout: 10000
+        },
+        logging: (sql) => console.log("SQL:", sql),
+        benchmark: true
+      }
+    );
+
+    console.log("Authenticating...");
+    await testSeq.authenticate();
+    console.log("✅ Connection successful!");
+
+    res.status(200).json({
+      success: true,
+      message: "Database connection successful",
+      database: {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        name: process.env.DB_NAME,
+        ssl: process.env.DB_SSL === 'true'
+      }
+    });
+  } catch (error) {
+    console.error("❌ Connection test failed:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Database connection failed",
+      error: error.message,
+      code: error.code
+    });
+  }
 });
 
 

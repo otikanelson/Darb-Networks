@@ -188,6 +188,7 @@ const searchCampaigns = async (req, res) => {
 // Get all approved public campaigns (Safe Raw SQL implementation)
 const getAllCampaigns = async (req, res) => {
   try {
+    console.log("📋 Fetching all campaigns...");
     const { category, search } = req.query;
 
     let querySql = `
@@ -215,11 +216,13 @@ const getAllCampaigns = async (req, res) => {
 
     querySql += ` ORDER BY c.createdAt DESC`;
 
+    console.log("🔍 Executing query...");
     const rawCampaigns = await db.sequelize.query(querySql, {
       replacements,
       type: db.sequelize.QueryTypes.SELECT
     });
 
+    console.log("✅ Query successful, found", rawCampaigns.length, "campaigns");
     const formattedCampaigns = rawCampaigns.map(formatCampaignCard);
 
     return res.status(200).json({
@@ -230,10 +233,12 @@ const getAllCampaigns = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in getAllCampaigns:', error);
+    console.error('❌ Error in getAllCampaigns:', error.message);
+    console.error('Stack:', error.stack);
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve campaigns'
+      message: 'Failed to retrieve campaigns',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

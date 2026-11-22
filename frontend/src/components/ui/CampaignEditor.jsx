@@ -864,8 +864,11 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
           <CampaignStepNav
             steps={STEPS}
             currentStep={step}
-            onStepClick={(stepIdx) => {
-              if (stepIdx < step) {
+            errors={errors}
+            form={form}
+            onStepClick={(stepId) => {
+              const stepIdx = STEPS.findIndex(st => st.id === stepId);
+              if (stepIdx < step && stepIdx !== -1) {
                 setStep(stepIdx);
                 window.scrollTo({ top: 0 });
               }
