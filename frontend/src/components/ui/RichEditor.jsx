@@ -40,7 +40,7 @@ const RichEditor = ({ value, onChange, placeholder = 'Start writing…', minHeig
         underline: false,
       }),
       Underline,
-      Image.configure({ inline: false, allowBase64: true }),
+      Image.configure({ inline: false, allowBase64: false }),
       Link.configure({ openOnClick: false, autolink: true }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Placeholder.configure({ placeholder }),
@@ -69,16 +69,41 @@ const RichEditor = ({ value, onChange, placeholder = 'Start writing…', minHeig
   const addLink = useCallback(() => {
     if (!editor) return;
     const prev = editor.getAttributes('link').href || '';
-    const url = window.prompt('URL', prev);
+    const url = window.prompt('URL (must start with https:// or mailto:)', prev);
     if (url === null) return;
     if (url === '') { editor.chain().focus().extendMarkRange('link').unsetLink().run(); return; }
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    
+    // Validate URL
+    if (!url.startsWith('https://') && !url.startsWith('mailto:')) {
+      alert('Links must start with https:// or mailto: (for email)');
+      return;
+    }
+    
+    try {
+      new URL(url);
+      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    } catch {
+      alert('Invalid URL. Please enter a valid HTTPS link or email address.');
+    }
   }, [editor]);
 
   const addImage = useCallback(() => {
     if (!editor) return;
-    const url = window.prompt('Image URL');
-    if (url) editor.chain().focus().setImage({ src: url }).run();
+    const url = window.prompt('Image URL (must start with https://)');
+    if (!url) return;
+    
+    // Validate URL
+    if (!url.startsWith('https://')) {
+      alert('Image URLs must start with https://');
+      return;
+    }
+    
+    try {
+      new URL(url);
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch {
+      alert('Invalid image URL. Please enter a valid HTTPS link.');
+    }
   }, [editor]);
 
   if (!editor) return null;

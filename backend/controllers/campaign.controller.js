@@ -531,8 +531,11 @@ const getAllMyCampaignsData = async (req, res) => {
 
 // Create new campaign
 const createCampaign = async (req, res) => {
+  const transaction = await db.sequelize.transaction();
   try {
     const founderId = req.userId;
+    const { validateCampaign } = require('../validators/campaign.validator');
+    const { sanitizeCampaignData } = require('../utils/sanitizer');
 
     const [userCheck] = await db.sequelize.query(
       'SELECT id, email, fullName, userType FROM users WHERE id = ?',
@@ -540,31 +543,38 @@ const createCampaign = async (req, res) => {
     );
 
     if (!userCheck) {
+      await transaction.rollback();
       return res.status(404).send({ success: false, message: 'User not found' });
     }
 
     if (userCheck.userType !== 'founder') {
+      await transaction.rollback();
       return res.status(403).send({ success: false, message: 'Only founders can create campaigns' });
     }
+
+    const isDraftBool = req.body.isDraft === true || req.body.isDraft === 'true';
+
+    // Validate campaign data
+    const validation = validateCampaign(req.body, isDraftBool);
+    if (!validation.isValid) {
+      await transaction.rollback();
+      return res.status(400).send({
+        success: false,
+        message: 'Validation failed',
+        errors: validation.errors
+      });
+    }
+
+    // Sanitize rich-text fields
+    const sanitized = sanitizeCampaignData(req.body);
 
     const {
       title, description, category, location, country,
       targetAmount, minimumInvestment, maximumInvestment,
       problemStatement, solution, businessPlan, marketAnalysis,
       competitiveAdvantage, financialProjections, teamInformation,
-      risksAndChallenges, videoUrl, endDate, durationDays, isDraft, documents
-    } = req.body;
-
-    const isDraftBool = isDraft === true || isDraft === 'true';
-
-    if (!isDraftBool) {
-      const requiredFields = ['title', 'description', 'category', 'location', 'country', 'targetAmount', 'minimumInvestment'];
-      for (const field of requiredFields) {
-        if (!req.body[field]) {
-          return res.status(400).send({ success: false, message: `${field} is required` });
-        }
-      }
-    }
+      risksAndChallenges, videoUrl, endDate, durationDays, documents
+    } = sanitized;
 
     const status = isDraftBool ? 'draft' : 'submitted';
     const submittedAt = isDraftBool ? null : new Date();
@@ -591,10 +601,33 @@ const createCampaign = async (req, res) => {
         financial_projections, team_information, risks_and_challenges,
         video_url, documents, end_date, duration_days, founder_id, status, submitted_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      { replacements: values, type: db.sequelize.QueryTypes.INSERT }
+      { replacements: values, type: db.sequelize.QueryTypes.INSERT, transaction }
     );
 
     const campaignId = result;
+
+    // Insert milestones within the same transaction
+    if (Array.isArray(sanitized.milestones) && sanitized.milestones.length > 0) {
+      for (let i = 0; i < sanitized.milestones.length; i++) {
+        const m = sanitized.milestones[i];
+        if (!m.title?.trim()) continue;
+        await db.sequelize.query(
+          `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          {
+            replacements: [
+              campaignId, m.title.trim(), m.description?.trim() || '',
+              parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0,
+              i, m.targetDate || null,
+            ],
+            type: db.sequelize.QueryTypes.INSERT,
+            transaction
+          }
+        );
+      }
+    }
+
+    await transaction.commit();
 
     const [campaign] = await db.sequelize.query(
       `SELECT c.*, u.fullName as founder_name, u.email as founder_email
@@ -604,35 +637,14 @@ const createCampaign = async (req, res) => {
       { replacements: [campaignId], type: db.sequelize.QueryTypes.SELECT }
     );
 
-    if (Array.isArray(req.body.milestones) && req.body.milestones.length > 0) {
-      try {
-        for (let i = 0; i < req.body.milestones.length; i++) {
-          const m = req.body.milestones[i];
-          if (!m.title?.trim()) continue;
-          await db.sequelize.query(
-            `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            {
-              replacements: [
-                campaignId, m.title.trim(), m.description?.trim() || '',
-                parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0,
-                i, m.targetDate || null,
-              ],
-              type: db.sequelize.QueryTypes.INSERT,
-            }
-          );
-        }
-      } catch (err) {
-        console.warn('Milestone save failed:', err.message);
-      }
-    }
-
     res.status(201).send({
       success: true,
       message: isDraftBool ? 'Campaign saved as draft' : 'Campaign submitted for approval',
       data: formatCampaignCard(campaign)
     });
   } catch (error) {
+    await transaction.rollback();
+    logger.error('Error creating campaign:', error);
     res.status(500).send({ success: false, message: 'Error creating campaign' });
   }
 };
@@ -755,10 +767,13 @@ const getCampaignForEdit = async (req, res) => {
 
 // Update campaign
 const updateCampaign = async (req, res) => {
+  const transaction = await db.sequelize.transaction();
   try {
     const { id } = req.params;
     const founderId = req.userId;
     const updateData = req.body;
+    const { validateCampaign } = require('../validators/campaign.validator');
+    const { sanitizeCampaignData } = require('../utils/sanitizer');
 
     const [campaign] = await db.sequelize.query(
       'SELECT id, founder_id, status FROM campaigns WHERE id = ? AND founder_id = ?',
@@ -766,14 +781,31 @@ const updateCampaign = async (req, res) => {
     );
 
     if (!campaign) {
+      await transaction.rollback();
       return res.status(404).send({ success: false, message: 'Campaign not found or unauthorized' });
     }
 
     if (!['draft', 'rejected'].includes(campaign.status)) {
+      await transaction.rollback();
       return res.status(400).send({ success: false, message: 'Cannot edit approved campaigns' });
     }
 
     const isDraftBool = updateData.isDraft === true || updateData.isDraft === 'true';
+
+    // Validate campaign data
+    const validation = validateCampaign(updateData, isDraftBool);
+    if (!validation.isValid) {
+      await transaction.rollback();
+      return res.status(400).send({
+        success: false,
+        message: 'Validation failed',
+        errors: validation.errors
+      });
+    }
+
+    // Sanitize rich-text fields
+    const sanitized = sanitizeCampaignData(updateData);
+
     const newStatus = isDraftBool ? 'draft' : 'submitted';
     const submittedAt = isDraftBool ? null : new Date();
 
@@ -802,10 +834,10 @@ const updateCampaign = async (req, res) => {
       durationDays: 'duration_days',
     };
 
-    if (updateData.documents !== undefined) {
+    if (sanitized.documents !== undefined) {
       updates.push('documents = ?');
-      const documentsJson = updateData.documents && Array.isArray(updateData.documents) && updateData.documents.length > 0
-        ? JSON.stringify(updateData.documents)
+      const documentsJson = sanitized.documents && Array.isArray(sanitized.documents) && sanitized.documents.length > 0
+        ? JSON.stringify(sanitized.documents)
         : null;
       values.push(documentsJson);
     }
@@ -814,11 +846,11 @@ const updateCampaign = async (req, res) => {
     const nullableDateFields = ['endDate'];
 
     Object.entries(fieldMappings).forEach(([frontendField, dbField]) => {
-      if (updateData[frontendField] === undefined) return;
+      if (sanitized[frontendField] === undefined) return;
 
       let shouldSkip = false;
       if (isDraftBool) {
-        const value = updateData[frontendField];
+        const value = sanitized[frontendField];
         if (numericFields.includes(frontendField)) {
           const parsed = parseFloat(String(value || '').replace(/,/g, ''));
           if (!parsed || parsed === 0 || isNaN(parsed)) shouldSkip = true;
@@ -835,12 +867,12 @@ const updateCampaign = async (req, res) => {
 
       updates.push(`${dbField} = ?`);
       if (numericFields.includes(frontendField)) {
-        const parsed = parseFloat(String(updateData[frontendField] || '').replace(/,/g, ''));
+        const parsed = parseFloat(String(sanitized[frontendField] || '').replace(/,/g, ''));
         values.push(isNaN(parsed) ? null : parsed);
       } else if (nullableDateFields.includes(frontendField)) {
-        values.push(updateData[frontendField] || null);
+        values.push(sanitized[frontendField] || null);
       } else {
-        values.push(updateData[frontendField] ?? '');
+        values.push(sanitized[frontendField] ?? '');
       }
     });
 
@@ -861,29 +893,33 @@ const updateCampaign = async (req, res) => {
       updates.push('rejected_at = NULL');
     }
 
-    updates.push('updated_at = NOW()');
+    updates.push('updatedAt = NOW()');
     values.push(id);
 
     const sql = `UPDATE campaigns SET ${updates.join(', ')} WHERE id = ?`;
-    await db.sequelize.query(sql, { replacements: values, type: db.sequelize.QueryTypes.UPDATE });
+    await db.sequelize.query(sql, { replacements: values, type: db.sequelize.QueryTypes.UPDATE, transaction });
 
-    if (Array.isArray(req.body.milestones)) {
-      try {
-        await db.sequelize.query('DELETE FROM campaign_milestones WHERE campaign_id = ?', { replacements: [id], type: db.sequelize.QueryTypes.DELETE });
-        for (let i = 0; i < req.body.milestones.length; i++) {
-          const m = req.body.milestones[i];
-          if (!m.title?.trim()) continue;
-          await db.sequelize.query(
-            `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            {
-              replacements: [id, m.title.trim(), m.description?.trim() || '', parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0, i, m.targetDate || null],
-              type: db.sequelize.QueryTypes.INSERT,
-            }
-          );
-        }
-      } catch (_) { }
+    // Delete and re-insert milestones within transaction
+    if (Array.isArray(sanitized.milestones)) {
+      await db.sequelize.query('DELETE FROM campaign_milestones WHERE campaign_id = ?',
+        { replacements: [id], type: db.sequelize.QueryTypes.DELETE, transaction });
+
+      for (let i = 0; i < sanitized.milestones.length; i++) {
+        const m = sanitized.milestones[i];
+        if (!m.title?.trim()) continue;
+        await db.sequelize.query(
+          `INSERT INTO campaign_milestones (campaign_id, title, description, target_amount, order_index, target_date)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          {
+            replacements: [id, m.title.trim(), m.description?.trim() || '', parseFloat(String(m.amount || 0).replace(/,/g, '')) || 0, i, m.targetDate || null],
+            type: db.sequelize.QueryTypes.INSERT,
+            transaction
+          }
+        );
+      }
     }
+
+    await transaction.commit();
 
     res.status(200).send({
       success: true,
@@ -891,6 +927,8 @@ const updateCampaign = async (req, res) => {
       data: { id: parseInt(id), status: newStatus }
     });
   } catch (error) {
+    await transaction.rollback();
+    logger.error('Error updating campaign:', error);
     res.status(500).send({ success: false, message: 'Error updating campaign' });
   }
 };
@@ -1098,6 +1136,62 @@ const getCampaignAnalytics = async (req, res) => {
   }
 };
 
+// Delete gallery image (founder only, draft/rejected campaigns only)
+const deleteCampaignImage = async (req, res) => {
+  try {
+    const { campaignId, imageId } = req.params;
+    const founderId = req.userId;
+
+    const [campaign] = await db.sequelize.query(
+      'SELECT id, founder_id, status FROM campaigns WHERE id = ? AND founder_id = ?',
+      { replacements: [campaignId, founderId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    if (!campaign) {
+      return res.status(404).send({ success: false, message: 'Campaign not found or unauthorized' });
+    }
+
+    if (!['draft', 'rejected'].includes(campaign.status)) {
+      return res.status(400).send({ success: false, message: 'Cannot delete images from approved campaigns' });
+    }
+
+    const [image] = await db.sequelize.query(
+      'SELECT id, image_url FROM campaign_images WHERE id = ? AND campaign_id = ?',
+      { replacements: [imageId, campaignId], type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    if (!image) {
+      return res.status(404).send({ success: false, message: 'Image not found' });
+    }
+
+    // Delete from Cloudinary if it's a cloudinary URL
+    if (image.image_url && image.image_url.includes('cloudinary')) {
+      try {
+        const urlParts = image.image_url.split('/');
+        const publicId = urlParts[urlParts.length - 1].split('.')[0];
+        await cloudinary.uploader.destroy(`darb/campaigns/${publicId}`);
+      } catch (err) {
+        logger.warn('Failed to delete image from Cloudinary:', err.message);
+        // Don't fail the request if Cloudinary deletion fails
+      }
+    }
+
+    // Delete from database
+    await db.sequelize.query(
+      'DELETE FROM campaign_images WHERE id = ?',
+      { replacements: [imageId], type: db.sequelize.QueryTypes.DELETE }
+    );
+
+    res.status(200).send({
+      success: true,
+      message: 'Image deleted successfully'
+    });
+  } catch (error) {
+    logger.error('Error deleting campaign image:', error);
+    res.status(500).send({ success: false, message: 'Error deleting image' });
+  }
+};
+
 // ================= EXPORTS =================
 
 module.exports = {
@@ -1119,6 +1213,7 @@ module.exports = {
   // CRUD & Editing
   createCampaign,
   uploadCampaignImage,
+  deleteCampaignImage,
   getCampaignForEdit,
   updateCampaign,
   deleteCampaign,

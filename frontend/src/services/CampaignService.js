@@ -1,7 +1,5 @@
 import ApiService from './apiService';
-import { API_URL } from '../config/apiUrl';
-
-const API_BASE_URL = API_URL;
+import { API_BASE_URL } from '../config/apiConfig';
 
 class CampaignService {
   /**
@@ -10,7 +8,7 @@ class CampaignService {
   static async getAllCampaigns(filters = {}) {
     try {
       const params = new URLSearchParams();
-      
+
       if (filters.category && filters.category !== 'All Categories') {
         params.append('category', filters.category);
       }
@@ -26,12 +24,12 @@ class CampaignService {
       if (filters.featured) {
         params.append('featured', filters.featured);
       }
-      
+
       const url = `${API_BASE_URL}/campaigns${params.toString() ? '?' + params.toString() : ''}`;
       console.log('🔍 Fetching campaigns from:', url);
-      
+
       const response = await ApiService.get(url);
-      
+
       // Handle response format
       if (response && Array.isArray(response)) {
         return response;
@@ -53,9 +51,9 @@ class CampaignService {
   static async getCampaignById(id) {
     try {
       console.log(`👀 Getting campaign ${id}`);
-      
+
       const response = await ApiService.get(`${API_BASE_URL}/campaigns/${id}`);
-      
+
       // Handle response format
       if (response && response.data) {
         return response.data;
@@ -76,9 +74,9 @@ class CampaignService {
   static async getFeaturedCampaigns(limit = 6) {
     try {
       console.log('⭐ Fetching featured campaigns');
-      
+
       const response = await ApiService.get(`${API_BASE_URL}/campaigns/featured?limit=${limit}`);
-      
+
       // Handle response format
       if (response && Array.isArray(response)) {
         return response;
@@ -100,9 +98,9 @@ class CampaignService {
   static async createCampaign(campaignData) {
     try {
       console.log('📝 Creating campaign with data:', campaignData);
-      
+
       const response = await ApiService.post(`${API_BASE_URL}/campaigns`, campaignData);
-      
+
       console.log('✅ Campaign created successfully:', response);
       return response;
     } catch (error) {
@@ -117,34 +115,34 @@ class CampaignService {
   static async getCreatedCampaigns() {
     try {
       const response = await ApiService.get(`${API_BASE_URL}/campaigns/user/my-campaigns`);
-      
+
       const raw = (response && response.data) ? response.data
-                : (response && (response.drafts || response.all)) ? response
-                : { drafts: [], submitted: [], approved: [], rejected: [], all: [] };
+        : (response && (response.drafts || response.all)) ? response
+          : { drafts: [], submitted: [], approved: [], rejected: [], all: [] };
 
       // Normalize camelCase → snake_case so CampaignCard can read the fields
       const normalize = (list) => (list || []).map(c => ({
         ...c,
-        main_image_url:    c.main_image_url    || c.mainImageUrl    || null,
-        target_amount:     c.target_amount     ?? c.targetAmount    ?? 0,
-        current_amount:    c.current_amount    ?? c.currentAmount   ?? 0,
-        minimum_investment:c.minimum_investment?? c.minimumInvestment?? 0,
-        view_count:        c.view_count        ?? c.viewCount       ?? 0,
-        favorite_count:    c.favorite_count    ?? c.favoriteCount   ?? 0,
-        is_featured:       c.is_featured       ?? c.isFeatured      ?? false,
-        founder_name:      c.founder_name      || c.founderName     || '',
-        founder_company:   c.founder_company   || c.founderCompany  || '',
-        founder_avatar:    c.founder_avatar    || c.founderAvatar   || null,
-        created_at:        c.created_at        || c.createdAt       || null,
-        admin_comments:    c.admin_comments    || c.adminComments   || null,
+        main_image_url: c.main_image_url || c.mainImageUrl || null,
+        target_amount: c.target_amount ?? c.targetAmount ?? 0,
+        current_amount: c.current_amount ?? c.currentAmount ?? 0,
+        minimum_investment: c.minimum_investment ?? c.minimumInvestment ?? 0,
+        view_count: c.view_count ?? c.viewCount ?? 0,
+        favorite_count: c.favorite_count ?? c.favoriteCount ?? 0,
+        is_featured: c.is_featured ?? c.isFeatured ?? false,
+        founder_name: c.founder_name || c.founderName || '',
+        founder_company: c.founder_company || c.founderCompany || '',
+        founder_avatar: c.founder_avatar || c.founderAvatar || null,
+        created_at: c.created_at || c.createdAt || null,
+        admin_comments: c.admin_comments || c.adminComments || null,
       }));
 
       return {
-        drafts:    normalize(raw.drafts),
+        drafts: normalize(raw.drafts),
         submitted: normalize(raw.submitted),
-        approved:  normalize(raw.approved),
-        rejected:  normalize(raw.rejected),
-        all:       normalize(raw.all),
+        approved: normalize(raw.approved),
+        rejected: normalize(raw.rejected),
+        all: normalize(raw.all),
       };
     } catch (error) {
       console.error('❌ Error fetching created campaigns:', error);
@@ -158,9 +156,9 @@ class CampaignService {
   static async getViewedCampaigns() {
     try {
       console.log('👀 Fetching viewed campaigns');
-      
+
       const response = await ApiService.get(`${API_BASE_URL}/campaigns/user/viewed`);
-      
+
       // Handle response format
       if (response && Array.isArray(response)) {
         return response;
@@ -181,9 +179,9 @@ class CampaignService {
   static async getFavoriteCampaigns() {
     try {
       console.log('❤️ Fetching favorite campaigns');
-      
+
       const response = await ApiService.get(`${API_BASE_URL}/campaigns/user/favorites`);
-      
+
       // Handle response format
       if (response && Array.isArray(response)) {
         return response;
@@ -204,9 +202,9 @@ class CampaignService {
   static async getFundedCampaigns() {
     try {
       console.log('💰 Fetching funded campaigns');
-      
+
       const response = await ApiService.get(`${API_BASE_URL}/campaigns/user/funded`);
-      
+
       // Handle response format
       if (response && Array.isArray(response)) {
         return response;
@@ -227,9 +225,9 @@ class CampaignService {
   static async toggleFavoriteCampaign(campaignId) {
     try {
       console.log(`💖 Toggling favorite for campaign ${campaignId}`);
-      
+
       const response = await ApiService.post(`${API_BASE_URL}/campaigns/${campaignId}/favorite`);
-      
+
       // Handle response format
       if (response && typeof response.isFavorited === 'boolean') {
         return response.isFavorited;
@@ -251,9 +249,9 @@ class CampaignService {
   static async trackCampaignView(campaignId) {
     try {
       console.log(`👁️ Tracking view for campaign ${campaignId}`);
-      
+
       await ApiService.post(`${API_BASE_URL}/campaigns/${campaignId}/view`);
-      
+
       console.log('✅ View tracked successfully');
     } catch (error) {
       console.error('❌ Error tracking view:', error);
@@ -267,15 +265,15 @@ class CampaignService {
   static async uploadCampaignImage(campaignId, imageFile) {
     try {
       console.log(`📸 Uploading image for campaign ${campaignId}`);
-      
+
       const formData = new FormData();
       formData.append('campaignImage', imageFile);
-      
+
       const response = await ApiService.uploadFiles(
         `${API_BASE_URL}/campaigns/${campaignId}/image`,
         { campaignImage: imageFile }
       );
-      
+
       console.log('✅ Image uploaded successfully:', response);
       return response;
     } catch (error) {
@@ -292,13 +290,13 @@ class CampaignService {
       console.log('🔄 ===== FRONTEND UPDATE CAMPAIGN START =====');
       console.log('📝 Campaign ID:', campaignId);
       console.log('📦 Campaign Data:', JSON.stringify(campaignData, null, 2));
-      
+
       const response = await ApiService.put(`${API_BASE_URL}/campaigns/${campaignId}`, campaignData);
-      
+
       console.log('✅ Campaign updated successfully!');
       console.log('📤 Response:', JSON.stringify(response, null, 2));
       console.log('🔄 ===== FRONTEND UPDATE CAMPAIGN END =====');
-      
+
       return response;
     } catch (error) {
       console.error('❌ ===== FRONTEND UPDATE CAMPAIGN ERROR =====');
@@ -317,9 +315,9 @@ class CampaignService {
   static async deleteCampaign(campaignId) {
     try {
       console.log(`🗑️ Deleting campaign ${campaignId}`);
-      
+
       await ApiService.delete(`${API_BASE_URL}/campaigns/${campaignId}`);
-      
+
       console.log('✅ Campaign deleted successfully');
       return true;
     } catch (error) {
@@ -332,82 +330,82 @@ class CampaignService {
    * Get all campaign data for My Campaigns page
    * Returns different data based on user type
    */
-static async getAllMyCampaignsData(user) {
-  try {
-    if (!user) {
-      throw new Error('User is required');
-    }
+  static async getAllMyCampaignsData(user) {
+    try {
+      if (!user) {
+        throw new Error('User is required');
+      }
 
-    const isFounder = user.userType?.toLowerCase() === 'founder';
-    const isInvestor = user.userType?.toLowerCase() === 'investor';
+      const isFounder = user.userType?.toLowerCase() === 'founder';
+      const isInvestor = user.userType?.toLowerCase() === 'investor';
 
-    console.log(`📊 Loading My Campaigns data for ${user.userType}`);
+      console.log(`📊 Loading My Campaigns data for ${user.userType}`);
 
-    const data = {
-      viewed: [],
-      favorites: [],
-      created: { drafts: [], submitted: [], approved: [], rejected: [], all: [] },
-      funded: []
-    };
+      const data = {
+        viewed: [],
+        favorites: [],
+        created: { drafts: [], submitted: [], approved: [], rejected: [], all: [] },
+        funded: []
+      };
 
-    // Load data in parallel for better performance
-    const promises = [];
+      // Load data in parallel for better performance
+      const promises = [];
 
-    // Always load viewed and favorites for all users
-    promises.push(
-      this.getViewedCampaigns()
-        .then(result => { data.viewed = result; })
-        .catch(error => {
-          console.error('Error loading viewed campaigns:', error);
-          data.viewed = [];
-        })
-    );
-
-    promises.push(
-      this.getFavoriteCampaigns()
-        .then(result => { data.favorites = result; })
-        .catch(error => {
-          console.error('Error loading favorite campaigns:', error);
-          data.favorites = [];
-        })
-    );
-
-    // Load user-type specific data
-    if (isFounder) {
+      // Always load viewed and favorites for all users
       promises.push(
-        this.getCreatedCampaigns()
-          .then(result => { data.created = result; })
+        this.getViewedCampaigns()
+          .then(result => { data.viewed = result; })
           .catch(error => {
-            console.error('Error loading created campaigns:', error);
-            data.created = { drafts: [], submitted: [], approved: [], rejected: [], all: [] };
+            console.error('Error loading viewed campaigns:', error);
+            data.viewed = [];
           })
       );
-    }
 
-    if (isInvestor) {
       promises.push(
-        this.getFundedCampaigns()
-          .then(result => { data.funded = result; })
+        this.getFavoriteCampaigns()
+          .then(result => { data.favorites = result; })
           .catch(error => {
-            console.error('Error loading funded campaigns:', error);
-            data.funded = [];
+            console.error('Error loading favorite campaigns:', error);
+            data.favorites = [];
           })
       );
+
+      // Load user-type specific data
+      if (isFounder) {
+        promises.push(
+          this.getCreatedCampaigns()
+            .then(result => { data.created = result; })
+            .catch(error => {
+              console.error('Error loading created campaigns:', error);
+              data.created = { drafts: [], submitted: [], approved: [], rejected: [], all: [] };
+            })
+        );
+      }
+
+      if (isInvestor) {
+        promises.push(
+          this.getFundedCampaigns()
+            .then(result => { data.funded = result; })
+            .catch(error => {
+              console.error('Error loading funded campaigns:', error);
+              data.funded = [];
+            })
+        );
+      }
+
+      await Promise.all(promises);
+
+      return data;
+    } catch (error) {
+      console.error('❌ Error loading My Campaigns data:', error);
+      return {
+        viewed: [],
+        favorites: [],
+        created: { drafts: [], submitted: [], approved: [], rejected: [], all: [] },
+        funded: []
+      };
     }
-
-    await Promise.all(promises);
-
-    return data;
-  } catch (error) {
-    console.error('❌ Error loading My Campaigns data:', error);
-    return {
-      viewed: [],
-      favorites: [],
-      created: { drafts: [], submitted: [], approved: [], rejected: [], all: [] },
-      funded: []
-    };
   }
-}
 
   // ============= BACKWARD COMPATIBILITY METHODS =============
 
@@ -463,6 +461,23 @@ static async getAllMyCampaignsData(user) {
       submittedAt: campaign.submitted_at || campaign.submittedAt,
       approvedAt: campaign.approved_at || campaign.approvedAt
     };
+  }
+
+  /**
+   * Delete gallery image
+   */
+  static async deleteGalleryImage(campaignId, imageId) {
+    try {
+      console.log(`🗑️ Deleting image ${imageId} from campaign ${campaignId}`);
+
+      const response = await ApiService.delete(`${API_BASE_URL}/campaigns/${campaignId}/images/${imageId}`);
+
+      console.log('✅ Image deleted successfully');
+      return response;
+    } catch (error) {
+      console.error('❌ Error deleting image:', error);
+      throw error;
+    }
   }
 
   /**

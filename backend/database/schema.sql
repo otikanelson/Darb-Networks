@@ -80,6 +80,7 @@ CREATE TABLE campaigns (
   description TEXT NOT NULL,
   category VARCHAR(100) NOT NULL,
   location VARCHAR(100) NOT NULL,
+  country VARCHAR(100) NOT NULL DEFAULT 'Nigeria',
   
   -- Financial Information
   target_amount DECIMAL(15,2) NOT NULL,

@@ -1,18 +1,9 @@
 -- Migration: Add country column to campaigns table
--- Purpose: Enable country-based campaign filtering
+-- Date: 2024
+-- Description: Adds support for multi-country campaigns
 
--- Add country column to campaigns table
 ALTER TABLE campaigns 
 ADD COLUMN country VARCHAR(100) NOT NULL DEFAULT 'Nigeria' AFTER location;
 
--- Add index for better query performance
+-- Add index for faster filtering
 CREATE INDEX idx_campaigns_country ON campaigns(country);
-
--- Create a composite index for common queries
-CREATE INDEX idx_campaigns_country_status ON campaigns(country, status);
-
--- Update existing campaigns to have Nigeria as default country
-UPDATE campaigns SET country = 'Nigeria' WHERE country = '';
-
--- Add comment to column
-ALTER TABLE campaigns MODIFY COLUMN country VARCHAR(100) NOT NULL COMMENT 'Country where the campaign is based (e.g., Nigeria, Kenya, Ghana)';

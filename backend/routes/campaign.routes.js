@@ -137,6 +137,15 @@ module.exports = function (app) {
     controller.updateCampaign
   );
 
+  // Delete gallery image (founder only, draft/rejected campaigns only)
+  app.delete(
+    "/api/campaigns/:campaignId/images/:imageId",
+    [authJwt.verifyToken],
+    controller.deleteCampaignImage || ((req, res) => {
+      res.status(501).json({ success: false, message: "Not implemented" });
+    })
+  );
+
   // Delete campaign (founder only, draft campaigns only)
   app.delete(
     "/api/campaigns/:id",

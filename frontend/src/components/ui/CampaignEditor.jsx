@@ -2,9 +2,16 @@
 
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { buildApiUrl } from '../../config/apiUrl';
+import { buildApiUrl } from '../../config/apiConfig';
 import { useCountry } from '../../context/CountryContext';
+import { useAuth } from '../../context/AuthContext';
 import RichEditor from './RichEditor';
+import CampaignReviewStep from './CampaignReviewStep';
+import CampaignStepNav from '../CampaignStepNav';
+import RestoreDraftPrompt from '../RestoreDraftPrompt';
+import SaveStatusIndicator from '../SaveStatusIndicator';
+import { useCampaignDraft } from '../../hooks/useCampaignDraft';
+import { useNavigationBlocker } from '../../hooks/useNavigationBlocker';
 import toast from 'react-hot-toast';
 import {
   ChevronLeft, ChevronRight, Check, AlertCircle, Save,
@@ -109,6 +116,13 @@ const STEPS = [
     title: 'Set your funding targets',
     description: 'How much do you need, and what\'s the minimum someone can invest? Set a deadline to create urgency.',
     fields: ['targetAmount','minimumInvestment'],
+  },
+  {
+    id: 'review',
+    label: 'Review',
+    title: 'Ready to submit?',
+    description: 'Review your campaign, check the validation checklist, and submit for approval.',
+    fields: [],
   },
 ];
 
@@ -221,11 +235,15 @@ const VideoList = ({ videos, onChange }) => {
 const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
   const navigate = useNavigate();
   const { country } = useCountry();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState({});
   const [globalError, setGlobalError] = useState('');
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null); // 'saving', 'saved', 'error'
+  const [saveMessage, setSaveMessage] = useState('');
+  const [isFirstSave, setIsFirstSave] = useState(mode === 'create'); // Track first save for create mode
 
   const [form, setForm] = useState({
     title: initialData.title || '',
@@ -264,10 +282,44 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
       : []
   );
 
+  // Draft and restore prompt state
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+  const [restoredDraft, setRestoredDraft] = useState(null);
+
+  // Autosave handler for useCampaignDraft hook
+  const handleAutosave = useCallback(async () => {
+    // For edit mode, autosave drafts to backend
+    if (mode === 'edit' && campaignId && !submitting) {
+      try {
+        const token = localStorage.getItem('authToken');
+        const p = payload(true); // isDraft = true
+        const res = await fetch(buildApiUrl(`/campaigns/${campaignId}`), {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(p),
+        });
+        if (res.ok) {
+          setSaveStatus('saved');
+          setSaveMessage('Autosaved');
+          setTimeout(() => setSaveStatus(null), 3000);
+        }
+      } catch (err) {
+        console.error('Autosave error:', err);
+        setSaveStatus('error');
+        setSaveMessage('Autosave failed');
+      }
+    }
+  }, [mode, campaignId, submitting]);
+
+  // Initialize draft hook
+  const draftHook = useCampaignDraft(user?.id, mode === 'edit' ? campaignId : null, form, handleAutosave);
+  useNavigationBlocker(draftHook?.showRestorePrompt || draftHook?.hasUnsavedChanges);
+
   const set = (field, value) => {
     setForm(p => ({ ...p, [field]: value }));
     setErrors(p => ({ ...p, [field]: null }));
     setGlobalError('');
+  };
   };
 
   const validate = (idx) => {
@@ -397,9 +449,24 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
       console.log('✅ Save successful!');
       toast.success(isDraft ? 'Draft saved!' : 'Campaign submitted for review!');
       
+      // Handle first save transition from create to edit mode
+      if (isFirstSave && mode === 'create' && isDraft) {
+        setIsFirstSave(false);
+        // Mark as saved in draft hook
+        if (draftHook?.markAsSaved) {
+          draftHook.markAsSaved();
+        }
+      }
+      
       const navUrl = isDraft ? '/my-campaigns' : `/campaign/${cId}`;
       console.log('🧭 Navigating to:', navUrl);
-      navigate(navUrl);
+      
+      // Use replace: true for first draft save to avoid back button issues
+      if (isFirstSave && mode === 'create' && isDraft) {
+        navigate(navUrl, { replace: true });
+      } else {
+        navigate(navUrl);
+      }
       
       console.log('💾 ===== CAMPAIGN EDITOR SAVE END =====');
     } catch (err) {
@@ -735,45 +802,75 @@ const CampaignEditor = ({ mode = 'create', initialData = {}, campaignId }) => {
         </div>
       );
 
+      case 'review': return (
+        <CampaignReviewStep
+          form={{
+            ...form,
+            mainImageUrl: mainImageFile || mainImage,
+          }}
+          errors={errors}
+          onStepClick={(stepId) => {
+            const stepIdx = STEPS.findIndex(st => st.id === stepId);
+            if (stepIdx !== -1) setStep(stepIdx);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onSubmit={() => save(false)}
+          isSubmitting={submitting}
+        />
+      );
+
       default: return null;
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* ── Restore Draft Prompt ── */}
+      {draftHook?.showRestorePrompt && draftHook?.savedDraft && (
+        <RestoreDraftPrompt
+          savedAt={draftHook.savedDraft.savedAt || new Date().toISOString()}
+          onRestore={() => {
+            const restored = draftHook?.restoreDraft?.();
+            if (restored) {
+              setForm({ ...form, ...restored });
+            }
+          }}
+          onDiscard={() => {
+            draftHook?.discardDraft?.();
+          }}
+        />
+      )}
+
       {/* ── top progress bar ── */}
       <div className="h-1 bg-gray-100 fixed top-0 left-0 right-0 z-50">
         <div className="h-full bg-primary-500 transition-all duration-500" style={{ width: `${pct}%` }} />
       </div>
 
       <div className="flex flex-1 pt-1">
-        {/* ── left sidebar ── */}
+        {/* ── left sidebar with step nav ── */}
         <aside className="hidden lg:flex flex-col w-64 xl:w-72 flex-shrink-0 bg-white border-r border-gray-100 min-h-screen px-5 py-10 sticky top-0 h-screen overflow-y-auto">
-          <div className="mb-8">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
-              {mode === 'edit' ? 'Editing Campaign' : 'New Campaign'}
-            </p>
-            <p className="text-xs text-gray-400">{pct}% complete</p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
+                {mode === 'edit' ? 'Editing Campaign' : 'New Campaign'}
+              </p>
+              <p className="text-xs text-gray-400">{pct}% complete</p>
+            </div>
+            {/* Save status indicator */}
+            <SaveStatusIndicator lastSaved={draftHook?.lastSaved} isSaving={draftHook?.isSaving} />
           </div>
 
-          <nav className="space-y-0.5 flex-1">
-            {STEPS.map((st, i) => {
-              const done = i < step;
-              const active = i === step;
-              return (
-                <button key={st.id} type="button"
-                  onClick={() => { if (i < step) { setStep(i); window.scrollTo({ top: 0 }); } }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all
-                    ${active ? 'bg-primary-50 text-primary-800' : done ? 'text-gray-600 hover:bg-gray-50 cursor-pointer' : 'text-gray-300 cursor-default'}`}>
-                  <div className={`w-5 h-5   flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all
-                    ${done ? 'bg-primary-500 text-white' : active ? 'bg-primary-700 text-white' : 'bg-gray-100 text-gray-300'}`}>
-                    {done ? <Check className="h-3 w-3" /> : i + 1}
-                  </div>
-                  <span className={`text-sm font-medium ${active ? 'text-primary-800' : ''}`}>{st.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          {/* Step navigator */}
+          <CampaignStepNav
+            steps={STEPS}
+            currentStep={step}
+            onStepClick={(stepIdx) => {
+              if (stepIdx < step) {
+                setStep(stepIdx);
+                window.scrollTo({ top: 0 });
+              }
+            }}
+          />
 
           {/* save draft shortcut */}
           <div className="mt-8 pt-6 border-t border-gray-100">
