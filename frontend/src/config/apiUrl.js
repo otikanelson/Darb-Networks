@@ -1,12 +1,12 @@
 const getApiUrl = () => {
   // Check if we're in development mode
-  const isDevelopment = import.meta.env.MODE === 'development' || 
-                        window.location.hostname === 'localhost';
-  
+  const isDevelopment = import.meta.env.MODE === 'development' ||
+    window.location.hostname === 'localhost';
+
   // Use environment variable or fallback to appropriate URL
-  const apiUrl = import.meta.env.VITE_API_URL || 
-                 (isDevelopment ? 'http://localhost:5000/api' : 'https://darb-networks-backend.vercel.app/api');
-  
+  const apiUrl = import.meta.env.VITE_API_URL ||
+    (isDevelopment ? 'http://localhost:5000/api' : 'https://darb-backend.vercel.app/api');
+
   // Remove trailing slash if present
   return apiUrl.replace(/\/$/, '');
 };
