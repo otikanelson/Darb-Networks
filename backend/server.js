@@ -421,8 +421,23 @@ app.use('/api/auth/reset-password', authLimiter);
 
 
 // Load routes with error handling
-const loadRoutes = () => {
+const loadRoutes = async () => {
   try {
+    // Wait for database to be ready before loading database-dependent routes
+    console.log("⏳ Waiting for database before loading routes...");
+    if (!initPromise) {
+      await initializeDatabase();
+    } else {
+      await initPromise;
+    }
+
+    if (!dbInitialized) {
+      console.error("❌ Cannot load routes - database initialization failed");
+      return false;
+    }
+
+    console.log("✅ Database ready, loading routes...");
+
     const routes = [
       { name: 'passwordReset', path: './routes/passwordReset.routes' },
       { name: 'auth', path: './routes/auth.routes' },
@@ -437,23 +452,28 @@ const loadRoutes = () => {
         require(route.path)(app);
         console.log(`✅ ${route.name} routes loaded`);
       } catch (error) {
-        console.error(`❌ Failed to load ${route.name} routes:`, error.message, error.stack);
+        console.error(`❌ Failed to load ${route.name} routes:`, error.message);
         app.all(`/api/${route.name}*`, (req, res) => {
           res.status(503).json({
             success: false,
-            message: `${route.name} service unavailable`
+            message: `${route.name} service unavailable: ${error.message}`
           });
         });
       }
     });
 
+    return true;
+
   } catch (error) {
     console.error("❌ Critical error loading routes:", error);
+    return false;
   }
 };
 
-// Load routes
-loadRoutes();
+// Load routes - this will wait for database to be ready
+loadRoutes().catch(err => {
+  console.error("❌ Failed to load routes:", err.message);
+});
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
