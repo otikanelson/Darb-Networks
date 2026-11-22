@@ -157,6 +157,15 @@ const initializeDatabase = async () => {
   try {
     console.log("🔧 Attempting to initialize database...");
 
+    // Log which env vars are set (without showing values for security)
+    console.log("📝 Environment variables status:");
+    console.log("  - DB_HOST:", !!process.env.DB_HOST ? "✅ set" : "❌ missing");
+    console.log("  - DB_USER:", !!process.env.DB_USER ? "✅ set" : "❌ missing");
+    console.log("  - DB_PASSWORD:", !!process.env.DB_PASSWORD ? "✅ set" : "❌ missing");
+    console.log("  - DB_NAME:", !!process.env.DB_NAME ? "✅ set" : "❌ missing");
+    console.log("  - DB_PORT:", process.env.DB_PORT || "default 3306");
+    console.log("  - DB_SSL:", process.env.DB_SSL);
+
     // Only try to connect to database if we have the required environment variables
     if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
       console.error("❌ Missing database env vars:", {
@@ -176,6 +185,7 @@ const initializeDatabase = async () => {
 
     const db = require("./models");
 
+    console.log("⏳ Authenticating with database...");
     await db.sequelize.authenticate();
     console.log("✅ Database connection established successfully");
 
@@ -225,20 +235,24 @@ initializeDatabase().catch(() => { });
 // Add a middleware to wait for database to be ready on campaign endpoints
 const dbReadyMiddleware = async (req, res, next) => {
   if (!dbInitialized && req.path.startsWith('/api/campaigns')) {
-    // Wait up to 10 seconds for database to initialize
+    console.log("⏳ Waiting for database to initialize for:", req.path);
+    // Wait up to 30 seconds for database to initialize
     let attempts = 0;
-    while (!dbInitialized && attempts < 100) {
+    const maxAttempts = 300; // 30 seconds with 100ms intervals
+    while (!dbInitialized && attempts < maxAttempts) {
       await new Promise(r => setTimeout(r, 100));
       attempts++;
     }
 
     if (!dbInitialized) {
+      console.error("❌ Database init timeout after", attempts * 100, "ms:", dbError?.message);
       return res.status(503).json({
         success: false,
-        message: "Service initializing, please try again",
-        error: dbError ? dbError.message : "Database initialization in progress"
+        message: "Service initializing, please try again in a few seconds",
+        error: dbError ? dbError.message : "Database initialization timeout"
       });
     }
+    console.log("✅ Database ready after", attempts * 100, "ms");
   }
   next();
 };
