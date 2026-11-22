@@ -15,7 +15,6 @@ frontend/.env.production
 node_modules/
 frontend/node_modules/
 backend/node_modules/
-package-lock.json
 
 # Build outputs
 dist/
