@@ -236,87 +236,95 @@ app.get("/debug/db-test", async (req, res) => {
 // Initialize database with error handling
 let dbInitialized = false;
 let dbError = null;
+let initPromise = null; // Track the initialization promise
 
 const initializeDatabase = async () => {
-  try {
-    console.log("🔧 Attempting to initialize database...");
+  // Prevent multiple simultaneous initialization attempts
+  if (initPromise) return initPromise;
 
-    // Log which env vars are set (without showing values for security)
-    console.log("📝 Environment variables status:");
-    console.log("  - DB_HOST:", !!process.env.DB_HOST ? "✅ set" : "❌ missing");
-    console.log("  - DB_USER:", !!process.env.DB_USER ? "✅ set" : "❌ missing");
-    console.log("  - DB_PASSWORD:", !!process.env.DB_PASSWORD ? "✅ set" : "❌ missing");
-    console.log("  - DB_NAME:", !!process.env.DB_NAME ? "✅ set" : "❌ missing");
-    console.log("  - DB_PORT:", process.env.DB_PORT || "default 3306");
-    console.log("  - DB_SSL:", process.env.DB_SSL);
-
-    // Only try to connect to database if we have the required environment variables
-    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
-      console.error("❌ Missing database env vars:", {
-        DB_HOST: !!process.env.DB_HOST,
-        DB_USER: !!process.env.DB_USER,
-        DB_NAME: !!process.env.DB_NAME
-      });
-      throw new Error("Missing required database environment variables");
-    }
-
-    console.log("📍 Connecting to database:", {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT || 3306,
-      user: process.env.DB_USER ? process.env.DB_USER.substring(0, 10) + "..." : "undefined",
-      database: process.env.DB_NAME,
-      ssl: process.env.DB_SSL === 'true'
-    });
-
-    console.log("⏳ Loading models...");
-    let db;
+  initPromise = (async () => {
     try {
-      db = require("./models");
-      console.log("✅ Models loaded successfully");
-    } catch (modelError) {
-      console.error("❌ FAILED to load models!");
-      console.error("   Error:", modelError.message);
-      throw new Error(`Model loading failed: ${modelError.message}`);
-    }
+      console.log("🔧 Attempting to initialize database...");
 
-    console.log("⏳ Attempting to authenticate with database...");
-    const start = Date.now();
-    try {
-      await db.sequelize.authenticate();
-      const duration = Date.now() - start;
-      console.log("✅ Database connection established successfully (took", duration, "ms)");
-    } catch (authError) {
-      console.error("❌ FAILED to authenticate!");
-      console.error("   Error:", authError.message);
-      console.error("   Code:", authError.code);
-      if (authError.original) {
-        console.error("   Original:", authError.original.message);
+      // Log which env vars are set (without showing values for security)
+      console.log("📝 Environment variables status:");
+      console.log("  - DB_HOST:", !!process.env.DB_HOST ? "✅ set" : "❌ missing");
+      console.log("  - DB_USER:", !!process.env.DB_USER ? "✅ set" : "❌ missing");
+      console.log("  - DB_PASSWORD:", !!process.env.DB_PASSWORD ? "✅ set" : "❌ missing");
+      console.log("  - DB_NAME:", !!process.env.DB_NAME ? "✅ set" : "❌ missing");
+      console.log("  - DB_PORT:", process.env.DB_PORT || "default 3306");
+      console.log("  - DB_SSL:", process.env.DB_SSL);
+
+      // Only try to connect to database if we have the required environment variables
+      if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
+        console.error("❌ Missing database env vars:", {
+          DB_HOST: !!process.env.DB_HOST,
+          DB_USER: !!process.env.DB_USER,
+          DB_NAME: !!process.env.DB_NAME
+        });
+        throw new Error("Missing required database environment variables");
       }
-      throw authError;
-    }
 
-    // Only sync in development
-    if (process.env.NODE_ENV !== 'production') {
-      await db.sequelize.sync({ alter: false });
-      console.log("✅ Database synchronized successfully");
-    }
+      console.log("📍 Connecting to database:", {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT || 3306,
+        user: process.env.DB_USER ? process.env.DB_USER.substring(0, 10) + "..." : "undefined",
+        database: process.env.DB_NAME,
+        ssl: process.env.DB_SSL === 'true'
+      });
 
-    dbInitialized = true;
-    console.log("🎉 Database initialization complete!");
-    return true;
-  } catch (error) {
-    console.error("❌❌❌ DATABASE INITIALIZATION FAILED ❌❌❌");
-    console.error("Error message:", error.message);
-    console.error("Error name:", error.name);
-    console.error("Error code:", error.code);
-    if (error.original) {
-      console.error("Original error:", error.original.message);
-      console.error("Original code:", error.original.code);
+      console.log("⏳ Loading models...");
+      let db;
+      try {
+        db = require("./models");
+        console.log("✅ Models loaded successfully");
+      } catch (modelError) {
+        console.error("❌ FAILED to load models!");
+        console.error("   Error:", modelError.message);
+        throw new Error(`Model loading failed: ${modelError.message}`);
+      }
+
+      console.log("⏳ Attempting to authenticate with database...");
+      const start = Date.now();
+      try {
+        await db.sequelize.authenticate();
+        const duration = Date.now() - start;
+        console.log("✅ Database connection established successfully (took", duration, "ms)");
+      } catch (authError) {
+        console.error("❌ FAILED to authenticate!");
+        console.error("   Error:", authError.message);
+        console.error("   Code:", authError.code);
+        if (authError.original) {
+          console.error("   Original:", authError.original.message);
+        }
+        throw authError;
+      }
+
+      // Only sync in development
+      if (process.env.NODE_ENV !== 'production') {
+        await db.sequelize.sync({ alter: false });
+        console.log("✅ Database synchronized successfully");
+      }
+
+      dbInitialized = true;
+      console.log("🎉 Database initialization complete!");
+      return true;
+    } catch (error) {
+      console.error("❌❌❌ DATABASE INITIALIZATION FAILED ❌❌❌");
+      console.error("Error message:", error.message);
+      console.error("Error name:", error.name);
+      console.error("Error code:", error.code);
+      if (error.original) {
+        console.error("Original error:", error.original.message);
+        console.error("Original code:", error.original.code);
+      }
+      console.error("Full error:", error);
+      dbError = error;
+      return false;
     }
-    console.error("Full error:", error);
-    dbError = error;
-    return false;
-  }
+  })();
+
+  return initPromise;
 };
 
 // Database status endpoint (development only)
@@ -344,29 +352,33 @@ const requireDatabase = (req, res, next) => {
 };
 
 // Initialize database async - don't block route loading
-initializeDatabase().catch(() => { });
+// But ensure it starts immediately
+initializeDatabase().catch(err => {
+  console.error("❌ Failed to initialize database at startup:", err.message);
+});
 
 // Add a middleware to wait for database to be ready on campaign endpoints
 const dbReadyMiddleware = async (req, res, next) => {
   if (!dbInitialized && req.path.startsWith('/api/campaigns')) {
-    console.log("⏳ Waiting for database to initialize for:", req.path);
-    // Wait up to 30 seconds for database to initialize
-    let attempts = 0;
-    const maxAttempts = 300; // 30 seconds with 100ms intervals
-    while (!dbInitialized && attempts < maxAttempts) {
-      await new Promise(r => setTimeout(r, 100));
-      attempts++;
+    console.log("⏳ Database not initialized, waiting...");
+
+    // If initialization hasn't started, start it now
+    if (!initPromise) {
+      await initializeDatabase();
+    } else {
+      // Wait for ongoing initialization to complete
+      await initPromise;
     }
 
     if (!dbInitialized) {
-      console.error("❌ Database init timeout after", attempts * 100, "ms:", dbError?.message);
+      console.error("❌ Database init failed:", dbError?.message);
       return res.status(503).json({
         success: false,
-        message: "Service initializing, please try again in a few seconds",
-        error: dbError ? dbError.message : "Database initialization timeout"
+        message: "Database not available",
+        error: dbError ? dbError.message : "Database initialization failed"
       });
     }
-    console.log("✅ Database ready after", attempts * 100, "ms");
+    console.log("✅ Database is now ready");
   }
   next();
 };
