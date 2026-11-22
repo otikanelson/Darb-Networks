@@ -1,6 +1,13 @@
 const isDevelopment = import.meta.env.MODE === 'development';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-                     (isDevelopment ? 'http://localhost:5000/api' : 'https://darb-backend.vercel.app/api');
+
+/**
+ * Central API configuration
+ * 
+ * Source of truth for all API URLs. Driven by VITE_API_URL environment variable.
+ * Defaults to localhost:5000 in development, production URL in production.
+ */
+const API_BASE_URL = import.meta.env.VITE_API_URL ||
+  (isDevelopment ? 'http://localhost:5000/api' : 'https://darb-backend.vercel.app/api');
 
 /**
  * API Endpoints for all backend services
@@ -15,7 +22,7 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: `${API_BASE_URL}/auth/forgot-password`,
     RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`
   },
-  
+
   USERS: {
     PROFILE: `${API_BASE_URL}/users/profile`,
     UPDATE_PROFILE: `${API_BASE_URL}/users/profile`,
@@ -23,7 +30,7 @@ export const API_ENDPOINTS = {
     SETTINGS: `${API_BASE_URL}/users/settings`,
     BANK_ACCOUNTS: `${API_BASE_URL}/users/bank-accounts`
   },
-  
+
   // Campaign endpoints
   CAMPAIGNS: {
     BASE: `${API_BASE_URL}/campaigns`,
@@ -36,14 +43,14 @@ export const API_ENDPOINTS = {
     TOGGLE_FAVORITE: (id) => `${API_BASE_URL}/campaigns/${id}/favorite`,
     TRACK_VIEW: (id) => `${API_BASE_URL}/campaigns/${id}/view`
   },
-  
+
   // Milestone endpoints
   MILESTONES: {
     CAMPAIGN_MILESTONES: (campaignId) => `${API_BASE_URL}/campaigns/${campaignId}/milestones`,
     BY_ID: (id) => `${API_BASE_URL}/milestones/${id}`,
     UPDATE_STATUS: (id) => `${API_BASE_URL}/milestones/${id}/status`
   },
-  
+
   // Payment endpoints
   PAYMENTS: {
     INITIALIZE: `${API_BASE_URL}/payments/initialize`,
@@ -53,13 +60,13 @@ export const API_ENDPOINTS = {
     CAMPAIGN_PAYMENTS: (campaignId) => `${API_BASE_URL}/payments/campaign/${campaignId}`,
     STATS: (campaignId) => `${API_BASE_URL}/payments/stats/campaign/${campaignId}`
   },
-  
+
   DRAFTS: {
     BASE: `${API_BASE_URL}/drafts`,
     BY_ID: (id) => `${API_BASE_URL}/drafts/${id}`,
     PUBLISH: (id) => `${API_BASE_URL}/drafts/${id}/publish`,
   },
-  
+
   // Media endpoints
   MEDIA: {
     UPLOAD: `${API_BASE_URL}/media`,
