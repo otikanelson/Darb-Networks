@@ -475,6 +475,62 @@ loadRoutes().catch(err => {
   console.error("❌ Failed to load routes:", err.message);
 });
 
+// Fallback route for campaigns while debugging route loading
+app.get("/api/campaigns", async (req, res) => {
+  try {
+    console.log("📋 Fallback /api/campaigns handler called");
+
+    // Ensure database is initialized
+    if (!dbInitialized) {
+      console.log("⏳ Database not initialized, waiting...");
+      if (!initPromise) {
+        await initializeDatabase();
+      } else {
+        await initPromise;
+      }
+    }
+
+    if (!dbInitialized) {
+      console.error("❌ Database still not initialized:", dbError?.message);
+      return res.status(503).json({
+        success: false,
+        message: "Database not available",
+        error: dbError?.message
+      });
+    }
+
+    console.log("✅ Database is ready, querying campaigns...");
+
+    // Query campaigns directly
+    const db = require("./models");
+
+    const rawCampaigns = await db.sequelize.query(
+      `SELECT c.*, u.fullName AS founder_name, u.companyName AS founder_company, u.profileImageUrl AS founder_avatar
+       FROM campaigns c
+       LEFT JOIN users u ON c.founder_id = u.id
+       WHERE c.status = 'approved'
+       ORDER BY c.createdAt DESC`,
+      { type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    console.log("✅ Query successful, found", rawCampaigns.length, "campaigns");
+
+    res.status(200).json({
+      success: true,
+      count: rawCampaigns.length,
+      data: rawCampaigns
+    });
+
+  } catch (error) {
+    console.error("❌ Error in fallback campaigns handler:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve campaigns",
+      error: error.message
+    });
+  }
+});
+
 // Global error handling middleware
 app.use((err, req, res, next) => {
   console.error('❌ Global Error:', {
