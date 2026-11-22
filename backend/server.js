@@ -159,8 +159,20 @@ const initializeDatabase = async () => {
 
     // Only try to connect to database if we have the required environment variables
     if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
+      console.error("❌ Missing database env vars:", {
+        DB_HOST: !!process.env.DB_HOST,
+        DB_USER: !!process.env.DB_USER,
+        DB_NAME: !!process.env.DB_NAME
+      });
       throw new Error("Missing required database environment variables");
     }
+
+    console.log("📍 Connecting to database:", {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      user: process.env.DB_USER ? process.env.DB_USER.substring(0, 10) + "..." : "undefined",
+      database: process.env.DB_NAME
+    });
 
     const db = require("./models");
 
@@ -177,6 +189,7 @@ const initializeDatabase = async () => {
     return true;
   } catch (error) {
     console.error("❌ Database initialization failed:", error.message);
+    console.error("Stack:", error.stack);
     dbError = error;
     return false;
   }
@@ -209,6 +222,28 @@ const requireDatabase = (req, res, next) => {
 // Initialize database async - don't block route loading
 initializeDatabase().catch(() => { });
 
+// Add a middleware to wait for database to be ready on campaign endpoints
+const dbReadyMiddleware = async (req, res, next) => {
+  if (!dbInitialized && req.path.startsWith('/api/campaigns')) {
+    // Wait up to 10 seconds for database to initialize
+    let attempts = 0;
+    while (!dbInitialized && attempts < 100) {
+      await new Promise(r => setTimeout(r, 100));
+      attempts++;
+    }
+
+    if (!dbInitialized) {
+      return res.status(503).json({
+        success: false,
+        message: "Service initializing, please try again",
+        error: dbError ? dbError.message : "Database initialization in progress"
+      });
+    }
+  }
+  next();
+};
+
+app.use(dbReadyMiddleware);
 
 // Configure rate limiters
 // General rate limiter: 100 requests per 15 minutes per IP
