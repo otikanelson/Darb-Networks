@@ -339,25 +339,13 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Middleware to check database connection for routes that need it
-const requireDatabase = (req, res, next) => {
-  if (!dbInitialized) {
-    return res.status(503).json({
-      success: false,
-      message: "Database not available",
-      error: dbError ? dbError.message : "Database not initialized"
-    });
-  }
-  next();
-};
-
 // Initialize database async - don't block route loading
 // But ensure it starts immediately
 initializeDatabase().catch(err => {
   console.error("❌ Failed to initialize database at startup:", err.message);
 });
 
-// Add a middleware to wait for database to be ready on API endpoints
+// Wait for the database to be ready on every API request (cold starts)
 const dbReadyMiddleware = async (req, res, next) => {
   if (!dbInitialized && req.path.startsWith('/api/')) {
     console.log("⏳ Database not initialized, waiting...");
@@ -420,8 +408,9 @@ app.use('/api/auth/forgot-password', authLimiter);
 app.use('/api/auth/reset-password', authLimiter);
 
 
-// Register routes synchronously so they come BEFORE the 404 handler.
-// DB readiness is still enforced per request by dbReadyMiddleware.
+// Register routes synchronously so they come BEFORE the 404 handler below.
+// (Registering them after an async DB wait put them behind the catch-all 404.)
+// Database readiness is enforced per request by dbReadyMiddleware above.
 const routes = [
   { name: 'passwordReset', path: './routes/passwordReset.routes' },
   { name: 'auth', path: './routes/auth.routes' },
@@ -438,7 +427,10 @@ routes.forEach(route => {
   } catch (error) {
     console.error(`❌ Failed to load ${route.name} routes:`, error.message);
     app.all(`/api/${route.name}*`, (req, res) => {
-      res.status(503).json({ success: false, message: `${route.name} service unavailable` });
+      res.status(503).json({
+        success: false,
+        message: `${route.name} service unavailable`
+      });
     });
   }
 });
