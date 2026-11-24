@@ -3,6 +3,7 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const CampaignStatsService = require('../services/campaignStatsService');
 const { sendError } = require("../utils/http");
+const logger = console;
 
 // Helper to build image URLs
 const buildImageUrl = (url) => {
