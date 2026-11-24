@@ -339,27 +339,15 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Middleware to check database connection for routes that need it
-const requireDatabase = (req, res, next) => {
-  if (!dbInitialized) {
-    return res.status(503).json({
-      success: false,
-      message: "Database not available",
-      error: dbError ? dbError.message : "Database not initialized"
-    });
-  }
-  next();
-};
-
 // Initialize database async - don't block route loading
 // But ensure it starts immediately
 initializeDatabase().catch(err => {
   console.error("❌ Failed to initialize database at startup:", err.message);
 });
 
-// Add a middleware to wait for database to be ready on campaign endpoints
+// Wait for the database to be ready on every API request (cold starts)
 const dbReadyMiddleware = async (req, res, next) => {
-  if (!dbInitialized && req.path.startsWith('/api/campaigns')) {
+  if (!dbInitialized && req.path.startsWith('/api/')) {
     console.log("⏳ Database not initialized, waiting...");
 
     // If initialization hasn't started, start it now
@@ -420,113 +408,29 @@ app.use('/api/auth/forgot-password', authLimiter);
 app.use('/api/auth/reset-password', authLimiter);
 
 
-// Load routes with error handling
-const loadRoutes = async () => {
+// Register routes synchronously so they come BEFORE the 404 handler below.
+// (Registering them after an async DB wait put them behind the catch-all 404.)
+// Database readiness is enforced per request by dbReadyMiddleware above.
+const routes = [
+  { name: 'passwordReset', path: './routes/passwordReset.routes' },
+  { name: 'auth', path: './routes/auth.routes' },
+  { name: 'user', path: './routes/user.routes' },
+  { name: 'campaign', path: './routes/campaign.routes' },
+  { name: 'admin', path: './routes/admin.routes' },
+  { name: 'investment', path: './routes/investment.routes' }
+];
+
+routes.forEach(route => {
   try {
-    // Wait for database to be ready before loading database-dependent routes
-    console.log("⏳ Waiting for database before loading routes...");
-    if (!initPromise) {
-      await initializeDatabase();
-    } else {
-      await initPromise;
-    }
-
-    if (!dbInitialized) {
-      console.error("❌ Cannot load routes - database initialization failed");
-      return false;
-    }
-
-    console.log("✅ Database ready, loading routes...");
-
-    const routes = [
-      { name: 'passwordReset', path: './routes/passwordReset.routes' },
-      { name: 'auth', path: './routes/auth.routes' },
-      { name: 'user', path: './routes/user.routes' },
-      { name: 'campaign', path: './routes/campaign.routes' },
-      { name: 'admin', path: './routes/admin.routes' },
-      { name: 'investment', path: './routes/investment.routes' }
-    ];
-
-    routes.forEach(route => {
-      try {
-        require(route.path)(app);
-        console.log(`✅ ${route.name} routes loaded`);
-      } catch (error) {
-        console.error(`❌ Failed to load ${route.name} routes:`, error.message);
-        app.all(`/api/${route.name}*`, (req, res) => {
-          res.status(503).json({
-            success: false,
-            message: `${route.name} service unavailable: ${error.message}`
-          });
-        });
-      }
-    });
-
-    return true;
-
+    require(route.path)(app);
+    console.log(`✅ ${route.name} routes loaded`);
   } catch (error) {
-    console.error("❌ Critical error loading routes:", error);
-    return false;
-  }
-};
-
-// Load routes - this will wait for database to be ready
-loadRoutes().catch(err => {
-  console.error("❌ Failed to load routes:", err.message);
-});
-
-// Fallback route for campaigns while debugging route loading
-app.get("/api/campaigns", async (req, res) => {
-  try {
-    console.log("📋 Fallback /api/campaigns handler called");
-
-    // Ensure database is initialized
-    if (!dbInitialized) {
-      console.log("⏳ Database not initialized, waiting...");
-      if (!initPromise) {
-        await initializeDatabase();
-      } else {
-        await initPromise;
-      }
-    }
-
-    if (!dbInitialized) {
-      console.error("❌ Database still not initialized:", dbError?.message);
-      return res.status(503).json({
+    console.error(`❌ Failed to load ${route.name} routes:`, error.message);
+    app.all(`/api/${route.name}*`, (req, res) => {
+      res.status(503).json({
         success: false,
-        message: "Database not available",
-        error: dbError?.message
+        message: `${route.name} service unavailable`
       });
-    }
-
-    console.log("✅ Database is ready, querying campaigns...");
-
-    // Query campaigns directly
-    const db = require("./models");
-
-    const rawCampaigns = await db.sequelize.query(
-      `SELECT c.*, u.fullName AS founder_name, u.companyName AS founder_company, u.profileImageUrl AS founder_avatar
-       FROM campaigns c
-       LEFT JOIN users u ON c.founder_id = u.id
-       WHERE c.status = 'approved'
-       ORDER BY c.createdAt DESC`,
-      { type: db.sequelize.QueryTypes.SELECT }
-    );
-
-    console.log("✅ Query successful, found", rawCampaigns.length, "campaigns");
-
-    res.status(200).json({
-      success: true,
-      count: rawCampaigns.length,
-      data: rawCampaigns
-    });
-
-  } catch (error) {
-    console.error("❌ Error in fallback campaigns handler:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Failed to retrieve campaigns",
-      error: error.message
     });
   }
 });
