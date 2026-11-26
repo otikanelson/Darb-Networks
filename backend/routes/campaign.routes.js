@@ -1,22 +1,31 @@
-const { authJwt, adminAuth } = require("../middlewares");
+const { firebaseAuth } = require("../middlewares");
 const controller = require("../controllers/campaign.controller");
 
 module.exports = function (app) {
   // ============= SPECIFIC ROUTES FIRST (order matters!) =============
 
-  // Get featured campaigns (public)
+  /**
+   * STEP 6: Firebase Auth - Get featured campaigns (public)
+   * No authentication required
+   */
   app.get(
     "/api/campaigns/featured",
     controller.getFeaturedCampaigns
   );
 
-  // Get recent campaigns (public)
+  /**
+   * STEP 6: Firebase Auth - Get recent campaigns (public)
+   * No authentication required
+   */
   app.get(
     "/api/campaigns/recent",
     controller.getRecentCampaigns || controller.getAllCampaigns
   );
 
-  // Search campaigns (public)
+  /**
+   * STEP 6: Firebase Auth - Search campaigns (public)
+   * No authentication required
+   */
   app.get(
     "/api/campaigns/search",
     controller.searchCampaigns || ((req, res) => {
@@ -24,35 +33,47 @@ module.exports = function (app) {
     })
   );
 
-  // Get my campaigns (founder's own campaigns - drafts, submitted, approved, rejected)
+  /**
+   * STEP 6: Firebase Auth - Get my campaigns (founder only)
+   * Authentication required: founder viewing their own campaigns
+   */
   app.get(
     "/api/campaigns/user/my-campaigns",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getMyCampaigns
   );
 
-  // Get viewed campaigns (campaigns the user has viewed)
+  /**
+   * STEP 6: Firebase Auth - Get viewed campaigns (authenticated users)
+   * Authentication required: track user's campaign views
+   */
   app.get(
     "/api/campaigns/user/viewed",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getViewedCampaigns || ((req, res) => {
       res.status(200).send({ success: true, data: [] });
     })
   );
 
-  // Get favorite campaigns (campaigns the user has favorited)
+  /**
+   * STEP 6: Firebase Auth - Get favorite campaigns (authenticated users)
+   * Authentication required: get user's favorited campaigns
+   */
   app.get(
     "/api/campaigns/user/favorites",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getFavoriteCampaigns || ((req, res) => {
       res.status(200).send({ success: true, data: [] });
     })
   );
 
-  // Get funded campaigns (for investors - campaigns they've invested in)
+  /**
+   * STEP 6: Firebase Auth - Get funded campaigns (investors)
+   * Authentication required: get campaigns user has invested in
+   */
   app.get(
     "/api/campaigns/user/funded",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getFundedCampaigns || ((req, res) => {
       res.status(200).send({ success: true, data: [] });
     })
@@ -60,35 +81,51 @@ module.exports = function (app) {
 
   // ============= CAMPAIGN CRUD OPERATIONS =============
 
-  // Create new campaign
+  /**
+   * STEP 6: Firebase Auth - Create new campaign
+   * Authentication required: verified email required
+   * Request:
+   * POST /api/campaigns
+   * Headers: Authorization: Bearer <FIREBASE_ID_TOKEN>
+   * Body: { title, description, targetAmount, category, ... }
+   */
   app.post(
     "/api/campaigns",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken, firebaseAuth.requireVerifiedEmail],
     controller.createCampaign
   );
 
-  // Upload campaign image
+  /**
+   * STEP 6: Firebase Auth - Upload campaign image
+   * Authentication required: verified email required
+   */
   app.post(
     "/api/campaigns/:campaignId/image",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken, firebaseAuth.requireVerifiedEmail],
     controller.uploadCampaignImage || ((req, res) => {
       res.status(501).send({ message: "Image upload not implemented yet" });
     })
   );
 
-  // Toggle favorite status for a campaign
+  /**
+   * STEP 6: Firebase Auth - Toggle favorite status
+   * Authentication required
+   */
   app.post(
     "/api/campaigns/:campaignId/favorite",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.toggleFavorite || ((req, res) => {
       res.status(501).send({ message: "Favorites not implemented yet" });
     })
   );
 
-  // Track campaign view (when user views a campaign)
+  /**
+   * STEP 6: Firebase Auth - Track campaign view
+   * Authentication required
+   */
   app.post(
     "/api/campaigns/:campaignId/view",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.trackCampaignView || ((req, res) => {
       res.status(200).send({ success: true, message: "View tracked" });
     })
@@ -96,7 +133,10 @@ module.exports = function (app) {
 
   // ============= CAMPAIGN VIEWING ROUTES =============
 
-  // Get related campaigns (same category, exclude current)
+  /**
+   * STEP 6: Firebase Auth - Get related campaigns (public)
+   * No authentication required
+   */
   app.get(
     "/api/campaigns/:id/related",
     controller.getRelatedCampaigns || ((req, res) => {
@@ -104,16 +144,22 @@ module.exports = function (app) {
     })
   );
 
-  // Get campaign analytics (founder only)
+  /**
+   * STEP 6: Firebase Auth - Get campaign analytics (founder only)
+   * Authentication required
+   */
   app.get(
     "/api/campaigns/:id/analytics",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getCampaignAnalytics || ((req, res) => {
       res.status(200).send({ success: true, data: {} });
     })
   );
 
-  // Get campaign statistics
+  /**
+   * STEP 6: Firebase Auth - Get campaign statistics (public)
+   * No authentication required
+   */
   app.get(
     "/api/campaigns/:id/stats",
     controller.getCampaignStats || ((req, res) => {
@@ -123,33 +169,45 @@ module.exports = function (app) {
 
   // ============= CAMPAIGN EDITING ROUTES =============
 
-  // Get campaign for editing (founder only, restricted access)
+  /**
+   * STEP 6: Firebase Auth - Get campaign for editing (founder only)
+   * Authentication required
+   */
   app.get(
     "/api/campaigns/:id/edit",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getCampaignForEdit || controller.getCampaignById
   );
 
-  // Update campaign (founder only, draft campaigns only)
+  /**
+   * STEP 6: Firebase Auth - Update campaign (founder only)
+   * Authentication required: verified email required
+   */
   app.put(
     "/api/campaigns/:id",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken, firebaseAuth.requireVerifiedEmail],
     controller.updateCampaign
   );
 
-  // Delete gallery image (founder only, draft/rejected campaigns only)
+  /**
+   * STEP 6: Firebase Auth - Delete gallery image (founder only)
+   * Authentication required: verified email required
+   */
   app.delete(
     "/api/campaigns/:campaignId/images/:imageId",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken, firebaseAuth.requireVerifiedEmail],
     controller.deleteCampaignImage || ((req, res) => {
       res.status(501).json({ success: false, message: "Not implemented" });
     })
   );
 
-  // Delete campaign (founder only, draft campaigns only)
+  /**
+   * STEP 6: Firebase Auth - Delete campaign (founder only)
+   * Authentication required: verified email required
+   */
   app.delete(
     "/api/campaigns/:id",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken, firebaseAuth.requireVerifiedEmail],
     controller.deleteCampaign || ((req, res) => {
       res.status(501).send({ message: "Delete not implemented yet" });
     })
@@ -157,16 +215,22 @@ module.exports = function (app) {
 
   // ============= GENERAL ROUTES LAST =============
 
-  // Get all approved campaigns (public) - MUST come after specific routes
+  /**
+   * STEP 6: Firebase Auth - Get all approved campaigns (public)
+   * No authentication required - MUST come after specific routes
+   */
   app.get(
     "/api/campaigns",
     controller.getAllCampaigns
   );
 
-  // Get campaign by ID (public, but tracks views) - MUST be last
+  /**
+   * STEP 6: Firebase Auth - Get campaign by ID (public with optional auth)
+   * Optional authentication: tracks views for authenticated users - MUST be last
+   */
   app.get(
     "/api/campaigns/:id",
-    [authJwt.optionalToken],
+    [firebaseAuth.optionalFirebaseToken],
     controller.getCampaignById
   );
 };

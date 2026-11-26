@@ -1,130 +1,212 @@
 const db = require("../models");
-const config = require("../config/auth.config");
+const { createUser, getUserByEmail } = require("../config/firebase");
 const User = db.user;
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
 const { sendError } = require("../utils/http");
 
+/**
+ * STEP 4: Firebase Auth - Signup endpoint
+ * 
+ * NEW FLOW (Firebase):
+ * 1. Frontend creates user in Firebase (email/password)
+ * 2. Frontend gets Firebase ID token
+ * 3. Frontend sends POST /api/auth/register with Firebase token + profile info
+ * 4. Backend verifies token (via firebaseAuth middleware)
+ * 5. Backend creates/updates MySQL user profile
+ * 
+ * Request body:
+ * {
+ *   firebaseToken: "...",  // Firebase ID token from client
+ *   fullName: "John Doe",
+ *   companyName: "Acme Inc",
+ *   userType: "founder" or "investor",  // Set manually in DB, not from request
+ *   phoneNumber: "...",
+ *   address: "...",
+ *   bvn: "...",
+ *   nin: "...",
+ *   cacNumber: "...",
+ *   accountNumber: "...",
+ *   bankName: "..."
+ * }
+ * 
+ * Response: User profile + Firebase ID token
+ */
 exports.signup = async (req, res) => {
   try {
-    const { email, password, fullName, userType } = req.body;
+    // firebaseAuth middleware already verified token and set req.firebaseUid, req.userEmail
+    const { fullName, companyName, phoneNumber, address, bvn, nin, cacNumber, accountNumber, bankName } = req.body;
+    const firebaseUid = req.firebaseUid;
+    const email = req.userEmail;
 
-    if (!email || !password || !fullName || !userType) {
-      return res.status(400).send({ success: false, message: "Email, password, full name, and user type are required" });
+    if (!fullName) {
+      return res.status(400).send({ success: false, message: "Full name is required" });
     }
 
-    // Only allow "founder" or "investor" on signup
-    if (!["founder", "investor"].includes(userType)) {
-      return res.status(400).send({ success: false, message: "Invalid user type" });
+    if (!email) {
+      return res.status(400).send({ success: false, message: "Email not found in Firebase token" });
     }
 
-    // Validate password length
-    if (password.length < 8) {
-      return res.status(400).send({ success: false, message: "Password must be at least 8 characters long" });
-    }
-
-    const existingUser = await User.findOne({ where: { email } });
+    // Check if user already has MySQL profile
+    const existingUser = await User.findOne({ where: { firebase_uid: firebaseUid } });
     if (existingUser) {
-      return res.status(400).send({ success: false, message: "Email is already in use" });
+      return res.status(400).send({ success: false, message: "User profile already exists" });
     }
 
-    const hashedPassword = bcrypt.hashSync(password, 12);
-
+    // Create new user in MySQL (userType set manually in DB, never from request)
+    // Default to "investor" for self-registration; "founder" and "admin" set only via backend/admin
     const user = await User.create({
-      email, password: hashedPassword, fullName, userType,
-      companyName: req.body.companyName || null,
-      phoneNumber: req.body.phoneNumber || null,
-      address: req.body.address || null,
-      bvn: req.body.bvn || null,
-      nin: req.body.nin || null,
-      cacNumber: req.body.cacNumber || null,
-      accountNumber: req.body.accountNumber || null,
-      bankName: req.body.bankName || null,
+      firebase_uid: firebaseUid,
+      email,
+      fullName,
+      userType: "investor",  // Default for self-registration
+      companyName: companyName || null,
+      phoneNumber: phoneNumber || null,
+      address: address || null,
+      bvn: bvn || null,
+      nin: nin || null,
+      cacNumber: cacNumber || null,
+      accountNumber: accountNumber || null,
+      bankName: bankName || null,
       isActive: true,
-      isVerified: false
+      isVerified: false,
+      isEmailVerified: false  // Set by email verification flow
     });
-
-    const token = jwt.sign({ id: user.id }, config.secret, { expiresIn: config.expiresIn });
 
     res.status(201).send({
       success: true,
-      message: "User registered successfully!",
+      message: "User profile created successfully!",
       data: {
-        id: user.id, email: user.email, fullName: user.fullName,
-        userType: user.userType, companyName: user.companyName,
-        isActive: user.isActive, isVerified: user.isVerified
-      },
-      token
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        userType: user.userType,
+        companyName: user.companyName,
+        isActive: user.isActive,
+        isVerified: user.isVerified,
+        isEmailVerified: user.isEmailVerified,
+        firebaseUid: user.firebase_uid
+      }
     });
   } catch (error) {
-    return sendError(res, 500, "Some error occurred during registration.", error);
+    return sendError(res, 500, "Error creating user profile.", error);
   }
 };
 
+/**
+ * STEP 4: Firebase Auth - Login endpoint
+ * 
+ * NEW FLOW (Firebase):
+ * 1. Frontend authenticates with Firebase (email/password or OAuth)
+ * 2. Frontend gets Firebase ID token
+ * 3. Frontend sends POST /api/auth/login with Firebase token
+ * 4. Backend verifies token (via firebaseAuth middleware)
+ * 5. Backend finds/creates MySQL user and returns profile
+ * 
+ * Request body:
+ * {
+ *   firebaseToken: "..."  // Firebase ID token from client
+ * }
+ * 
+ * Response: User profile data
+ * Note: Frontend handles token storage; backend verifies on each request
+ */
 exports.signin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    // firebaseAuth middleware already verified token and set req.firebaseUid, req.userEmail
+    const firebaseUid = req.firebaseUid;
+    const email = req.userEmail;
 
-    if (!email || !password) {
-      return res.status(400).send({ success: false, message: "Email and password are required" });
+    if (!firebaseUid || !email) {
+      return res.status(400).send({
+        success: false,
+        message: "Firebase authentication required"
+      });
     }
 
-    const user = await User.findOne({ where: { email } });
+    // Find user in MySQL by firebase_uid
+    const user = await User.findOne({ where: { firebase_uid: firebaseUid } });
 
     if (!user) {
-      return res.status(401).send({ success: false, message: "Invalid email or password" });
+      return res.status(401).send({
+        success: false,
+        message: "User profile not found. Please create a profile first via /api/auth/register.",
+        code: "PROFILE_NOT_FOUND"
+      });
     }
 
     if (!user.isActive) {
-      return res.status(401).send({ success: false, message: "Account is inactive. Please contact support." });
+      return res.status(401).send({
+        success: false,
+        message: "Account is inactive. Please contact support."
+      });
     }
 
-    const passwordIsValid = bcrypt.compareSync(password, user.password);
-    if (!passwordIsValid) {
-      return res.status(401).send({ success: false, message: "Invalid email or password" });
-    }
-
-    const token = jwt.sign({ id: user.id }, config.secret, { expiresIn: config.expiresIn });
-
+    // Update last login timestamp
     await User.update({ lastLoginAt: new Date() }, { where: { id: user.id } });
 
     res.status(200).send({
       success: true,
       message: "Login successful",
       data: {
-        id: user.id, email: user.email, fullName: user.fullName,
-        userType: user.userType, companyName: user.companyName,
-        phoneNumber: user.phoneNumber, address: user.address,
-        profileImageUrl: user.profileImageUrl, isActive: user.isActive,
-        isVerified: user.isVerified, createdAt: user.createdAt
-      },
-      token
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        userType: user.userType,
+        companyName: user.companyName,
+        phoneNumber: user.phoneNumber,
+        address: user.address,
+        profileImageUrl: user.profileImageUrl,
+        isActive: user.isActive,
+        isVerified: user.isVerified,
+        isEmailVerified: user.isEmailVerified,
+        createdAt: user.createdAt
+      }
     });
   } catch (error) {
     return sendError(res, 500, "Some error occurred during login.", error);
   }
 };
 
+/**
+ * STEP 4: Firebase Auth - Verify token endpoint
+ * 
+ * Returns current user profile based on Firebase ID token
+ * No body required; Firebase token verified by middleware
+ * 
+ * Response: User profile data
+ */
 exports.verifyToken = async (req, res) => {
   try {
     const userId = req.userId;
     if (!userId) {
-      return res.status(401).send({ success: false, message: "No user ID in token" });
+      return res.status(401).send({
+        success: false,
+        message: "Authentication required"
+      });
     }
 
     const user = await User.findByPk(userId);
     if (!user) {
-      return res.status(404).send({ success: false, message: "User not found" });
+      return res.status(404).send({
+        success: false,
+        message: "User not found"
+      });
     }
 
     res.status(200).send({
       success: true,
       data: {
-        id: user.id, email: user.email, fullName: user.fullName,
-        userType: user.userType, companyName: user.companyName,
-        phoneNumber: user.phoneNumber, address: user.address,
-        profileImageUrl: user.profileImageUrl, isActive: user.isActive,
-        isVerified: user.isVerified, createdAt: user.createdAt
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        userType: user.userType,
+        companyName: user.companyName,
+        phoneNumber: user.phoneNumber,
+        address: user.address,
+        profileImageUrl: user.profileImageUrl,
+        isActive: user.isActive,
+        isVerified: user.isVerified,
+        isEmailVerified: user.isEmailVerified,
+        createdAt: user.createdAt
       }
     });
   } catch (error) {
@@ -132,8 +214,93 @@ exports.verifyToken = async (req, res) => {
   }
 };
 
+/**
+ * STEP 4: Firebase Auth - Verify email endpoint
+ * 
+ * Marks user's email as verified in MySQL
+ * Frontend will manually trigger email verification flow in Firebase
+ * Backend tracks verification status in isEmailVerified column
+ * 
+ * Request body: (empty)
+ * 
+ * Response: Updated user profile
+ * 
+ * Note: This is called AFTER Firebase confirms email verification.
+ * Frontend flows:
+ * 1. User clicks "Verify Email" link from Firebase email
+ * 2. Firebase marks email as verified in Firebase Auth
+ * 3. Frontend calls this endpoint with verified Firebase token
+ * 4. Backend updates isEmailVerified = true
+ */
+exports.verifyEmail = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).send({
+        success: false,
+        message: "Authentication required"
+      });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Update email verification status
+    await User.update({ isEmailVerified: true }, { where: { id: userId } });
+
+    // Fetch updated user
+    const updatedUser = await User.findByPk(userId);
+
+    res.status(200).send({
+      success: true,
+      message: "Email verified successfully!",
+      data: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        fullName: updatedUser.fullName,
+        isEmailVerified: updatedUser.isEmailVerified,
+        createdAt: updatedUser.createdAt
+      }
+    });
+  } catch (error) {
+    return sendError(res, 500, "Error verifying email.", error);
+  }
+};
+
+/**
+ * STEP 4: Firebase Auth - Logout endpoint
+ * 
+ * Note: Firebase logout is handled on frontend (clear token from localStorage)
+ * Backend doesn't store sessions, so logout is mainly informational
+ * This endpoint can track logout events if needed (optional)
+ * 
+ * Response: Confirmation
+ */
+exports.logout = async (req, res) => {
+  try {
+    // Optional: Update lastLogoutAt timestamp for audit trail
+    if (req.userId) {
+      await User.update({ lastLogoutAt: new Date() }, { where: { id: req.userId } });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Logged out successfully"
+    });
+  } catch (error) {
+    return sendError(res, 500, "Error during logout.", error);
+  }
+};
+
 module.exports = {
   signup: exports.signup,
   signin: exports.signin,
-  verifyToken: exports.verifyToken
+  verifyToken: exports.verifyToken,
+  verifyEmail: exports.verifyEmail,
+  logout: exports.logout
 };

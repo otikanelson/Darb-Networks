@@ -1,10 +1,10 @@
 const db = require("../models");
 const User = db.user;
-const bcrypt = require("bcryptjs");
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { sendError } = require("../utils/http");
 const { formatSafeUserData, maskBVN, maskAccountNumber } = require("../utils/dataProtection");
+const { getAuth } = require("../config/firebase");
 
 // Helper function to check and configure Cloudinary at runtime
 const ensureCloudinaryConfigured = () => {
@@ -36,7 +36,13 @@ const upload = multer({
   },
 });
 
-// Get user profile
+/**
+ * STEP 5: Firebase Auth - Get user profile
+ * 
+ * Returns user's profile data from MySQL
+ * Authentication verified by firebaseAuth.verifyFirebaseToken middleware
+ * req.userId and req.firebaseUid already set by middleware
+ */
 exports.getProfile = (req, res) => {
   const userId = req.userId;
 
@@ -58,7 +64,14 @@ exports.getProfile = (req, res) => {
     });
 };
 
-// Update user profile
+/**
+ * STEP 5: Firebase Auth - Update user profile
+ * 
+ * Updates user profile fields (fullName, companyName, phoneNumber, address, BVN, etc.)
+ * Note: userType is NOT updated via this endpoint (set manually in DB only)
+ * Authentication verified by firebaseAuth.verifyFirebaseToken middleware
+ * req.userId already set by middleware
+ */
 exports.updateProfile = (req, res) => {
   const userId = req.userId;
 
@@ -122,127 +135,130 @@ exports.updateProfile = (req, res) => {
     });
 };
 
-// Update email (requires special handling)
-exports.updateEmail = (req, res) => {
-  const userId = req.userId;
-  const { newEmail, currentPassword } = req.body;
+/**
+ * STEP 5: Firebase Auth - Update Email
+ * 
+ * NEW FLOW:
+ * 1. User requests email change via /api/users/email
+ * 2. Backend sends email change request to Firebase (admin SDK)
+ * 3. Firebase sends verification email to NEW email
+ * 4. User verifies via Firebase email link
+ * 5. Firebase updates user's email
+ * 6. Frontend calls /api/auth/verify-email to sync MySQL
+ * 
+ * Note: Password verification is handled by Firebase, not backend
+ */
+exports.updateEmail = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const firebaseUid = req.firebaseUid;
+    const { newEmail } = req.body;
 
-  if (!newEmail || !currentPassword) {
-    return res.status(400).send({
-      success: false,
-      message: "New email and current password are required."
-    });
-  }
-
-  // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(newEmail)) {
-    return res.status(400).send({
-      success: false,
-      message: "Invalid email format."
-    });
-  }
-
-  User.findByPk(userId)
-    .then(user => {
-      if (!user) {
-        return res.status(404).send({
-          success: false,
-          message: "User not found."
-        });
-      }
-
-      // Verify current password
-      const passwordIsValid = bcrypt.compareSync(currentPassword, user.password);
-      if (!passwordIsValid) {
-        return res.status(401).send({
-          success: false,
-          message: "Current password is incorrect."
-        });
-      }
-
-      // Check if new email already exists
-      return User.findOne({ where: { email: newEmail } });
-    })
-    .then(existingUser => {
-      if (existingUser) {
-        return res.status(400).send({
-          success: false,
-          message: "Email already in use."
-        });
-      }
-
-      // Update email and set isVerified to false
-      return User.update(
-        {
-          email: newEmail,
-          isVerified: false  // Require re-verification
-        },
-        { where: { id: userId } }
-      );
-    })
-    .then(() => {
-      res.status(200).send({
-        success: true,
-        message: "Email updated successfully. Please verify your new email address."
+    if (!newEmail) {
+      return res.status(400).send({
+        success: false,
+        message: "New email is required."
       });
-    })
-    .catch(err => {
-      return sendError(res, 500, "Error updating email.", err);
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid email format."
+      });
+    }
+
+    // Check if new email already exists in MySQL
+    const existingUser = await User.findOne({ where: { email: newEmail } });
+    if (existingUser && existingUser.id !== userId) {
+      return res.status(400).send({
+        success: false,
+        message: "Email already in use."
+      });
+    }
+
+    // Update email in Firebase
+    const auth = getAuth();
+    await auth.updateUser(firebaseUid, { email: newEmail });
+
+    // Update email in MySQL (Firebase will mark email as unverified)
+    // Set isEmailVerified to false since new email needs verification
+    await User.update(
+      {
+        email: newEmail,
+        isEmailVerified: false
+      },
+      { where: { id: userId } }
+    );
+
+    res.status(200).send({
+      success: true,
+      message: "Email updated successfully. Please verify your new email address via the verification link sent by Firebase.",
+      data: {
+        email: newEmail,
+        isEmailVerified: false
+      }
     });
+  } catch (error) {
+    console.error("Error updating email:", error.message);
+    if (error.code === 'auth/email-already-exists') {
+      return res.status(400).send({
+        success: false,
+        message: "Email already in use."
+      });
+    }
+    return sendError(res, 500, "Error updating email.", error);
+  }
 };
 
-// Update password
-exports.updatePassword = (req, res) => {
-  const userId = req.userId;
-  const { currentPassword, newPassword } = req.body;
+/**
+ * STEP 5: Firebase Auth - Update Password
+ * 
+ * NEW FLOW:
+ * 1. User requests password change via /api/users/password
+ * 2. Backend sends password reset request to Firebase (admin SDK)
+ * 3. Firebase sends "reset password" email to user
+ * 4. User clicks link in email and sets new password in Firebase UI
+ * 5. Firebase updates password in Firebase Auth
+ * 
+ * Note: Password change happens entirely in Firebase, not backend
+ * This endpoint initiates the process by sending reset email
+ */
+exports.updatePassword = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const userEmail = req.userEmail;
 
-  if (!currentPassword || !newPassword) {
-    return res.status(400).send({
-      success: false,
-      message: "Current password and new password are required."
-    });
-  }
-
-  if (newPassword.length < 8) {
-    return res.status(400).send({
-      success: false,
-      message: "New password must be at least 8 characters long."
-    });
-  }
-
-  User.findByPk(userId)
-    .then(user => {
-      if (!user) {
-        return res.status(404).send({
-          success: false,
-          message: "User not found."
-        });
-      }
-
-      const passwordIsValid = bcrypt.compareSync(currentPassword, user.password);
-      if (!passwordIsValid) {
-        return res.status(401).send({
-          success: false,
-          message: "Current password is incorrect."
-        });
-      }
-
-      const hashedNewPassword = bcrypt.hashSync(newPassword, 12);
-      return User.update(
-        { password: hashedNewPassword },
-        { where: { id: userId } }
-      );
-    })
-    .then(() => {
-      res.status(200).send({
-        success: true,
-        message: "Password updated successfully."
+    if (!userEmail) {
+      return res.status(400).send({
+        success: false,
+        message: "User email not found."
       });
-    })
-    .catch(err => {
-      return sendError(res, 500, "Error updating password.", err);
+    }
+
+    // Send password reset email via Firebase
+    const auth = getAuth();
+    await auth.generatePasswordResetLink(userEmail);
+
+    res.status(200).send({
+      success: true,
+      message: "Password reset email sent successfully. Please check your email and follow the link to set a new password.",
+      data: {
+        email: userEmail
+      }
     });
+  } catch (error) {
+    console.error("Error initiating password reset:", error.message);
+    if (error.code === 'auth/user-not-found') {
+      return res.status(404).send({
+        success: false,
+        message: "User not found."
+      });
+    }
+    return sendError(res, 500, "Error initiating password reset.", error);
+  }
 };
 
 // Upload profile image

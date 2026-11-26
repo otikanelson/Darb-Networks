@@ -1,9 +1,12 @@
-const { authJwt, adminAuth } = require("../middlewares");
+const { firebaseAuth } = require("../middlewares");
 const controller = require("../controllers/investment.controller");
 const express = require("express");
 
 module.exports = function (app) {
-  // Register webhook handler (raw body already handled in server.js)
+  /**
+   * STEP 6: Firebase Auth - Paystack webhook (public, no auth)
+   * Webhook handler for Paystack payment notifications
+   */
   app.post(
     "/api/webhooks/paystack",
     controller.handlePaystackWebhook || ((req, res) => {
@@ -14,10 +17,17 @@ module.exports = function (app) {
 
   // ================= CORE INVESTMENT ROUTES =================
 
-  // Create investment with Paystack payment initialization
+  /**
+   * STEP 6: Firebase Auth - Create investment (requires verified email)
+   * Authentication required: verified email required
+   * Request:
+   * POST /api/investments/create
+   * Headers: Authorization: Bearer <FIREBASE_ID_TOKEN>
+   * Body: { campaignId, amount, ... }
+   */
   app.post(
     "/api/investments/create",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken, firebaseAuth.requireVerifiedEmail],
     controller.initiateInvestmentWithPayment || ((req, res) => {
       res.status(501).send({
         success: false,
@@ -26,28 +36,37 @@ module.exports = function (app) {
     })
   );
 
-  // Initialize payment (alternative endpoint)
+  /**
+   * STEP 6: Firebase Auth - Initialize payment (requires verified email)
+   * Authentication required: verified email required
+   */
   app.post(
     "/api/investments/initialize-payment",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken, firebaseAuth.requireVerifiedEmail],
     controller.initializePayment || controller.initiateInvestmentWithPayment || ((req, res) => {
       res.status(501).send({ message: "Payment initialization not implemented" });
     })
   );
 
-  // Verify payment with Paystack
+  /**
+   * STEP 6: Firebase Auth - Verify payment (authenticated users)
+   * Authentication required
+   */
   app.get(
     "/api/investments/verify/:paymentReference",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.verifyPayment || ((req, res) => {
       res.status(501).send({ message: "Payment verification not implemented" });
     })
   );
 
-  // Get payment status
+  /**
+   * STEP 6: Firebase Auth - Get payment status (authenticated users)
+   * Authentication required
+   */
   app.get(
     "/api/investments/status/:paymentReference",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getPaymentStatus || ((req, res) => {
       res.status(404).send({
         success: false,
@@ -58,7 +77,10 @@ module.exports = function (app) {
 
   // ================= WEBHOOK ROUTES =================
 
-  // Flutterwave webhook (future)
+  /**
+   * STEP 6: Firebase Auth - Flutterwave webhook (public, no auth)
+   * Webhook handler for Flutterwave payment notifications
+   */
   app.post(
     "/api/webhooks/flutterwave",
     controller.handleFlutterwaveWebhook || ((req, res) => {
@@ -69,19 +91,25 @@ module.exports = function (app) {
 
   // ================= INVESTMENT HISTORY =================
 
-  // Get user's investment history
+  /**
+   * STEP 6: Firebase Auth - Get user's investment history (authenticated users)
+   * Authentication required
+   */
   app.get(
     "/api/investments/my-investments",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getMyInvestments || ((req, res) => {
       res.status(200).send({ success: true, data: [] });
     })
   );
 
-  // Get user's investment summary
+  /**
+   * STEP 6: Firebase Auth - Get user's investment summary (authenticated users)
+   * Authentication required
+   */
   app.get(
     "/api/investments/my-summary",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getInvestmentSummary || ((req, res) => {
       res.status(200).send({
         success: true,
@@ -94,19 +122,25 @@ module.exports = function (app) {
     })
   );
 
-  // Get campaign investors (founder view)
+  /**
+   * STEP 6: Firebase Auth - Get campaign investors (founder only)
+   * Authentication required: founder viewing their campaign's investors
+   */
   app.get(
     "/api/investments/campaign/:campaignId/investors",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getCampaignInvestors || ((req, res) => {
       res.status(200).send({ success: true, data: [] });
     })
   );
 
-  // Get investment analytics
+  /**
+   * STEP 6: Firebase Auth - Get campaign investment analytics (founder only)
+   * Authentication required: founder viewing their campaign's analytics
+   */
   app.get(
     "/api/investments/campaign/:campaignId/analytics",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getCampaignInvestmentAnalytics || ((req, res) => {
       res.status(200).send({
         success: true,
@@ -121,28 +155,37 @@ module.exports = function (app) {
 
   // ================= PAYMENT MANAGEMENT =================
 
-  // Get payment details
+  /**
+   * STEP 6: Firebase Auth - Get payment details (authenticated users)
+   * Authentication required
+   */
   app.get(
     "/api/investments/payment/:paymentId",
-    [authJwt.verifyToken],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getPaymentDetails || ((req, res) => {
       res.status(404).send({ success: false, message: "Payment not found" });
     })
   );
 
-  // Get all payments (admin only)
+  /**
+   * STEP 6: Firebase Auth - Get all payments (admin only)
+   * Authentication required: admin user
+   */
   app.get(
     "/api/admin/investments/payments",
-    [authJwt.verifyToken, adminAuth.verifyAdmin],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getAllPayments || ((req, res) => {
       res.status(200).send({ success: true, data: [] });
     })
   );
 
-  // Refund investment (admin only)
+  /**
+   * STEP 6: Firebase Auth - Refund investment (admin only)
+   * Authentication required: admin user
+   */
   app.post(
     "/api/admin/investments/:investmentId/refund",
-    [authJwt.verifyToken, adminAuth.verifyAdmin],
+    [firebaseAuth.verifyFirebaseToken],
     controller.refundInvestment || ((req, res) => {
       res.status(501).send({ message: "Refund functionality not implemented" });
     })
@@ -150,10 +193,13 @@ module.exports = function (app) {
 
   // ================= INVESTMENT ANALYTICS =================
 
-  // Get platform investment statistics (admin only)
+  /**
+   * STEP 6: Firebase Auth - Get platform investment statistics (admin only)
+   * Authentication required: admin user
+   */
   app.get(
     "/api/admin/investments/stats",
-    [authJwt.verifyToken, adminAuth.verifyAdmin],
+    [firebaseAuth.verifyFirebaseToken],
     controller.getPlatformInvestmentStats || ((req, res) => {
       res.status(200).send({
         success: true,
