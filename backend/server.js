@@ -244,20 +244,23 @@ const initializeDatabase = async () => {
 
   initPromise = (async () => {
     try {
-      console.log("🔧 Attempting to initialize database...");
+      console.log("🔧 [DB] Attempting to initialize database...");
+      console.log("🔧 [DB] Process ID:", process.pid);
+      console.log("🔧 [DB] Environment:", process.env.NODE_ENV);
+      console.log("🔧 [DB] Vercel:", !!process.env.VERCEL ? "Yes" : "No");
 
       // Log which env vars are set (without showing values for security)
-      console.log("📝 Environment variables status:");
-      console.log("  - DB_HOST:", !!process.env.DB_HOST ? "✅ set" : "❌ missing");
-      console.log("  - DB_USER:", !!process.env.DB_USER ? "✅ set" : "❌ missing");
-      console.log("  - DB_PASSWORD:", !!process.env.DB_PASSWORD ? "✅ set" : "❌ missing");
-      console.log("  - DB_NAME:", !!process.env.DB_NAME ? "✅ set" : "❌ missing");
-      console.log("  - DB_PORT:", process.env.DB_PORT || "default 3306");
-      console.log("  - DB_SSL:", process.env.DB_SSL);
+      console.log("📝 [DB] Environment variables status:");
+      console.log("  - DB_HOST:", !!process.env.DB_HOST ? `✅ set (${process.env.DB_HOST})` : "❌ missing");
+      console.log("  - DB_USER:", !!process.env.DB_USER ? `✅ set (${process.env.DB_USER.substring(0, 20)}...)` : "❌ missing");
+      console.log("  - DB_PASSWORD:", !!process.env.DB_PASSWORD ? "✅ set (length: " + process.env.DB_PASSWORD.length + ")" : "❌ missing");
+      console.log("  - DB_NAME:", !!process.env.DB_NAME ? `✅ set (${process.env.DB_NAME})` : "❌ missing");
+      console.log("  - DB_PORT:", process.env.DB_PORT || "not set (will use default)");
+      console.log("  - DB_SSL:", process.env.DB_SSL || "not set");
 
       // Only try to connect to database if we have the required environment variables
       if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
-        console.error("❌ Missing database env vars:", {
+        console.error("❌ [DB] Missing critical database env vars:", {
           DB_HOST: !!process.env.DB_HOST,
           DB_USER: !!process.env.DB_USER,
           DB_NAME: !!process.env.DB_NAME
@@ -265,60 +268,83 @@ const initializeDatabase = async () => {
         throw new Error("Missing required database environment variables");
       }
 
-      console.log("📍 Connecting to database:", {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT || 3306,
-        user: process.env.DB_USER ? process.env.DB_USER.substring(0, 10) + "..." : "undefined",
-        database: process.env.DB_NAME,
-        ssl: process.env.DB_SSL === 'true'
-      });
+      console.log("📍 [DB] Connection parameters:");
+      console.log("   Host:", process.env.DB_HOST);
+      console.log("   Port:", process.env.DB_PORT || 3306);
+      console.log("   Database:", process.env.DB_NAME);
+      console.log("   User:", process.env.DB_USER.substring(0, 20) + "...");
+      console.log("   SSL:", process.env.DB_SSL === 'true' ? "enabled" : "disabled");
 
-      console.log("⏳ Loading models...");
+      console.log("⏳ [DB] Loading models...");
       let db;
       try {
+        const modelStart = Date.now();
         db = require("./models");
-        console.log("✅ Models loaded successfully");
+        const modelDuration = Date.now() - modelStart;
+        console.log("✅ [DB] Models loaded successfully (took " + modelDuration + "ms)");
       } catch (modelError) {
-        console.error("❌ FAILED to load models!");
-        console.error("   Error:", modelError.message);
+        console.error("❌ [DB] FAILED to load models!");
+        console.error("   Error type:", modelError.constructor.name);
+        console.error("   Error message:", modelError.message);
+        console.error("   Stack:", modelError.stack);
         throw new Error(`Model loading failed: ${modelError.message}`);
       }
 
-      console.log("⏳ Attempting to authenticate with database...");
+      console.log("⏳ [DB] Attempting to authenticate with database...");
       const start = Date.now();
       try {
+        console.log("   - Starting connection attempt...");
         await db.sequelize.authenticate();
         const duration = Date.now() - start;
-        console.log("✅ Database connection established successfully (took", duration, "ms)");
+        console.log("✅ [DB] Authentication successful! Connection took " + duration + "ms");
+        console.log("   - Connected to:", process.env.DB_HOST + ":" + (process.env.DB_PORT || 3306));
       } catch (authError) {
-        console.error("❌ FAILED to authenticate!");
-        console.error("   Error:", authError.message);
-        console.error("   Code:", authError.code);
+        const duration = Date.now() - start;
+        console.error("❌ [DB] FAILED to authenticate after " + duration + "ms!");
+        console.error("   Error type:", authError.constructor.name);
+        console.error("   Error message:", authError.message);
+        console.error("   Error code:", authError.code);
+        console.error("   Stack trace:", authError.stack);
         if (authError.original) {
-          console.error("   Original:", authError.original.message);
+          console.error("   === ORIGINAL ERROR ===");
+          console.error("   Type:", authError.original.constructor.name);
+          console.error("   Message:", authError.original.message);
+          console.error("   Code:", authError.original.code);
+          console.error("   Errno:", authError.original.errno);
+          console.error("   Stack:", authError.original.stack);
+        }
+        if (authError.sql) {
+          console.error("   SQL:", authError.sql);
         }
         throw authError;
       }
 
       // Only sync in development
       if (process.env.NODE_ENV !== 'production') {
+        console.log("⏳ [DB] Syncing models (development only)...");
         await db.sequelize.sync({ alter: false });
-        console.log("✅ Database synchronized successfully");
+        console.log("✅ [DB] Models synchronized successfully");
       }
 
       dbInitialized = true;
-      console.log("🎉 Database initialization complete!");
+      console.log("🎉 [DB] Database initialization complete!");
       return true;
     } catch (error) {
-      console.error("❌❌❌ DATABASE INITIALIZATION FAILED ❌❌❌");
-      console.error("Error message:", error.message);
+      console.error("❌❌❌ [DB] DATABASE INITIALIZATION FAILED ❌❌❌");
+      console.error("Timestamp:", new Date().toISOString());
       console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
       console.error("Error code:", error.code);
+      console.error("Error errno:", error.errno);
+      console.error("Full stack:", error.stack);
       if (error.original) {
-        console.error("Original error:", error.original.message);
-        console.error("Original code:", error.original.code);
+        console.error("\n=== ORIGINAL/UNDERLYING ERROR ===");
+        console.error("Type:", error.original.constructor.name);
+        console.error("Message:", error.original.message);
+        console.error("Code:", error.original.code);
+        console.error("Errno:", error.original.errno);
+        console.error("Stack:", error.original.stack);
       }
-      console.error("Full error:", error);
       dbError = error;
       return false;
     }

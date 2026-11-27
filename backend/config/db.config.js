@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+console.log("[DB-CONFIG] Loading database configuration...");
+
 module.exports = {
   HOST: process.env.DB_HOST,
   PORT: parseInt(process.env.DB_PORT || '3306'),
@@ -31,9 +33,16 @@ module.exports = {
     idle: 5000,
     evict: 5000,
     validate: (connection) => {
+      console.log("[DB-POOL] Validating connection...");
       return connection.query({ sql: 'SELECT 1', timeout: 5000 })
-        .then(() => true)
-        .catch(() => false);
+        .then(() => {
+          console.log("[DB-POOL] Connection validation successful");
+          return true;
+        })
+        .catch((err) => {
+          console.error("[DB-POOL] Connection validation failed:", err.message);
+          return false;
+        });
     }
   },
 
@@ -41,5 +50,7 @@ module.exports = {
     max: 2 // Reduced retries
   },
 
-  logging: false
+  logging: (sql, timing) => {
+    console.log(`[DB-SQL] (${timing}ms) ${sql}`);
+  }
 };
