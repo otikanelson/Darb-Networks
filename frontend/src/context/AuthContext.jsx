@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AuthService from '../services/authService';
+import FirebaseAuthService from '../services/firebaseAuthService';
 import axios from 'axios';
 
 const AuthContext = createContext(null);
@@ -13,21 +13,28 @@ export const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       try {
         setLoading(true);
-        const currentUser = AuthService.getCurrentUser();
-        if (currentUser) {
-          const isValid = await AuthService.verifyToken();
-          setUser(isValid ? currentUser : null);
-          if (!isValid) AuthService.logout();
-        } else {
-          setUser(null);
-        }
-      } catch {
+        
+        // Listen to Firebase auth state
+        const unsubscribe = FirebaseAuthService.onAuthStateChanged(async (firebaseUser) => {
+          if (firebaseUser) {
+            // User is logged in with Firebase, verify token and get profile
+            const profile = await FirebaseAuthService.verifyToken();
+            setUser(profile || FirebaseAuthService.getCurrentUser());
+          } else {
+            // No Firebase user logged in
+            setUser(null);
+          }
+          setLoading(false);
+        });
+
+        return () => unsubscribe();
+      } catch (err) {
+        console.error('Auth initialization error:', err);
         setUser(null);
-        AuthService.logout();
-      } finally {
         setLoading(false);
       }
     };
+
     initAuth();
   }, []);
 
@@ -35,11 +42,12 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const newUser = await AuthService.register(userData);
+      const newUser = await FirebaseAuthService.register(userData);
       setUser(newUser);
       return newUser;
     } catch (err) {
-      setError(err.message || 'Registration failed');
+      const errorMessage = err.message || 'Registration failed';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -49,36 +57,32 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setError(null);
-      const loggedInUser = await AuthService.login(credentials);
-      try {
-        const completeProfile = await AuthService.verifyToken();
-        setUser(completeProfile || loggedInUser);
-      } catch {
-        setUser(loggedInUser);
-      }
+      const loggedInUser = await FirebaseAuthService.login(credentials);
+      setUser(loggedInUser);
       return loggedInUser;
     } catch (err) {
+      let errorMessage = 'Login failed';
+      
       if (axios.isAxiosError(err)) {
-        if (err.response) {
-          setError(err.response.data?.message || 'Invalid email or password');
+        if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
         } else if (err.request) {
-          setError('Network error. Please check your connection.');
-        } else {
-          setError('Login failed. Please try again.');
+          errorMessage = 'Network error. Please check your connection.';
         }
-      } else {
-        setError(err.message || 'Login failed. Please try again.');
+      } else if (err.message) {
+        errorMessage = err.message;
       }
+      
+      setError(errorMessage);
       throw err;
     }
   };
 
   const logout = async () => {
     try {
-      await AuthService.logout();
-    } catch {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('currentUser');
+      await FirebaseAuthService.logout();
+    } catch (err) {
+      console.error('Logout error:', err);
     } finally {
       setUser(null);
     }
@@ -89,7 +93,7 @@ export const AuthProvider = ({ children }) => {
       if (user && updatedData) {
         const updatedUser = { ...user, ...updatedData };
         setUser(updatedUser);
-        AuthService.setCurrentUser(updatedUser);
+        FirebaseAuthService.setCurrentUser(updatedUser);
         return updatedUser;
       }
     } catch (err) {

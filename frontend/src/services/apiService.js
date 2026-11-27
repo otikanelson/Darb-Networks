@@ -4,9 +4,15 @@ import axios from 'axios';
 class ApiService {
   /**
    * Get the authentication token from localStorage
+   * Checks for Firebase token first, then falls back to JWT token
    * @returns {string|null} The auth token or null if not found
    */
   static getAuthToken() {
+    // Check for Firebase ID token first
+    const firebaseToken = localStorage.getItem('firebaseIdToken');
+    if (firebaseToken) return firebaseToken;
+
+    // Fall back to JWT token for backward compatibility
     return localStorage.getItem('authToken');
   }
 
@@ -113,7 +119,7 @@ class ApiService {
    */
   static async uploadFiles(url, files, additionalData = {}, options = {}) {
     const formData = new FormData();
-    
+
     // Add all files to form data
     Object.entries(files).forEach(([fieldName, fileObj]) => {
       if (Array.isArray(fileObj)) {
@@ -124,7 +130,7 @@ class ApiService {
         formData.append(fieldName, fileObj);
       }
     });
-    
+
     // Add any additional data
     Object.entries(additionalData).forEach(([key, value]) => {
       if (typeof value === 'object' && value !== null) {
@@ -133,9 +139,9 @@ class ApiService {
         formData.append(key, value);
       }
     });
-    
+
     const { headers = {}, ...restOptions } = options;
-    
+
     try {
       const authHeaders = this.addAuthHeader(headers);
       const response = await axios({
