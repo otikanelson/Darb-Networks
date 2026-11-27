@@ -27,57 +27,72 @@ function initializeFirebase() {
     return firebaseApp;
   }
 
-  // Validate required environment variables
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  let credentials = null;
 
-  if (!projectId) {
-    throw new Error(
-      '❌ FIREBASE_PROJECT_ID environment variable is not set. ' +
-      'Add it to your .env file. Example: FIREBASE_PROJECT_ID=your-project-id'
-    );
+  // Try to load credentials from Base64-encoded JSON (Vercel/production)
+  if (process.env.FIREBASE_CREDENTIALS_BASE64) {
+    try {
+      const decoded = Buffer.from(process.env.FIREBASE_CREDENTIALS_BASE64, 'base64').toString('utf-8');
+      credentials = JSON.parse(decoded);
+      console.log('✅ Loaded Firebase credentials from FIREBASE_CREDENTIALS_BASE64');
+    } catch (error) {
+      console.error('❌ Failed to decode FIREBASE_CREDENTIALS_BASE64:', error.message);
+      throw new Error('Invalid FIREBASE_CREDENTIALS_BASE64. It must be a valid Base64-encoded JSON string.');
+    }
   }
 
-  if (!clientEmail) {
-    throw new Error(
-      '❌ FIREBASE_CLIENT_EMAIL environment variable is not set. ' +
-      'Add it to your .env file. Example: FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxx@your-project.iam.gserviceaccount.com'
-    );
+  // Fallback: Try to load from individual environment variables
+  if (!credentials && process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
+    credentials = {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: privateKey
+    };
+    console.log('✅ Loaded Firebase credentials from individual environment variables');
   }
 
-  if (!privateKey) {
-    throw new Error(
-      '❌ FIREBASE_PRIVATE_KEY environment variable is not set. ' +
-      'Add it to your .env file. The key should start with "-----BEGIN PRIVATE KEY-----" ' +
-      'and literal \\n should be converted to real newlines.'
-    );
+  // Fallback: Try to load from local JSON file (development)
+  if (!credentials) {
+    const path = require('path');
+    const fs = require('fs');
+    const credPath = path.join(__dirname, '..', 'darb-61805-firebase-adminsdk-fbsvc-e4b77cf671.json');
+
+    if (fs.existsSync(credPath)) {
+      try {
+        credentials = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
+        console.log('✅ Loaded Firebase credentials from local JSON file');
+      } catch (error) {
+        console.error('❌ Failed to load local Firebase JSON file:', error.message);
+      }
+    }
   }
 
-  // Convert literal \n to real newlines in private key
-  // Firebase keys from JSON files have literal \n that need to be converted
-  const convertedPrivateKey = privateKey.replace(/\\n/g, '\n');
+  // If we still don't have credentials, throw an error
+  if (!credentials) {
+    throw new Error(
+      '❌ Firebase credentials not found. Set one of:\n' +
+      '1. FIREBASE_CREDENTIALS_BASE64 environment variable (Base64-encoded service account JSON)\n' +
+      '2. FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY environment variables\n' +
+      '3. Place darb-61805-firebase-adminsdk-fbsvc-e4b77cf671.json in backend/ directory (local development)\n'
+    );
+  }
 
   try {
     // Initialize Firebase Admin SDK
     firebaseApp = admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: projectId,
-        clientEmail: clientEmail,
-        privateKey: convertedPrivateKey
-      }),
-      projectId: projectId
+      credential: admin.cert(credentials),
+      projectId: credentials.projectId
     });
 
     console.log('✅ Firebase Admin SDK initialized successfully');
-    console.log(`📱 Project: ${projectId}`);
+    console.log(`📱 Project: ${credentials.projectId}`);
 
     return firebaseApp;
   } catch (error) {
     console.error('❌ Failed to initialize Firebase Admin SDK:', error.message);
     throw new Error(
-      'Firebase initialization failed. Check that FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, ' +
-      'and FIREBASE_PRIVATE_KEY are correctly set in your .env file. ' +
+      'Firebase initialization failed. Check your credentials configuration. ' +
       'Error: ' + error.message
     );
   }
@@ -105,7 +120,7 @@ async function verifyIdToken(token) {
   try {
     const auth = getAuth();
     const decodedToken = await auth.verifyIdToken(token);
-    
+
     return {
       uid: decodedToken.uid,
       email: decodedToken.email,
@@ -113,7 +128,7 @@ async function verifyIdToken(token) {
     };
   } catch (error) {
     console.error('❌ Token verification failed:', error.message);
-    
+
     // Provide helpful error messages
     if (error.code === 'auth/id-token-expired') {
       throw new Error('ID token expired. Please log in again.');
@@ -122,7 +137,7 @@ async function verifyIdToken(token) {
     } else if (error.code === 'auth/argument-error') {
       throw new Error('No token provided or token format is invalid.');
     }
-    
+
     throw error;
   }
 }
@@ -157,7 +172,7 @@ async function importUsers(users, hashOptions) {
   try {
     const auth = getAuth();
     const result = await auth.importUsers(users, hashOptions);
-    
+
     console.log(`✅ Imported ${result.successCount} users to Firebase`);
     if (result.failureCount > 0) {
       console.warn(`⚠️  Failed to import ${result.failureCount} users`);
@@ -165,7 +180,7 @@ async function importUsers(users, hashOptions) {
         console.warn(`  User ${idx}: ${err.error.message}`);
       });
     }
-    
+
     return result;
   } catch (error) {
     console.error('❌ Failed to import users to Firebase:', error.message);
