@@ -10,6 +10,7 @@ backend/.env.development
 frontend/.env
 frontend/.env.local
 frontend/.env.production
+frontend/.env.development
 
 # Dependencies
 node_modules/
