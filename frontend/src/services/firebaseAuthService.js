@@ -461,5 +461,6 @@ class FirebaseAuthService {
       throw error;
     }
   }
+}
 
 export default FirebaseAuthService;
