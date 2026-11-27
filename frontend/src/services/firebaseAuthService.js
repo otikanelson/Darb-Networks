@@ -1,6 +1,7 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   onAuthStateChanged,
   sendEmailVerification,
@@ -10,7 +11,7 @@ import {
   deleteUser as firebaseDeleteUser,
   updateProfile
 } from 'firebase/auth';
-import { auth } from '../config/firebaseConfig';
+import { auth, googleProvider, facebookProvider } from '../config/firebaseConfig';
 import ApiService from './apiService';
 import { API_ENDPOINTS } from '../config/apiConfig';
 
@@ -124,7 +125,7 @@ class FirebaseAuthService {
       throw new Error('Backend registration failed');
     } catch (error) {
       console.error('Registration error:', error);
-      
+
       // Clean up Firebase user if backend registration fails
       const firebaseUser = auth.currentUser;
       if (firebaseUser) {
@@ -354,24 +355,111 @@ class FirebaseAuthService {
   }
 
   /**
-   * Refresh Firebase ID token
-   * @returns {Promise<string>} New ID token
+   * Sign in with Google
+   * @returns {Promise<Object>} User profile from backend
    */
-  static async refreshToken() {
+  static async signInWithGoogle() {
     try {
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) {
-        throw new Error('No user logged in');
-      }
+      const firebaseUserCredential = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = firebaseUserCredential.user;
 
-      const newToken = await firebaseUser.getIdToken(true);
-      this.setToken(newToken);
-      return newToken;
+      // Get Firebase ID token
+      const firebaseIdToken = await firebaseUser.getIdToken();
+      this.setToken(firebaseIdToken);
+
+      // Create or get profile from backend
+      const headers = {
+        'Authorization': `Bearer ${firebaseIdToken}`
+      };
+
+      const response = await ApiService.post(
+        API_ENDPOINTS.AUTH.LOGIN,
+        {},
+        { headers }
+      );
+
+      if (response && response.success && response.data) {
+        const user = {
+          id: response.data.id,
+          email: response.data.email,
+          fullName: response.data.fullName,
+          userType: response.data.userType,
+          companyName: response.data.companyName,
+          phoneNumber: response.data.phoneNumber,
+          address: response.data.address,
+          profileImageUrl: response.data.profileImageUrl,
+          isActive: response.data.isActive,
+          isVerified: response.data.isVerified,
+          isEmailVerified: response.data.isEmailVerified,
+          createdAt: response.data.createdAt
+        };
+        this.setCurrentUser(user);
+        return user;
+      }
+      throw new Error('Failed to retrieve profile');
     } catch (error) {
-      console.error('Token refresh error:', error);
+      console.error('Google sign in error:', error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign in cancelled.');
+      } else if (error.code === 'auth/popup-blocked') {
+        throw new Error('Sign in popup was blocked. Please allow popups.');
+      }
       throw error;
     }
   }
-}
+
+  /**
+   * Sign in with Facebook
+   * @returns {Promise<Object>} User profile from backend
+   */
+  static async signInWithFacebook() {
+    try {
+      const firebaseUserCredential = await signInWithPopup(auth, facebookProvider);
+      const firebaseUser = firebaseUserCredential.user;
+
+      // Get Firebase ID token
+      const firebaseIdToken = await firebaseUser.getIdToken();
+      this.setToken(firebaseIdToken);
+
+      // Create or get profile from backend
+      const headers = {
+        'Authorization': `Bearer ${firebaseIdToken}`
+      };
+
+      const response = await ApiService.post(
+        API_ENDPOINTS.AUTH.LOGIN,
+        {},
+        { headers }
+      );
+
+      if (response && response.success && response.data) {
+        const user = {
+          id: response.data.id,
+          email: response.data.email,
+          fullName: response.data.fullName,
+          userType: response.data.userType,
+          companyName: response.data.companyName,
+          phoneNumber: response.data.phoneNumber,
+          address: response.data.address,
+          profileImageUrl: response.data.profileImageUrl,
+          isActive: response.data.isActive,
+          isVerified: response.data.isVerified,
+          isEmailVerified: response.data.isEmailVerified,
+          createdAt: response.data.createdAt
+        };
+        this.setCurrentUser(user);
+        return user;
+      }
+      throw new Error('Failed to retrieve profile');
+    } catch (error) {
+      console.error('Facebook sign in error:', error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign in cancelled.');
+      } else if (error.code === 'auth/popup-blocked') {
+        throw new Error('Sign in popup was blocked. Please allow popups.');
+      }
+      throw error;
+    }
+  }
 
 export default FirebaseAuthService;

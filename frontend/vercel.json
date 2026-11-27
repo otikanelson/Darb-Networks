@@ -1,4 +1,8 @@
 {
-  "installCommand": "npm ci --no-audit",
-  "buildCommand": "npm run build"
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 
 // Firebase configuration - using public/non-sensitive values only
 // API keys are intentionally public for client-side Firebase SDKs
@@ -15,13 +15,25 @@ const firebaseConfig = {
 // Initialize Firebase
 let app;
 let auth;
+let googleProvider;
+let facebookProvider;
 
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
+
+  // Initialize social providers
+  googleProvider = new GoogleAuthProvider();
+  googleProvider.addScope('profile');
+  googleProvider.addScope('email');
+
+  facebookProvider = new FacebookAuthProvider();
+  facebookProvider.addScope('email');
+  facebookProvider.addScope('public_profile');
+
   console.log('✅ Firebase initialized successfully');
 } catch (error) {
   console.error('❌ Firebase initialization failed:', error.message);
 }
 
-export { app, auth };
+export { app, auth, googleProvider, facebookProvider };
