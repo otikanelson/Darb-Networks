@@ -69,24 +69,6 @@ const Login = () => {
     }
   };
 
-  const handleFacebookLogin = async () => {
-    setIsLoading(true);
-    try {
-      await FirebaseAuthService.signInWithFacebook();
-      const redirectPath = localStorage.getItem('redirectPath');
-      if (redirectPath) {
-        localStorage.removeItem('redirectPath');
-        navigate(redirectPath);
-      } else {
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      console.error('Facebook login error:', err);
-      toast.error(err.message || 'Facebook sign in failed. Please try again.');
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left side - Image */}
@@ -261,27 +243,18 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-6">
               <button
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full inline-flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-md bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12.545 10.239v3.821h5.445c-0.643 2.783-2.835 4.769-5.445 4.769-3.271 0-5.921-2.66-5.921-5.942s2.65-5.942 5.921-5.942c1.498 0 2.866 0.559 3.921 1.488l2.814-2.814c-1.801-1.677-4.206-2.702-6.736-2.702-5.518 0-10 4.48-10 10s4.482 10 10 10c5.523 0 10-4.486 10-10 0-0.772-0.098-1.52-0.275-2.241l-9.725 0.063z" />
+                <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                  <path fillRule="evenodd" d="M12 0C5.372 0 0 5.373 0 12s5.372 12 12 12 12-5.373 12-12S18.628 0 12 0zm0 2.4c5.3 0 9.6 4.3 9.6 9.6s-4.3 9.6-9.6 9.6-9.6-4.3-9.6-9.6 4.3-9.6 9.6-9.6z" />
+                  <path fillRule="evenodd" d="M12 5.4c3.5 0 6.4 2.8 6.4 6.4s-2.9 6.4-6.4 6.4-6.4-2.9-6.4-6.4 2.8-6.4 6.4-6.4zm3.2 7.2c0 1.8-1.4 3.2-3.2 3.2s-3.2-1.4-3.2-3.2 1.4-3.2 3.2-3.2 3.2 1.4 3.2 3.2z" />
                 </svg>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleFacebookLogin}
-                disabled={isLoading}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M22 12c0-5.523-4.477-10-10-10s-10 4.477-10 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54v-2.891h2.54v-2.203c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238 0.195 2.238 0.195v2.459h-1.26c-1.243 0-1.63 0.771-1.63 1.562v1.875h2.773l-0.443 2.891h-2.33v6.988c4.781-0.75 8.437-4.887 8.437-9.877z" />
-                </svg>
+                <span>Sign in with Google</span>
               </button>
             </div>
           </div>
