@@ -293,8 +293,16 @@ const initializeDatabase = async () => {
       console.log("⏳ [DB] Attempting to authenticate with database...");
       const start = Date.now();
       try {
-        console.log("   - Starting connection attempt...");
-        await db.sequelize.authenticate();
+        console.log("   - Starting connection attempt to", process.env.DB_HOST + ":" + (process.env.DB_PORT || 3306));
+        const authPromise = db.sequelize.authenticate();
+
+        // Add a timeout promise to race against
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('AUTH_TIMEOUT_EXCEEDED_20S')), 21000);
+        });
+
+        await Promise.race([authPromise, timeoutPromise]);
+
         const duration = Date.now() - start;
         console.log("✅ [DB] Authentication successful! Connection took " + duration + "ms");
         console.log("   - Connected to:", process.env.DB_HOST + ":" + (process.env.DB_PORT || 3306));
@@ -304,13 +312,29 @@ const initializeDatabase = async () => {
         console.error("   Error type:", authError.constructor.name);
         console.error("   Error message:", authError.message);
         console.error("   Error code:", authError.code);
+
+        // Check if it's a timeout
+        if (authError.message.includes('ETIMEDOUT')) {
+          console.error("   ⚠️  TIMEOUT ERROR - Connection to TiDB timed out");
+          console.error("   - Possible causes:");
+          console.error("     1. Network/firewall issue between Vercel and TiDB");
+          console.error("     2. TiDB server is unreachable or down");
+          console.error("     3. DNS resolution failing for", process.env.DB_HOST);
+          console.error("     4. Connection timeout is too short (20s)");
+        } else if (authError.message.includes('ECONNREFUSED')) {
+          console.error("   ⚠️  CONNECTION REFUSED - TiDB rejected the connection");
+          console.error("     Check if TiDB is accepting connections and IP is whitelisted");
+        } else if (authError.message.includes('ENOTFOUND')) {
+          console.error("   ⚠️  DNS RESOLUTION FAILED");
+          console.error("     Cannot resolve hostname:", process.env.DB_HOST);
+        }
+
         console.error("   Stack trace:", authError.stack);
         if (authError.original) {
           console.error("   === ORIGINAL ERROR ===");
           console.error("   Type:", authError.original.constructor.name);
           console.error("   Message:", authError.original.message);
           console.error("   Code:", authError.original.code);
-          console.error("   Errno:", authError.original.errno);
           console.error("   Stack:", authError.original.stack);
         }
         if (authError.sql) {
