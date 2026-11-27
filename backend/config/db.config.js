@@ -19,7 +19,6 @@ module.exports = {
     } : undefined,
     connectTimeout: 20000, // Reduced to 20 seconds for faster failure detection
     enableKeepAlive: true,
-    keepAliveInitialDelayMsecs: 0,
     // TiDB specific settings
     dateStrings: true,
     typeCast: true
