@@ -190,7 +190,7 @@ class FirebaseAuthService {
           this.setCurrentUser(user);
           return user;
         }
-        throw new Error('Admin login failed');
+        throw new Error(response?.message || 'Admin login failed');
       }
 
       // Step 1: Sign in with Firebase
