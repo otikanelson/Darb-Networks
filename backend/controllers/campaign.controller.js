@@ -395,6 +395,14 @@ const getViewedCampaigns = async (req, res) => {
   try {
     const userId = req.userId;
 
+    // If no userId, return empty array
+    if (!userId) {
+      return res.status(200).send({
+        success: true,
+        data: []
+      });
+    }
+
     const viewedRaw = await db.sequelize.query(
       `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar, MAX(cv.viewed_at) as last_viewed
        FROM campaign_views cv
@@ -421,6 +429,14 @@ const getFavoriteCampaigns = async (req, res) => {
   try {
     const userId = req.userId;
 
+    // If no userId, return empty array
+    if (!userId) {
+      return res.status(200).send({
+        success: true,
+        data: []
+      });
+    }
+
     const favoritesRaw = await db.sequelize.query(
       `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar
        FROM campaign_favorites cf
@@ -444,6 +460,14 @@ const getFavoriteCampaigns = async (req, res) => {
 const getFundedCampaigns = async (req, res) => {
   try {
     const userId = req.userId;
+
+    // If no userId, return empty array
+    if (!userId) {
+      return res.status(200).send({
+        success: true,
+        data: []
+      });
+    }
 
     const fundedRaw = await db.sequelize.query(
       `SELECT c.*, u.fullName as founder_name, u.companyName as founder_company, u.profileImageUrl as founder_avatar, MAX(inv.created_at) as last_invested
