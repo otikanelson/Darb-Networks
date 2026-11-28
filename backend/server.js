@@ -294,14 +294,7 @@ const initializeDatabase = async () => {
       const start = Date.now();
       try {
         console.log("   - Starting connection attempt to", process.env.DB_HOST + ":" + (process.env.DB_PORT || 3306));
-        const authPromise = db.sequelize.authenticate();
-
-        // Add a timeout promise to race against
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('AUTH_TIMEOUT_EXCEEDED_20S')), 21000);
-        });
-
-        await Promise.race([authPromise, timeoutPromise]);
+        await db.sequelize.authenticate();
 
         const duration = Date.now() - start;
         console.log("✅ [DB] Authentication successful! Connection took " + duration + "ms");
