@@ -1,7 +1,54 @@
+const bcrypt = require("bcryptjs");
 const { firebaseAuth } = require("../middlewares");
 const controller = require("../controllers/admin.controller");
 
 module.exports = function (app) {
+  /**
+   * Admin - Delete all campaigns
+   * DELETE /api/admin/campaigns
+   * Headers: Authorization: Bearer <ADMIN_TOKEN>
+   * 
+   * Deletes all campaigns from the database
+   */
+  app.delete(
+    "/api/admin/campaigns",
+    [firebaseAuth.verifyFirebaseToken],
+    async (req, res) => {
+      try {
+        // Check if user is admin
+        if (req.userType !== 'admin') {
+          return res.status(403).send({
+            success: false,
+            message: "Only admin users can delete campaigns"
+          });
+        }
+
+        console.log('🗑  Deleting all campaigns...');
+        const db = require("../models");
+
+        const result = await db.sequelize.query(
+          'DELETE FROM campaigns',
+          { type: db.sequelize.QueryTypes.DELETE }
+        );
+
+        console.log('✓ Successfully deleted all campaigns');
+
+        res.status(200).send({
+          success: true,
+          message: "All campaigns deleted successfully"
+        });
+
+      } catch (error) {
+        console.error('❌ Error deleting campaigns:', error.message);
+        res.status(500).send({
+          success: false,
+          message: "Error deleting campaigns",
+          error: error.message
+        });
+      }
+    }
+  );
+
   /**
    * Admin - Reset database (development/testing only)
    * DELETE /api/admin/reset-database
@@ -42,6 +89,9 @@ module.exports = function (app) {
 
         // 2. Create admin user
         console.log('⏳ Creating admin user...');
+        const adminPassword = 'Admin@123456';
+        const hashedPassword = bcrypt.hashSync(adminPassword, 12);
+
         const adminUser = await db.user.create({
           firebase_uid: 'admin-uid-12345',
           email: 'admin@darb.com',
@@ -50,6 +100,7 @@ module.exports = function (app) {
           companyName: 'Darb Networks',
           phoneNumber: '+2348012345678',
           address: 'Lagos, Nigeria',
+          password: hashedPassword,
           isActive: true,
           isVerified: true,
           isEmailVerified: true

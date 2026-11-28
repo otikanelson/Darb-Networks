@@ -11,6 +11,7 @@ import {
   deleteUser as firebaseDeleteUser,
   updateProfile
 } from 'firebase/auth';
+import axios from 'axios';
 import { auth, googleProvider, facebookProvider } from '../config/firebaseConfig';
 import ApiService from './apiService';
 import { API_ENDPOINTS } from '../config/apiConfig';
@@ -168,27 +169,35 @@ class FirebaseAuthService {
       if (email === 'admin@darb.com') {
         // Use admin login endpoint instead of Firebase
         try {
-          const response = await ApiService.post(
+          const rawResponse = await axios.post(
             API_ENDPOINTS.AUTH.LOGIN_ADMIN || '/api/auth/login-admin',
             { email, password }
           );
 
-          // ApiService extracts .data field, so response is the user data
-          if (response) {
+          // Get full response before ApiService processes it
+          const responseData = rawResponse.data;
+
+          if (responseData && responseData.success && responseData.data) {
             const user = {
-              id: response.id,
-              email: response.email,
-              fullName: response.fullName,
-              userType: response.userType,
-              companyName: response.companyName,
-              phoneNumber: response.phoneNumber,
-              address: response.address,
-              profileImageUrl: response.profileImageUrl,
-              isActive: response.isActive,
-              isVerified: response.isVerified,
-              isEmailVerified: response.isEmailVerified,
-              createdAt: response.createdAt
+              id: responseData.data.id,
+              email: responseData.data.email,
+              fullName: responseData.data.fullName,
+              userType: responseData.data.userType,
+              companyName: responseData.data.companyName,
+              phoneNumber: responseData.data.phoneNumber,
+              address: responseData.data.address,
+              profileImageUrl: responseData.data.profileImageUrl,
+              isActive: responseData.data.isActive,
+              isVerified: responseData.data.isVerified,
+              isEmailVerified: responseData.data.isEmailVerified,
+              createdAt: responseData.data.createdAt
             };
+
+            // Store JWT token if provided
+            if (responseData.token) {
+              localStorage.setItem('authToken', responseData.token);
+            }
+
             this.setCurrentUser(user);
             return user;
           }
@@ -363,6 +372,8 @@ class FirebaseAuthService {
       // Clear local storage regardless
       this.removeToken();
       this.removeCurrentUser();
+      // Also clear JWT token for admin users
+      localStorage.removeItem('authToken');
     }
   }
 

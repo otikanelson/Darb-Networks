@@ -3,6 +3,8 @@ const { createUser, getUserByEmail } = require("../config/firebase");
 const User = db.user;
 const { sendError } = require("../utils/http");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const config = require("../config/auth.config.js");
 
 /**
  * STEP 4: Firebase Auth - Signup endpoint
@@ -258,6 +260,13 @@ exports.signinAdmin = async (req, res) => {
     // Update last login timestamp
     await User.update({ lastLoginAt: new Date() }, { where: { id: user.id } });
 
+    // Generate JWT token for session
+    const token = jwt.sign(
+      { id: user.id, email: user.email, userType: 'admin' },
+      config.secret,
+      { expiresIn: '24h' }
+    );
+
     res.status(200).send({
       success: true,
       message: "Admin login successful",
@@ -274,7 +283,8 @@ exports.signinAdmin = async (req, res) => {
         isVerified: user.isVerified,
         isEmailVerified: user.isEmailVerified,
         createdAt: user.createdAt
-      }
+      },
+      token: token  // Return JWT token
     });
   } catch (error) {
     console.error('[AUTH] Admin login error:', error.message);

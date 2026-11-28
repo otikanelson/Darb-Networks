@@ -1,6 +1,8 @@
 const { verifyIdToken, getUserByEmail } = require("../config/firebase");
 const db = require("../models");
 const User = db.user;
+const jwt = require("jsonwebtoken");
+const config = require("../config/auth.config.js");
 
 /**
  * Middleware: Verify Firebase ID token and attach user to request
@@ -23,30 +25,69 @@ const verifyFirebaseToken = async (req, res, next) => {
       });
     }
 
-    // Verify Firebase ID token
-    const decodedToken = await verifyIdToken(token);
-    const firebaseUid = decodedToken.uid;
+    // Try Firebase token first
+    try {
+      const decodedToken = await verifyIdToken(token);
+      const firebaseUid = decodedToken.uid;
 
-    // Look up user in MySQL by firebase_uid
-    const user = await User.findOne({
-      where: { firebase_uid: firebaseUid }
-    });
-
-    if (!user) {
-      return res.status(401).send({
-        message: "User not found in database. Profile creation may be needed."
+      // Look up user in MySQL by firebase_uid
+      const user = await User.findOne({
+        where: { firebase_uid: firebaseUid }
       });
+
+      if (!user) {
+        return res.status(401).send({
+          message: "User not found in database. Profile creation may be needed."
+        });
+      }
+
+      // Attach user info to request
+      req.userId = user.id;
+      req.firebaseUid = firebaseUid;
+      req.userEmail = user.email;
+      req.userType = user.userType; // founder, investor, or admin
+
+      return next();
+    } catch (firebaseError) {
+      // Firebase verification failed, try JWT token for admin users
+      console.warn("Firebase token verification failed, trying JWT...", firebaseError.message);
+
+      try {
+        const decoded = jwt.verify(token, config.secret);
+
+        // Look up user in MySQL by ID
+        const user = await User.findByPk(decoded.id);
+
+        if (!user) {
+          return res.status(401).send({
+            message: "User not found in database."
+          });
+        }
+
+        // Only allow admin users to authenticate via JWT
+        if (user.userType !== 'admin') {
+          return res.status(401).send({
+            message: "JWT authentication only available for admin users. Please use Firebase authentication."
+          });
+        }
+
+        // Attach user info to request
+        req.userId = user.id;
+        req.firebaseUid = null; // No Firebase UID for JWT auth
+        req.userEmail = user.email;
+        req.userType = user.userType;
+
+        return next();
+      } catch (jwtError) {
+        // Both Firebase and JWT failed
+        return res.status(401).send({
+          message: "Unauthorized! Invalid or expired token.",
+          error: firebaseError.message
+        });
+      }
     }
-
-    // Attach user info to request
-    req.userId = user.id;
-    req.firebaseUid = firebaseUid;
-    req.userEmail = user.email;
-    req.userType = user.userType; // founder, investor, or admin
-
-    next();
   } catch (error) {
-    console.error("Firebase token verification error:", error.message);
+    console.error("Token verification error:", error.message);
     return res.status(401).send({
       message: "Unauthorized! Invalid or expired token.",
       error: error.message
