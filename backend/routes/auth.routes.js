@@ -57,6 +57,23 @@ module.exports = function (app) {
   );
 
   /**
+   * Traditional login for admin users
+   * POST /api/auth/login-admin
+   * 
+   * Request:
+   * {
+   *   email: "admin@darb.com",
+   *   password: "Admin@123456"
+   * }
+   * 
+   * Response: User profile data
+   */
+  app.post(
+    "/api/auth/login-admin",
+    controller.signinAdmin
+  );
+
+  /**
    * STEP 4: Firebase Auth - Profile/Token verification route
    * 
    * Returns current user profile based on Firebase ID token

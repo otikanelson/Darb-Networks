@@ -2,6 +2,7 @@ const db = require("../models");
 const { createUser, getUserByEmail } = require("../config/firebase");
 const User = db.user;
 const { sendError } = require("../utils/http");
+const bcrypt = require("bcryptjs");
 
 /**
  * STEP 4: Firebase Auth - Signup endpoint
@@ -167,6 +168,86 @@ exports.signin = async (req, res) => {
 };
 
 /**
+ * Traditional login with email/password (for admin users)
+ * POST /api/auth/login-admin
+ * 
+ * Request body:
+ * {
+ *   email: "admin@darb.com",
+ *   password: "Admin@123456"
+ * }
+ */
+exports.signinAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).send({
+        success: false,
+        message: "Email and password are required"
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(401).send({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    // Check if user is admin
+    if (user.userType !== 'admin') {
+      return res.status(403).send({
+        success: false,
+        message: "This endpoint is for admin users only"
+      });
+    }
+
+    // Verify password
+    if (!user.password || !bcrypt.compareSync(password, user.password)) {
+      return res.status(401).send({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).send({
+        success: false,
+        message: "Account is inactive. Please contact support."
+      });
+    }
+
+    // Update last login timestamp
+    await User.update({ lastLoginAt: new Date() }, { where: { id: user.id } });
+
+    res.status(200).send({
+      success: true,
+      message: "Admin login successful",
+      data: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        userType: user.userType,
+        companyName: user.companyName,
+        phoneNumber: user.phoneNumber,
+        address: user.address,
+        profileImageUrl: user.profileImageUrl,
+        isActive: user.isActive,
+        isVerified: user.isVerified,
+        isEmailVerified: user.isEmailVerified,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    return sendError(res, 500, "Error during admin login.", error);
+  }
+};
+
+/**
  * STEP 4: Firebase Auth - Verify token endpoint
  * 
  * Returns current user profile based on Firebase ID token
@@ -300,6 +381,7 @@ exports.logout = async (req, res) => {
 module.exports = {
   signup: exports.signup,
   signin: exports.signin,
+  signinAdmin: exports.signinAdmin,
   verifyToken: exports.verifyToken,
   verifyEmail: exports.verifyEmail,
   logout: exports.logout
