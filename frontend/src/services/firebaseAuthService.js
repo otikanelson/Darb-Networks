@@ -164,6 +164,35 @@ class FirebaseAuthService {
     try {
       const { email, password } = credentials;
 
+      // Check if this is admin login (admin@darb.com)
+      if (email === 'admin@darb.com') {
+        // Use admin login endpoint instead of Firebase
+        const response = await ApiService.post(
+          API_ENDPOINTS.AUTH.LOGIN_ADMIN || '/api/auth/login-admin',
+          { email, password }
+        );
+
+        if (response && response.success && response.data) {
+          const user = {
+            id: response.data.id,
+            email: response.data.email,
+            fullName: response.data.fullName,
+            userType: response.data.userType,
+            companyName: response.data.companyName,
+            phoneNumber: response.data.phoneNumber,
+            address: response.data.address,
+            profileImageUrl: response.data.profileImageUrl,
+            isActive: response.data.isActive,
+            isVerified: response.data.isVerified,
+            isEmailVerified: response.data.isEmailVerified,
+            createdAt: response.data.createdAt
+          };
+          this.setCurrentUser(user);
+          return user;
+        }
+        throw new Error('Admin login failed');
+      }
+
       // Step 1: Sign in with Firebase
       const firebaseUserCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = firebaseUserCredential.user;
