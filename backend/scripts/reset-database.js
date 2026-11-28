@@ -62,6 +62,7 @@ async function resetDatabase() {
         \`isActive\` BOOLEAN DEFAULT true,
         \`isVerified\` BOOLEAN DEFAULT false,
         \`isEmailVerified\` BOOLEAN DEFAULT false,
+        \`lastLoginAt\` DATETIME,
         \`createdAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         \`updatedAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
