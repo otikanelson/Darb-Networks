@@ -356,7 +356,7 @@ class FirebaseAuthService {
 
   /**
    * Sign in with Google
-   * @returns {Promise<Object>} User profile from backend
+   * @returns {Promise<Object>} User profile from backend or redirect to register
    */
   static async signInWithGoogle() {
     try {
@@ -367,38 +367,50 @@ class FirebaseAuthService {
       const firebaseIdToken = await firebaseUser.getIdToken();
       this.setToken(firebaseIdToken);
 
-      // Create or get profile from backend
+      // Try to log in (get existing profile)
       const headers = {
         'Authorization': `Bearer ${firebaseIdToken}`
       };
 
-      const response = await ApiService.post(
-        API_ENDPOINTS.AUTH.LOGIN,
-        {},
-        { headers }
-      );
+      try {
+        const response = await ApiService.post(
+          API_ENDPOINTS.AUTH.LOGIN,
+          {},
+          { headers }
+        );
 
-      if (response && response.success && response.data) {
-        const user = {
-          id: response.data.id,
-          email: response.data.email,
-          fullName: response.data.fullName,
-          userType: response.data.userType,
-          companyName: response.data.companyName,
-          phoneNumber: response.data.phoneNumber,
-          address: response.data.address,
-          profileImageUrl: response.data.profileImageUrl,
-          isActive: response.data.isActive,
-          isVerified: response.data.isVerified,
-          isEmailVerified: response.data.isEmailVerified,
-          createdAt: response.data.createdAt
-        };
-        this.setCurrentUser(user);
-        return user;
+        if (response && response.success && response.data) {
+          const user = {
+            id: response.data.id,
+            email: response.data.email,
+            fullName: response.data.fullName,
+            userType: response.data.userType,
+            companyName: response.data.companyName,
+            phoneNumber: response.data.phoneNumber,
+            address: response.data.address,
+            profileImageUrl: response.data.profileImageUrl,
+            isActive: response.data.isActive,
+            isVerified: response.data.isVerified,
+            isEmailVerified: response.data.isEmailVerified,
+            createdAt: response.data.createdAt
+          };
+          this.setCurrentUser(user);
+          return user;
+        }
+      } catch (loginError) {
+        // If 401, user profile doesn't exist - redirect to registration
+        if (loginError.response?.status === 401) {
+          throw new Error('PROFILE_NOT_FOUND');
+        }
+        throw loginError;
       }
+
       throw new Error('Failed to retrieve profile');
     } catch (error) {
       console.error('Google sign in error:', error);
+      if (error.message === 'PROFILE_NOT_FOUND') {
+        throw new Error('profile_not_found');
+      }
       if (error.code === 'auth/popup-closed-by-user') {
         throw new Error('Sign in cancelled.');
       } else if (error.code === 'auth/popup-blocked') {

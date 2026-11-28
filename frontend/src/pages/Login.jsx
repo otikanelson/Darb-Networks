@@ -64,6 +64,14 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Google login error:', err);
+      
+      // If profile not found, redirect to register
+      if (err.message === 'profile_not_found') {
+        toast.error('Please complete your registration to continue.');
+        navigate('/register');
+        return;
+      }
+      
       toast.error(err.message || 'Google sign in failed. Please try again.');
       setIsLoading(false);
     }
