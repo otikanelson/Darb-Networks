@@ -6,12 +6,27 @@ const isDevelopment = import.meta.env.MODE === 'development';
  * Source of truth for all API URLs. Driven by VITE_API_URL environment variable.
  * Defaults to localhost:5000 in development, production URL in production.
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL ||
-  (isDevelopment ? 'http://localhost:5000/api' : 'https://darb-backend.vercel.app/api');
+const getAPIBaseURL = () => {
+  // If VITE_API_URL is explicitly set, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // Development: use localhost
+  if (isDevelopment) {
+    return 'http://localhost:5000/api';
+  }
+
+  // Production: use backend URL (not frontend URL)
+  // This ensures API calls go to the correct domain
+  return 'https://darb-backend.vercel.app/api';
+};
 
 /**
  * API Endpoints for all backend services
  */
+const API_BASE_URL = getAPIBaseURL();
+
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
