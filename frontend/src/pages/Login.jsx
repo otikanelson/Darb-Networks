@@ -65,8 +65,17 @@ const Login = () => {
     } catch (err) {
       console.error('Google login error:', err);
       
-      // If profile not found, redirect to register
+      // If profile not found, redirect to register with Google data
       if (err.message === 'profile_not_found') {
+        // Store the Firebase data for the register page
+        const firebaseUser = FirebaseAuthService.getCurrentFirebaseUser();
+        if (firebaseUser) {
+          localStorage.setItem('googleSignupData', JSON.stringify({
+            email: firebaseUser.email,
+            fullName: firebaseUser.displayName || '',
+            profileImageUrl: firebaseUser.photoURL || ''
+          }));
+        }
         toast.error('Please complete your registration to continue.');
         navigate('/register');
         return;

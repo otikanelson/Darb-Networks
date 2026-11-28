@@ -69,20 +69,40 @@ const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [formData, setFormData] = useState({
-    userType: 'founder',
-    fullName: '',
-    email: '',
-    phoneNumber: '+234',
-    nin: '',
-    bvn: '',
-    cacNumber: '',
-    accountNumber: '',
-    bankName: '',
-    companyName: '',
-    address: '',
-    password: '',
-    confirmPassword: '',
+  const [formData, setFormData] = useState(() => {
+    // Load pre-filled Google signup data if available
+    const googleData = localStorage.getItem('googleSignupData');
+    const defaultData = {
+      userType: 'founder',
+      fullName: '',
+      email: '',
+      phoneNumber: '+234',
+      nin: '',
+      bvn: '',
+      cacNumber: '',
+      accountNumber: '',
+      bankName: '',
+      companyName: '',
+      address: '',
+      password: '',
+      confirmPassword: '',
+    };
+
+    if (googleData) {
+      try {
+        const parsed = JSON.parse(googleData);
+        localStorage.removeItem('googleSignupData'); // Clean up
+        return {
+          ...defaultData,
+          fullName: parsed.fullName || '',
+          email: parsed.email || '',
+        };
+      } catch (e) {
+        console.error('Failed to parse Google signup data:', e);
+      }
+    }
+
+    return defaultData;
   });
 
   // ── Input change handler ──────────────────────────────────────────────────
