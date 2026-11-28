@@ -18,23 +18,30 @@ module.exports = {
       minVersion: 'TLSv1.2'
     } : undefined,
     connectTimeout: 30000,
-    enableKeepAlive: true,
+    enableKeepAlive: false, // Disable keep-alive - create fresh connections
     dateStrings: true,
     typeCast: true,
     decimalNumbers: true
   },
 
-  // Serverless-optimized pool settings
+  // For serverless: minimal pool, aggressively recycle connections
+  // TiDB closes idle connections after ~30 minutes, so we recycle much sooner
   pool: {
-    max: 1,
-    min: 0,
+    max: 1,        // Only 1 connection at a time (serverless)
+    min: 0,        // Don't pre-allocate
     acquire: 30000,
-    idle: 5000,
-    evict: 5000,
+    idle: 30000,   // Close idle connections after 30 seconds
+    evict: 30000,  // Check and evict every 30 seconds
     validate: (connection) => {
+      // Always validate - TiDB might have closed this connection
       return connection.query({ sql: 'SELECT 1', timeout: 5000 })
-        .then(() => true)
-        .catch(() => false);
+        .then(() => {
+          return true;
+        })
+        .catch((err) => {
+          console.log("[DB-POOL] Stale connection detected, will get new one");
+          return false;
+        });
     }
   },
 
