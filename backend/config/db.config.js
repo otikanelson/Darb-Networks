@@ -17,7 +17,7 @@ module.exports = {
       rejectUnauthorized: false,
       minVersion: 'TLSv1.2'
     } : undefined,
-    connectTimeout: 20000, // Reduced to 20 seconds for faster failure detection
+    connectTimeout: 30000, // Increased to 30 seconds for Vercel cold starts
     enableKeepAlive: true,
     // TiDB specific settings
     dateStrings: true,
@@ -26,9 +26,9 @@ module.exports = {
 
   // Serverless-optimized pool settings
   pool: {
-    max: 2, // Reduced for serverless (each connection is expensive)
+    max: 1, // Reduced to 1 for serverless (each connection is expensive)
     min: 0,
-    acquire: 20000, // 20 seconds
+    acquire: 30000, // 30 seconds
     idle: 5000,
     evict: 5000,
     validate: (connection) => {
@@ -46,7 +46,7 @@ module.exports = {
   },
 
   retry: {
-    max: 2 // Reduced retries
+    max: 3 // Increased retries
   },
 
   logging: (sql, timing) => {
