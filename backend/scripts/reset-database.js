@@ -124,11 +124,14 @@ async function resetDatabase() {
     console.log('⏳ Creating admin user...');
     const adminPassword = 'Admin@123456';
     const hashedPassword = bcrypt.hashSync(adminPassword, 12);
+    console.log('Generated hash:', hashedPassword);
+    console.log('Hash length:', hashedPassword.length);
+
     await connection.execute(
-      'INSERT INTO users (firebase_uid, email, fullName, userType, companyName, phoneNumber, address, password, isActive, isVerified, isEmailVerified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      ['admin-uid-12345', 'admin@darb.com', 'Admin User', 'admin', 'Darb Networks', '+2348012345678', 'Lagos, Nigeria', hashedPassword, true, true, true]
+      'INSERT INTO users (firebase_uid, email, fullName, userType, companyName, phoneNumber, address, password, bvn, cacNumber, accountNumber, bankName, profileImageUrl, isActive, isVerified, isEmailVerified, emailVerifiedAt, lastLoginAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      ['admin-uid-12345', 'admin@darb.com', 'Admin User', 'admin', 'Darb Networks', '+2348012345678', 'Lagos, Nigeria', hashedPassword, null, null, null, null, null, true, true, true, new Date(), null]
     );
-    console.log('✅ Admin user created');
+    console.log('✅ Admin user created with password hash');
 
     // 6. Create 2 sample campaigns
     console.log('⏳ Creating sample campaigns...');

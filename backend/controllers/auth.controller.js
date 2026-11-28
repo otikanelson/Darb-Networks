@@ -203,6 +203,8 @@ exports.signinAdmin = async (req, res) => {
     }
 
     console.log('[AUTH] User found, checking type:', user.userType);
+    console.log('[AUTH] Stored password hash:', user.password ? user.password.substring(0, 20) + '...' : 'NO HASH');
+    console.log('[AUTH] Hash length:', user.password ? user.password.length : 0);
 
     // Check if user is admin
     if (user.userType !== 'admin') {
@@ -224,6 +226,7 @@ exports.signinAdmin = async (req, res) => {
 
     try {
       console.log('[AUTH] Comparing password...');
+      console.log('[AUTH] Input password length:', password.length);
       const passwordMatch = bcrypt.compareSync(password, user.password);
       console.log('[AUTH] Password match result:', passwordMatch);
 
