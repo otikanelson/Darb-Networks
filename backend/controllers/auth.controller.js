@@ -207,7 +207,24 @@ exports.signinAdmin = async (req, res) => {
     }
 
     // Verify password
-    if (!user.password || !bcrypt.compareSync(password, user.password)) {
+    if (!user.password) {
+      console.error('[AUTH] Admin user has no password hash');
+      return res.status(401).send({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    try {
+      const passwordMatch = bcrypt.compareSync(password, user.password);
+      if (!passwordMatch) {
+        return res.status(401).send({
+          success: false,
+          message: "Invalid email or password"
+        });
+      }
+    } catch (bcryptError) {
+      console.error('[AUTH] Bcrypt comparison error:', bcryptError.message);
       return res.status(401).send({
         success: false,
         message: "Invalid email or password"
@@ -243,6 +260,8 @@ exports.signinAdmin = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('[AUTH] Admin login error:', error.message);
+    console.error('[AUTH] Error stack:', error.stack);
     return sendError(res, 500, "Error during admin login.", error);
   }
 };
