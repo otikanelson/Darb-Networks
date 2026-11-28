@@ -33,15 +33,9 @@ module.exports = {
     idle: 30000,   // Close idle connections after 30 seconds
     evict: 30000,  // Check and evict every 30 seconds
     validate: (connection) => {
-      // Always validate - TiDB might have closed this connection
-      return connection.query({ sql: 'SELECT 1', timeout: 5000 })
-        .then(() => {
-          return true;
-        })
-        .catch((err) => {
-          console.log("[DB-POOL] Stale connection detected, will get new one");
-          return false;
-        });
+      // Simple validation without async - Sequelize will handle connection testing
+      // Just return true and let Sequelize test the connection
+      return true;
     }
   },
 
