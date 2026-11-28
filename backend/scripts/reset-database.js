@@ -5,11 +5,10 @@ const bcrypt = require('bcryptjs');
 async function resetDatabase() {
   console.log('🔄 Starting database reset...');
 
-  // Use TiDB Cloud connection
   const config = {
-    host: process.env.DB_HOST || 'gateway01.ap-southeast-1.prod.tidb-cloud.com',
+    host: process.env.DB_HOST || 'gateway01.us-east-1.prod.aws.tidbcloud.com',
     port: parseInt(process.env.DB_PORT || '4000'),
-    user: process.env.DB_USER || '2YV9Q8kMRyGbJNm.root',
+    user: process.env.DB_USER || '3KStFbgUmQthP1a.root',
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || 'darb_network',
     ssl: {
@@ -29,7 +28,6 @@ async function resetDatabase() {
 
   let connection;
   try {
-    // Create connection
     connection = await mysql.createConnection(config);
     console.log('✅ Connected to database');
 
@@ -39,7 +37,6 @@ async function resetDatabase() {
 
     // Drop all tables
     console.log('⏳ Dropping existing tables...');
-    await connection.execute('DROP TABLE IF EXISTS `repayments`');
     await connection.execute('DROP TABLE IF EXISTS `investments`');
     await connection.execute('DROP TABLE IF EXISTS `campaigns`');
     await connection.execute('DROP TABLE IF EXISTS `users`');
@@ -61,6 +58,7 @@ async function resetDatabase() {
         \`companyName\` VARCHAR(255),
         \`phoneNumber\` VARCHAR(20),
         \`address\` TEXT,
+        \`profileImageUrl\` VARCHAR(500),
         \`isActive\` BOOLEAN DEFAULT true,
         \`isVerified\` BOOLEAN DEFAULT false,
         \`isEmailVerified\` BOOLEAN DEFAULT false,
@@ -79,18 +77,21 @@ async function resetDatabase() {
         \`description\` TEXT,
         \`fullDescription\` LONGTEXT,
         \`category\` VARCHAR(100),
-        \`fundingGoal\` DECIMAL(15, 2),
-        \`amountRaised\` DECIMAL(15, 2) DEFAULT 0,
+        \`founder_id\` INT,
+        \`target_amount\` DECIMAL(15, 2),
+        \`current_amount\` DECIMAL(15, 2) DEFAULT 0,
         \`minimumInvestment\` DECIMAL(15, 2),
         \`riskLevel\` ENUM('low', 'medium', 'high') DEFAULT 'medium',
         \`investorCount\` INT DEFAULT 0,
-        \`status\` ENUM('draft', 'active', 'completed', 'closed') DEFAULT 'active',
-        \`isFeatured\` BOOLEAN DEFAULT false,
+        \`status\` ENUM('draft', 'approved', 'completed', 'closed') DEFAULT 'approved',
+        \`is_featured\` BOOLEAN DEFAULT false,
+        \`view_count\` INT DEFAULT 0,
         \`country\` VARCHAR(100),
         \`documents\` JSON,
         \`thumbnailUrl\` VARCHAR(500),
         \`createdAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        \`updatedAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        \`updatedAt\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (\`founder_id\`) REFERENCES \`users\`(\`id\`)
       )
     `);
     console.log('✅ Campaigns table created');
@@ -126,26 +127,32 @@ async function resetDatabase() {
     // 6. Create 2 sample campaigns
     console.log('⏳ Creating sample campaigns...');
 
+    // Get admin user ID
+    const [adminUserResult] = await connection.query('SELECT id FROM users WHERE email = ?', ['admin@darb.com']);
+    const adminUserId = adminUserResult[0].id;
+
     const campaign1Docs = JSON.stringify([
       { name: 'Business Plan', url: '/documents/ecocharge-plan.pdf', type: 'pdf' },
       { name: 'Financial Projections', url: '/documents/ecocharge-financials.xlsx', type: 'xlsx' }
     ]);
 
     await connection.execute(
-      `INSERT INTO campaigns (title, description, fullDescription, category, fundingGoal, amountRaised, minimumInvestment, riskLevel, investorCount, status, isFeatured, country, documents, thumbnailUrl) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO campaigns (title, description, fullDescription, category, founder_id, target_amount, current_amount, minimumInvestment, riskLevel, investorCount, status, is_featured, view_count, country, documents, thumbnailUrl) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         'EcoCharge - Solar Energy Solution',
         'Revolutionary solar charging stations for Nigeria. We are building a network of eco-friendly charging infrastructure across major cities.',
         'EcoCharge is developing innovative solar-powered electric vehicle charging stations. Our mission is to provide sustainable energy solutions while creating employment opportunities in rural and urban areas. We are seeking ₦50 million to expand our network to 20 cities.',
         'Energy',
+        adminUserId,
         50000000,
         15000000,
         500000,
         'medium',
         8,
-        'active',
+        'approved',
         true,
+        1250,
         'Nigeria',
         campaign1Docs,
         'https://via.placeholder.com/400x250?text=EcoCharge'
@@ -158,20 +165,22 @@ async function resetDatabase() {
     ]);
 
     await connection.execute(
-      `INSERT INTO campaigns (title, description, fullDescription, category, fundingGoal, amountRaised, minimumInvestment, riskLevel, investorCount, status, isFeatured, country, documents, thumbnailUrl) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO campaigns (title, description, fullDescription, category, founder_id, target_amount, current_amount, minimumInvestment, riskLevel, investorCount, status, is_featured, view_count, country, documents, thumbnailUrl) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         'FarmTech - Smart Agricultural Platform',
         'Digital platform connecting farmers directly to buyers using AI and IoT sensors. Eliminate middlemen and increase farmer profits by 40%.',
         'FarmTech is revolutionizing Nigerian agriculture through technology. Our platform uses IoT sensors to monitor crop health and AI to predict market prices. Farmers get real-time data and direct market access. We are raising ₦30 million to expand to 500 farms across Nigeria.',
         'Agriculture',
+        adminUserId,
         30000000,
         8500000,
         250000,
         'low',
         12,
-        'active',
+        'approved',
         true,
+        845,
         'Nigeria',
         campaign2Docs,
         'https://via.placeholder.com/400x250?text=FarmTech'
