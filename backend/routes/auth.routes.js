@@ -73,6 +73,8 @@ module.exports = function (app) {
     controller.signinAdmin
   );
 
+  console.log('✅ Admin login route registered: POST /api/auth/login-admin');
+
   /**
    * STEP 4: Firebase Auth - Profile/Token verification route
    * 
