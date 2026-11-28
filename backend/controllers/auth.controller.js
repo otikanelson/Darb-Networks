@@ -179,9 +179,11 @@ exports.signin = async (req, res) => {
  */
 exports.signinAdmin = async (req, res) => {
   try {
+    console.log('[AUTH] Admin login attempt:', { email: req.body.email, hasPassword: !!req.body.password });
     const { email, password } = req.body;
 
     if (!email || !password) {
+      console.log('[AUTH] Missing email or password');
       return res.status(400).send({
         success: false,
         message: "Email and password are required"
@@ -189,17 +191,22 @@ exports.signinAdmin = async (req, res) => {
     }
 
     // Find user by email
+    console.log('[AUTH] Looking up user:', email);
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
+      console.log('[AUTH] User not found:', email);
       return res.status(401).send({
         success: false,
         message: "Invalid email or password"
       });
     }
 
+    console.log('[AUTH] User found, checking type:', user.userType);
+
     // Check if user is admin
     if (user.userType !== 'admin') {
+      console.log('[AUTH] User is not admin, type:', user.userType);
       return res.status(403).send({
         success: false,
         message: "This endpoint is for admin users only"
@@ -208,7 +215,7 @@ exports.signinAdmin = async (req, res) => {
 
     // Verify password
     if (!user.password) {
-      console.error('[AUTH] Admin user has no password hash');
+      console.log('[AUTH] Admin user has no password hash');
       return res.status(401).send({
         success: false,
         message: "Invalid email or password"
@@ -216,8 +223,12 @@ exports.signinAdmin = async (req, res) => {
     }
 
     try {
+      console.log('[AUTH] Comparing password...');
       const passwordMatch = bcrypt.compareSync(password, user.password);
+      console.log('[AUTH] Password match result:', passwordMatch);
+
       if (!passwordMatch) {
+        console.log('[AUTH] Password mismatch');
         return res.status(401).send({
           success: false,
           message: "Invalid email or password"
@@ -232,11 +243,14 @@ exports.signinAdmin = async (req, res) => {
     }
 
     if (!user.isActive) {
+      console.log('[AUTH] User is not active');
       return res.status(401).send({
         success: false,
         message: "Account is inactive. Please contact support."
       });
     }
+
+    console.log('[AUTH] Admin login successful, updating lastLoginAt');
 
     // Update last login timestamp
     await User.update({ lastLoginAt: new Date() }, { where: { id: user.id } });
