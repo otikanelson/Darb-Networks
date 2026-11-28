@@ -173,25 +173,26 @@ class FirebaseAuthService {
             { email, password }
           );
 
-          if (response && response.success && response.data) {
+          // ApiService extracts .data field, so response is the user data
+          if (response) {
             const user = {
-              id: response.data.id,
-              email: response.data.email,
-              fullName: response.data.fullName,
-              userType: response.data.userType,
-              companyName: response.data.companyName,
-              phoneNumber: response.data.phoneNumber,
-              address: response.data.address,
-              profileImageUrl: response.data.profileImageUrl,
-              isActive: response.data.isActive,
-              isVerified: response.data.isVerified,
-              isEmailVerified: response.data.isEmailVerified,
-              createdAt: response.data.createdAt
+              id: response.id,
+              email: response.email,
+              fullName: response.fullName,
+              userType: response.userType,
+              companyName: response.companyName,
+              phoneNumber: response.phoneNumber,
+              address: response.address,
+              profileImageUrl: response.profileImageUrl,
+              isActive: response.isActive,
+              isVerified: response.isVerified,
+              isEmailVerified: response.isEmailVerified,
+              createdAt: response.createdAt
             };
             this.setCurrentUser(user);
             return user;
           }
-          throw new Error(response?.message || 'Admin login failed');
+          throw new Error('Admin login failed');
         } catch (error) {
           if (error.response?.data?.message) {
             throw new Error(error.response.data.message);
